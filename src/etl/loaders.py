@@ -161,21 +161,23 @@ class BaseLoader:
         Returns:
             'inserted', 'updated', or 'skipped'
         """
+        # First check if row_hash already exists (to avoid unique constraint violation)
+        existing_by_hash = self.db.query(model_class).filter_by(row_hash=row_hash).first()
+        
+        if existing_by_hash:
+            # Exact same data already exists - skip
+            self.skipped_count += 1
+            return 'skipped'
+        
         # Find existing record by business keys
         existing = self.db.query(model_class).filter_by(**business_keys).first()
         
         if existing:
-            # Record exists - check if changed
-            if hasattr(existing, 'row_hash') and existing.row_hash == row_hash:
-                # No changes - skip
-                self.skipped_count += 1
-                return 'skipped'
-            else:
-                # Changed - update all fields
-                for key, value in record_data.items():
-                    setattr(existing, key, value)
-                self.updated_count += 1
-                return 'updated'
+            # Record exists with different data - update all fields
+            for key, value in record_data.items():
+                setattr(existing, key, value)
+            self.updated_count += 1
+            return 'updated'
         else:
             # New record - insert
             new_record = model_class(**record_data)
@@ -686,55 +688,30 @@ class Zrfi005Loader(BaseLoader):
     
     def load(self, snapshot_date: Optional[date] = None) -> Dict[str, int]:
         """
-        Load AR data with automatic monthly reset logic
+        Load AR data with upsert logic
         
         Args:
             snapshot_date: Date of AR snapshot
         
-        Business Rule:
-            - Automatically delete previous month's data when new month is detected
-            - Example:
-                * DB has: Jan 5, Jan 10, Jan 15 (all January)
-                * Upload Feb 3 → Auto-delete all January data, then insert Feb 3 data
-                * Upload Feb 5 → Upsert into February data (no deletion)
-                * Upload Mar 1 → Auto-delete all February data, then insert Mar 1 data
+        Business Rule (NEW):
+            - KEEP all historical snapshots (never delete)
+            - For same snapshot date: upsert (update if exists, insert if new)
+            - This allows viewing historical data and comparing snapshots
+            
+            Example:
+                * Upload 01/05 → Insert 129 records (snapshot 01/05)
+                * Upload 01/06 → Insert 129 records (snapshot 01/06)
+                * Re-upload 01/06 → Update existing records (same snapshot date, same business key)
+                * Upload 01/07 → Insert 98 records (snapshot 01/07)
+                * Can view AR aging for any of: 01/05, 01/06, or 01/07
         """
         file_path = self.file_path or EXCEL_FILES['zrfi005']
         print(f"Loading {file_path}...")
-        
-        # Automatic monthly reset: Delete previous month when new month detected
-        if snapshot_date:
-            # Get the most recent snapshot_date in database
-            latest_record = self.db.query(RawZrfi005).order_by(RawZrfi005.snapshot_date.desc()).first()
-            
-            if latest_record and latest_record.snapshot_date:
-                latest_month = (latest_record.snapshot_date.year, latest_record.snapshot_date.month)
-                current_month = (snapshot_date.year, snapshot_date.month)
-                
-                # If uploading data from a NEW month, delete ALL data from the previous month
-                if current_month > latest_month:
-                    # Calculate previous month date range
-                    prev_month_start = latest_record.snapshot_date.replace(day=1)
-                    # Last day of previous month
-                    if latest_record.snapshot_date.month == 12:
-                        prev_month_end = latest_record.snapshot_date.replace(month=12, day=31)
-                    else:
-                        next_month = latest_record.snapshot_date.replace(month=latest_record.snapshot_date.month + 1, day=1)
-                        prev_month_end = next_month - timedelta(days=1)
-                    
-                    # Delete all records from previous month
-                    deleted = self.db.query(RawZrfi005).filter(
-                        RawZrfi005.snapshot_date >= prev_month_start,
-                        RawZrfi005.snapshot_date <= prev_month_end
-                    ).delete(synchronize_session=False)
-                    
-                    print(f"  ⚠ Monthly reset: Detected new month ({snapshot_date.strftime('%Y-%m')})")
-                    print(f"  ⚠ Deleted {deleted} records from previous month ({prev_month_start.strftime('%Y-%m-%d')} to {prev_month_end.strftime('%Y-%m-%d')})")
-                    self.db.commit()
+        print(f"  📅 Snapshot date: {snapshot_date or 'Not specified'}")
+        print(f"  📝 Mode: {self.mode} (upsert - keep history)")
         
         df = pd.read_excel(file_path, header=0, dtype=str)
         print(f"  Found {len(df)} rows, {len(df.columns)} columns")
-        print(f"  Snapshot date: {snapshot_date or 'Not specified'}")
         
         records = []
         for idx, row in df.iterrows():
@@ -773,10 +750,18 @@ class Zrfi005Loader(BaseLoader):
                 }
                 
                 if self.mode == 'upsert':
-                    # Upsert mode: update existing same customer on same date
+                    # Upsert mode: update existing record with same business key
+                    # Business key: customer + distribution channel + customer group + salesman + snapshot date
+                    # (one customer can have multiple records for different channels/groups)
                     self.upsert_record(
                         RawZrfi005,
-                        {'customer_name': customer_name, 'snapshot_date': snapshot_date},
+                        {
+                            'customer_name': customer_name,
+                            'dist_channel': record_data['dist_channel'],
+                            'cust_group': record_data['cust_group'],
+                            'salesman_name': record_data['salesman_name'],
+                            'snapshot_date': snapshot_date
+                        },
                         record_data,
                         record_data['row_hash']
                     )

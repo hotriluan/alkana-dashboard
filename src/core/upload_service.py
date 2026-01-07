@@ -236,7 +236,8 @@ async def process_file(upload_id: int, file_path: Path, db: Session) -> Dict:
             # ZRSD006 is used by lead time for channel lookup
             transformer.transform_lead_time()
         elif file_type == 'ZRFI005':
-            transformer.transform_zrfi005()
+            # Pass snapshot_date to transformer to ensure correct data is aggregated
+            transformer.transform_zrfi005(target_date=snapshot_date.isoformat() if snapshot_date else None)
         elif file_type == 'TARGET':
             transformer.transform_target()
         

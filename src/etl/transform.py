@@ -604,9 +604,10 @@ class Transformer:
             target_date: Optional snapshot date (YYYY-MM-DD) to transform.
                         If None, uses the latest snapshot_date.
         
-        Business Rule: Only transform ONE snapshot at a time
-        - Multiple snapshots can exist in raw_zrfi005 (historical data)
-        - Dashboard should show one snapshot at a time based on user selection
+        Business Rule: Support multiple historical snapshots
+        - Raw table keeps all historical snapshots (never delete)
+        - Fact table is rebuilt per snapshot (clear old, rebuild new for that date)
+        - Users can select which snapshot to view via API parameter
         """
         print("Transforming zrfi005 → fact_ar_aging...")
         
@@ -635,11 +636,13 @@ class Transformer:
         
         print(f"  📅 Transforming snapshot: {snapshot_to_use}")
         
-        # Truncate fact table first to avoid duplicates
-        deleted = self.db.query(FactArAging).delete()
+        # Clear fact records for THIS snapshot only (keep other snapshots)
+        deleted = self.db.query(FactArAging).filter(
+            FactArAging.snapshot_date == snapshot_to_use
+        ).delete(synchronize_session=False)
         self.db.commit()
         if deleted > 0:
-            print(f"  ⚠ Cleared {deleted} existing records from fact_ar_aging")
+            print(f"  ⚠ Cleared {deleted} records for snapshot {snapshot_to_use}")
         
         # Load only the specified snapshot
         raw_df = pd.read_sql(
