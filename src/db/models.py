@@ -652,7 +652,7 @@ class DimUomConversion(Base):
     kg_per_unit = Column(Numeric(18, 6))
     source = Column(String(20), default='billing')
     sample_count = Column(Integer)
-    variance_pct = Column(Numeric(5, 2))
+    variance_pct = Column(Numeric(10, 2))  # Changed from (5,2) to (10,2) to handle larger variance values
     last_updated = Column(DateTime, default=datetime.utcnow)
 
 

@@ -1,5 +1,5 @@
 // Shared DateRangePicker component for filtering dashboards
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Calendar } from 'lucide-react';
 
 interface DateRangePickerProps {
@@ -17,16 +17,26 @@ export const DateRangePicker = ({
   const [localStartDate, setLocalStartDate] = useState(startDate);
   const [localEndDate, setLocalEndDate] = useState(endDate);
 
+  // Sync local state with props when they change
+  useEffect(() => {
+    setLocalStartDate(startDate);
+    setLocalEndDate(endDate);
+  }, [startDate, endDate]);
+
   const handleApply = () => {
     onDateChange(localStartDate, localEndDate);
   };
 
   const handleReset = () => {
-    const today = new Date().toISOString().split('T')[0];
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    setLocalStartDate(thirtyDaysAgo);
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const today = `${year}-${month}-${day}`;
+    const firstDayOfMonth = `${year}-${month}-01`;
+    setLocalStartDate(firstDayOfMonth);
     setLocalEndDate(today);
-    onDateChange(thirtyDaysAgo, today);
+    onDateChange(firstDayOfMonth, today);
   };
 
   return (

@@ -7,6 +7,7 @@ import { KPICard } from '../components/common/KPICard';
 import { DataTable } from '../components/common/DataTable';
 import { DateRangePicker } from '../components/common/DateRangePicker';
 import api from '../services/api';
+import { getFirstDayOfMonth, getToday } from '../utils/dateHelpers';
 
 interface ExecutiveKPIs {
   total_revenue: number;
@@ -37,9 +38,9 @@ interface TopCustomer {
 }
 
 const ExecutiveDashboard = () => {
-  const today = new Date().toISOString().split('T')[0];
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-  const [startDate, setStartDate] = useState(thirtyDaysAgo);
+  const today = getToday();
+  const firstDayOfMonth = getFirstDayOfMonth();
+  const [startDate, setStartDate] = useState(firstDayOfMonth);
   const [endDate, setEndDate] = useState(today);
 
   const handleDateChange = (newStartDate: string, newEndDate: string) => {

@@ -321,6 +321,12 @@ class Transformer:
         if raw_df.empty:
             print("  ⚠ No data in raw_mb51")
             return
+
+        # Remove previously generated aggregated rows (mvt_type=999) to prevent unique constraint collisions
+        # Constraint: idx_fact_inventory_unique (material_code, plant_code, posting_date)
+        deleted = self.db.query(FactInventory).filter(FactInventory.mvt_type == 999).delete(synchronize_session=False)
+        if deleted:
+            print(f"  🔄 Cleared {deleted} existing aggregated inventory rows (mvt_type=999)")
         
         # Filter valid movement types
         raw_df = raw_df[raw_df['col_1_mvt_type'].notna()].copy()
@@ -336,12 +342,20 @@ class Transformer:
             uom = row.get('col_8_uom')
             qty = row.get('col_7_qty')
             
-            if pd.isna(material) or pd.isna(qty):
+            if pd.isna(qty):
                 return 0.0  # Return 0 instead of None for aggregation
-                
-            kg_per_unit = self.uom_converter.get_kg_per_unit(str(material))
-            if kg_per_unit:
-                return float(qty) * kg_per_unit if uom == 'PC' else float(qty)
+            
+            # If already in KG, return as-is
+            if uom == 'KG':
+                return float(qty)
+            
+            # If in PC, need conversion
+            if uom == 'PC' and not pd.isna(material):
+                kg_per_unit = self.uom_converter.get_kg_per_unit(str(material))
+                if kg_per_unit:
+                    return float(qty) * kg_per_unit
+            
+            # Default: can't convert, return 0
             return 0.0
         
         raw_df['qty_kg'] = raw_df.apply(convert_to_kg, axis=1)
@@ -455,6 +469,11 @@ class Transformer:
         if raw_df.empty:
             print("  ⚠ No data in raw_zrsd002")
             return
+        
+        # Clear existing fact_billing rows to avoid unique constraint collisions on reruns
+        deleted_billing = self.db.query(FactBilling).delete(synchronize_session=False)
+        if deleted_billing:
+            print(f"  🔄 Cleared {deleted_billing} existing billing rows")
         
         count = 0
         for _, row in raw_df.iterrows():
@@ -763,6 +782,7 @@ class Transformer:
         
         # Save to dim_uom_conversion
         count = 0
+        updated = 0
         for _, row in conversion_df.iterrows():
             existing = self.db.query(DimUomConversion).filter_by(
                 material_code=row['material']
@@ -773,6 +793,7 @@ class Transformer:
                 existing.sample_count = row['sample_count']
                 existing.variance_pct = row.get('variance_pct')
                 existing.last_updated = datetime.utcnow()
+                updated += 1
             else:
                 dim = DimUomConversion(
                     material_code=row['material'],
@@ -786,7 +807,7 @@ class Transformer:
                 count += 1
         
         self.db.commit()
-        print(f"  ✓ Built UOM conversion for {count} materials")
+        print(f"Built UOM conversion table: {count + updated} materials (new: {count}, updated: {updated})")
     
     def transform_all(self):
         """Run all transformations"""
@@ -827,7 +848,15 @@ class Transformer:
         """Calculate Lead Time Metrics (Purchase + Production + Storage)"""
         print("Calculating Lead Time metrics...")
         count = 0 
+
+        # Remove previous lead time facts to avoid unique constraint collisions on reruns
+        deleted_lt = self.db.query(FactLeadTime).delete(synchronize_session=False)
+        if deleted_lt:
+            print(f"  🔄 Cleared {deleted_lt} existing lead time rows")
         
+        # Track seen (order_number, batch) pairs to avoid duplicate inserts in one run
+        seen_pairs = set()
+
         # ---------------------------------------------------------
         # 0. PREPARE OUTBOUND DATA (For Storage Time)
         # ---------------------------------------------------------
@@ -995,10 +1024,18 @@ class Transformer:
                 if not channel_code and material_code and material_code in material_channel_map:
                     channel_code = material_channel_map[material_code]
                 
+                order_number = safe_convert(row.get('order_number'))
+
+                # Skip duplicates within the same run (unique key: order_number + batch)
+                if order_number and batch and (order_number, batch) in seen_pairs:
+                    continue
+                if order_number and batch:
+                    seen_pairs.add((order_number, batch))
+
                 fact = FactLeadTime(
                     material_code=safe_convert(row.get('material_code')),
                     plant_code=safe_convert(row.get('plant_code')),
-                    order_number=safe_convert(row.get('order_number')),
+                    order_number=order_number,
                     order_type=order_type,
                     batch=batch,
                     channel_code=channel_code,
@@ -1065,10 +1102,18 @@ class Transformer:
                     if issue_date >= gr_date:
                         storage_days = (issue_date - gr_date).days
                 
+                order_number = safe_convert(row.get('po_number'))
+
+                # Skip duplicates within the same run (unique key: order_number + batch)
+                if order_number and batch and (order_number, batch) in seen_pairs:
+                    continue
+                if order_number and batch:
+                    seen_pairs.add((order_number, batch))
+
                 fact = FactLeadTime(
                     material_code=safe_convert(row.get('col_4_material')),
                     plant_code=safe_convert(row.get('col_2_plant')),
-                    order_number=safe_convert(row.get('po_number')),
+                    order_number=order_number,
                     order_type='PURCHASE', # External
                     batch=batch, # Capture Batch!
                     start_date=po_date,

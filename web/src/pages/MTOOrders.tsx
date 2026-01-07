@@ -11,10 +11,12 @@ import api from '../services/api';
 interface MTOKPIs { total_orders: number; completed_orders: number; partial_orders: number; pending_orders: number; completion_rate: number; }
 interface MTOOrder { plant_code: string; sales_order: string; order_number: string; material_code: string; material_description: string; order_qty: number; delivered_qty: number; uom: string; status: string; release_date: string | null; actual_finish_date: string | null; }
 
+import { getFirstDayOfMonth, getToday } from '../utils/dateHelpers';
+
 const MTOOrders = () => {
-  const today = new Date().toISOString().split('T')[0];
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-  const [startDate, setStartDate] = useState(thirtyDaysAgo);
+  const today = getToday();
+  const firstDayOfMonth = getFirstDayOfMonth();
+  const [startDate, setStartDate] = useState(firstDayOfMonth);
   const [endDate, setEndDate] = useState(today);
 
   const { data: kpis, isLoading: kpisLoading } = useQuery({ queryKey: ['mto-kpis', startDate, endDate], queryFn: async () => (await api.get<MTOKPIs>('/api/v1/dashboards/mto-orders/summary', { params: { start_date: startDate, end_date: endDate } })).data });

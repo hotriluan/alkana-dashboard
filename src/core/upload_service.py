@@ -70,7 +70,7 @@ def detect_file_type(file_path: Path) -> str:
             return 'ZRSD002'
         elif 'delivery' in headers_str and 'sold-to party' in headers_str:
             return 'ZRSD004'
-        elif 'material' in headers_str and 'distribution channel' in headers_str and ('ph1' in headers_str or 'ph2' in headers_str):
+        elif ('material' in headers_str or 'material code' in headers_str) and 'distribution channel' in headers_str and ('ph 1' in headers_str or 'ph 2' in headers_str or 'ph1' in headers_str or 'ph2' in headers_str):
             return 'ZRSD006'
         elif 'customer name' in headers_str and 'total target' in headers_str and 'total realization' in headers_str:
             return 'ZRFI005'

@@ -35,10 +35,12 @@ interface PlantYield {
   total_scrap: number;
 }
 
+import { getFirstDayOfMonth, getToday } from '../utils/dateHelpers';
+
 const ProductionYield = () => {
-  const today = new Date().toISOString().split('T')[0];
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-  const [startDate, setStartDate] = useState(thirtyDaysAgo);
+  const today = getToday();
+  const firstDayOfMonth = getFirstDayOfMonth();
+  const [startDate, setStartDate] = useState(firstDayOfMonth);
   const [endDate, setEndDate] = useState(today);
 
   const { data: kpis, isLoading: kpisLoading } = useQuery({

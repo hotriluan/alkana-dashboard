@@ -87,10 +87,12 @@ interface BatchTrace {
 
 
 
+import { getFirstDayOfMonth, getToday } from '../utils/dateHelpers';
+
 const LeadTimeDashboard = () => {
-    const today = new Date().toISOString().split('T')[0];
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    const [startDate, setStartDate] = useState(thirtyDaysAgo);
+    const today = getToday();
+    const firstDayOfMonth = getFirstDayOfMonth();
+    const [startDate, setStartDate] = useState(firstDayOfMonth);
     const [endDate, setEndDate] = useState(today);
 
     const handleDateChange = (newStartDate: string, newEndDate: string) => {

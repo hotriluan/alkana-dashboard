@@ -7,15 +7,16 @@ import { KPICard } from '../components/common/KPICard';
 import { DataTable } from '../components/common/DataTable';
 import { DateRangePicker } from '../components/common/DateRangePicker';
 import api from '../services/api';
+import { getFirstDayOfMonth, getToday } from '../utils/dateHelpers';
 
 interface InventoryKPI { total_items: number; total_materials: number; total_plants: number; total_qty_kg: number; }
 interface InventoryItem { plant_code: string; material_code: string; material_description: string; current_qty: number; current_qty_kg: number; uom: string; last_movement: string; }
 interface PlantInventory { plant_code: string; item_count: number; total_kg: number; }
 
-export const Inventory = () => {
-  const today = new Date().toISOString().split('T')[0];
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-  const [startDate, setStartDate] = useState(thirtyDaysAgo);
+const Inventory = () => {
+  const today = getToday();
+  const firstDayOfMonth = getFirstDayOfMonth();
+  const [startDate, setStartDate] = useState(firstDayOfMonth);
   const [endDate, setEndDate] = useState(today);
 
   const { data: kpis, isLoading: kpisLoading } = useQuery({ queryKey: ['inventory-kpis', startDate, endDate], queryFn: async () => (await api.get<InventoryKPI>('/api/v1/dashboards/inventory/summary', { params: { start_date: startDate, end_date: endDate } })).data });

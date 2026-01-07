@@ -116,7 +116,7 @@ def detect_zrmm024_header_row(file_path: Path, max_scan_rows: int = 10) -> Optio
 class BaseLoader:
     """Base class for Excel loaders"""
     
-    def __init__(self, db: Session, mode: str = 'insert', file_path: Optional[Path] = None):
+    def __init__(self, db: Session, mode: str = 'upsert', file_path: Optional[Path] = None):
         """
         Initialize loader
         
@@ -261,7 +261,7 @@ class CooispiLoader(BaseLoader):
                     'source_file': str(file_path.name),
                     'source_row': idx + 2,  # +2 for header and 0-index
                     'raw_data': raw_data,
-                    'row_hash': compute_row_hash(raw_data)
+                    'row_hash': compute_row_hash({**raw_data, 'source_file': str(file_path.name)})
                 }
                 
                 if self.mode == 'upsert':
@@ -343,7 +343,7 @@ class Mb51Loader(BaseLoader):
                     'source_file': str(file_path.name),
                     'source_row': idx + 2,
                     'raw_data': raw_data,
-                    'row_hash': compute_row_hash(raw_data)
+                    'row_hash': compute_row_hash({**raw_data, 'source_file': str(file_path.name)})
                 }
                 
                 if self.mode == 'upsert':
@@ -439,7 +439,7 @@ class Zrmm024Loader(BaseLoader):
                     'source_file': str(file_path.name),
                     'source_row': idx + data_start_row,
                     'raw_data': raw_data,
-                    'row_hash': compute_row_hash(raw_data)
+                    'row_hash': compute_row_hash({**raw_data, 'source_file': str(file_path.name)})
                 }
                 
                 if self.mode == 'upsert':
@@ -484,14 +484,14 @@ class Zrsd002Loader(BaseLoader):
                     'billing_date': safe_datetime(row.get('Billing Date')),
                     'billing_document': billing_document,
                     'billing_item': billing_item,
-                    'sloc': safe_str(row.get('SLoc')),
+                    'sloc': safe_str(row.get('Sloc')),
                     'sales_office': safe_str(row.get('Sales Office')),
                     'dist_channel': safe_str(row.get('Dist Channel')),
-                    'customer_name': safe_str(row.get('Customer Name')),
+                    'customer_name': safe_str(row.get('Name of Bill to')),
                     'cust_group': safe_str(row.get('Cust. Group')),
                     'salesman_name': safe_str(row.get('Salesman Name')),
                     'material': safe_str(row.get('Material')),
-                    'material_desc': safe_str(row.get('Material Description')),
+                    'material_desc': safe_str(row.get('Description')),
                     'prod_hierarchy': safe_str(row.get('Prod. Hierarchy')),
                     'billing_qty': safe_float(row.get('Billing Qty')),
                     'sales_unit': safe_str(row.get('Sales Unit')),
@@ -505,15 +505,15 @@ class Zrsd002Loader(BaseLoader):
                     'total': safe_float(row.get('Total')),
                     'net_weight': safe_float(row.get('Net Weight')),
                     'weight_unit': safe_str(row.get('Weight Unit')),
-                    'volume': safe_float(row.get('Volume')),
-                    'volume_unit': safe_str(row.get('Volume Unit')),
+                    'volume': safe_float(row.get('Volum')),
+                    'volume_unit': safe_str(row.get('Volum Unit')),
                     'so_number': safe_str(row.get('SO No.')),
-                    'so_date': safe_datetime(row.get('SO Date')),
-                    'doc_reference_od': safe_str(row.get('Doc Reference (OD)')),
+                    'so_date': safe_datetime(row.get('SO Date.')),
+                    'doc_reference_od': safe_str(row.get('Doc Reference (OD).')),
                     'source_file': str(file_path.name),
                     'source_row': idx + 2,
                     'raw_data': raw_data,
-                    'row_hash': compute_row_hash(raw_data)
+                    'row_hash': compute_row_hash(raw_data)  # Don't include source_file - billing_doc+item is unique
                 }
                 
                 if self.mode == 'upsert':
@@ -598,7 +598,7 @@ class Zrsd004Loader(BaseLoader):
                     'source_file': str(file_path.name),
                     'source_row': idx + 2,
                     'raw_data': raw_data,
-                    'row_hash': compute_row_hash(raw_data)
+                    'row_hash': compute_row_hash({**raw_data, 'source_file': str(file_path.name)})
                 }
                 
                 if self.mode == 'upsert':
@@ -636,32 +636,33 @@ class Zrsd006Loader(BaseLoader):
             try:
                 raw_data = row_to_json(row)
                 
-                material = safe_str(row.get('Material'))
+                # Use actual column names from file
+                material = safe_str(row.get('Material Code'))
                 dist_channel = safe_str(row.get('Distribution Channel'))
                 
                 record_data = {
                     'material': material,
-                    'material_desc': safe_str(row.get('Material Description')),
+                    'material_desc': safe_str(row.get('Mat. Description')),
                     'dist_channel': dist_channel,
-                    'uom': safe_str(row.get('UoM')),
-                    'ph1': safe_str(row.get('PH1')),
-                    'ph1_desc': safe_str(row.get('PH1 Desc')),
-                    'ph2': safe_str(row.get('PH2')),
-                    'ph2_desc': safe_str(row.get('PH2 Desc')),
-                    'ph3': safe_str(row.get('PH3')),
-                    'ph3_desc': safe_str(row.get('PH3 Desc')),
-                    'ph4': safe_str(row.get('PH4')),
-                    'ph4_desc': safe_str(row.get('PH4 Desc')),
-                    'ph5': safe_str(row.get('PH5')),
-                    'ph5_desc': safe_str(row.get('PH5 Desc')),
-                    'ph6': safe_str(row.get('PH6')),
-                    'ph6_desc': safe_str(row.get('PH6 Desc')),
-                    'ph7': safe_str(row.get('PH7')),
-                    'ph7_desc': safe_str(row.get('PH7 Desc')),
+                    'uom': safe_str(row.get('UOM')),
+                    'ph1': safe_str(row.get('PH 1')),
+                    'ph1_desc': safe_str(row.get('Division')),
+                    'ph2': safe_str(row.get('PH 2')),
+                    'ph2_desc': safe_str(row.get('Business')),
+                    'ph3': safe_str(row.get('PH 3')),
+                    'ph3_desc': safe_str(row.get('Sub Business')),
+                    'ph4': safe_str(row.get('PH 4')),
+                    'ph4_desc': safe_str(row.get('Product Group')),
+                    'ph5': safe_str(row.get('PH 5')),
+                    'ph5_desc': safe_str(row.get('Product Group 1')),
+                    'ph6': safe_str(row.get('PH 6')),
+                    'ph6_desc': safe_str(row.get('Product Group 2')),
+                    'ph7': safe_str(row.get('PH 7')),
+                    'ph7_desc': safe_str(row.get('Series')),
                     'source_file': str(file_path.name),
                     'source_row': idx + 2,
                     'raw_data': raw_data,
-                    'row_hash': compute_row_hash(raw_data)
+                    'row_hash': compute_row_hash({**raw_data, 'source_file': str(file_path.name)})
                 }
                 
                 if self.mode == 'upsert':
@@ -814,7 +815,7 @@ class TargetLoader(BaseLoader):
                     'source_file': str(file_path.name),
                     'source_row': idx + 2,
                     'raw_data': raw_data,
-                    'row_hash': compute_row_hash(raw_data)
+                    'row_hash': compute_row_hash({**raw_data, 'source_file': str(file_path.name)})
                 }
                 
                 if self.mode == 'upsert':
