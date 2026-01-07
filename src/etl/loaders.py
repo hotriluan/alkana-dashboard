@@ -746,7 +746,7 @@ class Zrfi005Loader(BaseLoader):
                     'source_file': str(file_path.name),
                     'source_row': idx + 2,
                     'raw_data': raw_data,
-                    'row_hash': compute_row_hash(raw_data)
+                    'row_hash': compute_row_hash({**raw_data, 'snapshot_date': snapshot_date.isoformat() if snapshot_date else None})
                 }
                 
                 if self.mode == 'upsert':
