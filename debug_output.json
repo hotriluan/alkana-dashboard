@@ -1,0 +1,12 @@
+{
+  "found": true,
+  "batch": "25L2460910",
+  "order_number": "10000107734",
+  "sales_order": "210033818",
+  "mrp_controller": "P01",
+  "is_mto": true,
+  "release_date": "2025-12-01",
+  "actual_finish_date": "2025-12-02",
+  "has_finish_date": true,
+  "should_be_processed": true
+}

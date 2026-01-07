@@ -1,0 +1,106 @@
+====================================================================================================
+COMPREHENSIVE ANALYSIS: BATCH 25L2492010 - STUCK HOURS CALCULATION
+====================================================================================================
+
+1. COOISPI (PRODUCTION ORDER DATA)
+----------------------------------------------------------------------------------------------------
+  Plant: 1201
+  Sales Order: 210033909.0
+  Order: 10000108058
+  Order Type: 201O
+  Material Number: 100002758
+  Basic start date: 2025-12-10T00:00:00.000000000
+  Release date (actual): 2025-12-05T00:00:00.000000000
+  Actual finish date: 2025-12-18T00:00:00.000000000
+  Material description: LACQUER PUL-51330 SR KD 10 MY-20LP
+  BOM alternative: 10
+  Batch: 25L2492010
+  System Status: TECO MSPT PRT  PCNF DLV  PRC  BASC BCRQ*
+  MRP controller: P01
+  Order quantity (GMEIN): 25.0
+  Delivered quantity (GMEIN): 25.0
+  Unit of measure (=GMEIN): PC
+  Created on: 2025-12-05T00:00:00.000000000
+  Basic finish date: 2025-12-10T00:00:00.000000000
+
+  Actual finish date (parsed): 2025-12-18 00:00:00
+
+2. MB51 (MATERIAL MOVEMENTS)
+----------------------------------------------------------------------------------------------------
+  Found 8 movement records:
+
+  Movement 10361:
+    Posting Date: 2025-12-18 00:00:00
+    Movement Type: 101
+    Plant: 1201
+    Storage Location: 201.0
+    Material: 100002758
+    Quantity: N/A
+
+  Movement 10362:
+    Posting Date: 2025-12-18 00:00:00
+    Movement Type: 351
+    Plant: 1201
+    Storage Location: 201.0
+    Material: 100002758
+    Quantity: N/A
+
+  Movement 10364:
+    Posting Date: 2025-12-18 00:00:00
+    Movement Type: 101
+    Plant: 1401
+    Storage Location: 101.0
+    Material: 100002758
+    Quantity: N/A
+
+  Movement 11461:
+    Posting Date: 2025-12-22 00:00:00
+    Movement Type: 602
+    Plant: 1401
+    Storage Location: 101.0
+    Material: 100002758
+    Quantity: N/A
+
+  Movement 11777:
+    Posting Date: 2025-12-22 00:00:00
+    Movement Type: 601
+    Plant: 1401
+    Storage Location: 101.0
+    Material: 100002758
+    Quantity: N/A
+
+  Movement 11815:
+    Posting Date: 2025-12-23 00:00:00
+    Movement Type: 601
+    Plant: 1401
+    Storage Location: 101.0
+    Material: 100002758
+    Quantity: N/A
+
+  Movement 11896:
+    Posting Date: 2025-12-23 00:00:00
+    Movement Type: 601
+    Plant: 1401
+    Storage Location: 101.0
+    Material: 100002758
+    Quantity: N/A
+
+  Movement 11958:
+    Posting Date: 2025-12-23 00:00:00
+    Movement Type: 602
+    Plant: 1401
+    Storage Location: 101.0
+    Material: 100002758
+    Quantity: N/A
+
+
+3. MVT 101 ANALYSIS (Goods Receipt at DC)
+----------------------------------------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\dev\alkana-dashboard\analyze_stuck_batch_25L2492010.py", line 70, in <module>
+    print("  \u2717 No MVT 101 at Plant 1401!")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2717' in position 2: character maps to <undefined>

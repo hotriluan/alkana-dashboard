@@ -1,0 +1,1122 @@
+# Next Steps Implementation Plan
+
+**Date:** December 25, 2025  
+**Based On:** IMPLEMENTATION_REVIEW.md  
+**Priority:** Complete Phases 4 & 5 following CLAUDE.md workflows
+
+---
+
+## 🎯 Mission Statement
+
+Complete remaining **48 hours of development work** with **STRICT CLAUDE.md compliance**. Comprehensive gap analysis reveals **22 missing features** from original IMPLEMENTATION_PLAN.md, with **6 critical gaps** requiring immediate attention.
+
+**🔴 CRITICAL DISCOVERIES (from COMPREHENSIVE_GAP_ANALYSIS.md):**
+1. **Lead-time Calculation** (Section 11) - COMPLETELY MISSING - 11 hours
+2. **Semester Target Tracking** (Section 10) - NOT IMPLEMENTED - 6 hours
+3. **Stack Netting Integration** - Module exists but NOT USED in views - 3 hours
+4. **UOM Conversion Application** - Module exists but NOT FULLY APPLIED - 2 hours
+5. **Alert System Activation** - Module exists but NOT RUNNING - 4 hours
+6. **Production Chain Visualization** - Data exists but NO DASHBOARD - 4 hours
+
+**Total Implementation Gap:** 48 hours (18 critical + 12 important + 18 nice-to-have)
+
+**Reference:** See [COMPREHENSIVE_GAP_ANALYSIS.md](COMPREHENSIVE_GAP_ANALYSIS.md) for full 82-item comparison
+
+---
+
+## 📋 Week 1-2: Critical Missing Features (18 hours) 🔴 HIGHEST PRIORITY
+
+### Phase 6.1: Lead Time Analysis (11 hours) - URGENT
+
+**Duration:** 11 hours  
+**Status:** 🔴 **NOT STARTED** - Section 11 completely missing  
+**Primary Skills:** `backend-development`, `databases`, `ui-ux-pro-max`  
+**Reference:** IMPLEMENTATION_PLAN.md Section 11 (Lines 1223-1425, 203 lines of spec)  
+**Detail:** [LEADTIME_MISSING_FEATURE.md](LEADTIME_MISSING_FEATURE.md)  
+**Gap Analysis:** [COMPREHENSIVE_GAP_ANALYSIS.md](COMPREHENSIVE_GAP_ANALYSIS.md) Section 11
+
+#### Why This Is Critical
+
+**User Question:** "lead time của MTO và MTS. Sao tới giờ tôi vẫn chưa thấy phần nào làm yêu cầu này?"
+
+**Original Requirement (IMPLEMENTATION_PLAN.md):**
+```
+11. Lead-time Calculation
+
+11.1 MTS Lead-time (Make-to-Stock) - 3 STAGES
+- Production Time: Release → Finish (days)
+- Transit Time: Finish → Receipt (MVT 101)
+- Storage Time: Receipt → Issue (MVT 601 with stack netting)
+
+11.2 MTO Lead-time (Make-to-Order) - 5 STAGES
+- Preparation Time: PO Date → Release (days)
+- Production Time: Release → Finish
+- Transit Time: Finish → Receipt (MVT 101)
+- Storage Time: Receipt → Issue (MVT 601)
+- Delivery Time: Issue → Actual GI (from ZRSD004)
+
+Total: Sum of all components
+Status: ON_TIME / DELAYED / STUCK
+```
+
+**Current Status:** ❌ ZERO implementation
+- ❌ Database columns do NOT exist (7 missing columns)
+- ❌ Calculator module does NOT exist
+- ❌ API endpoints do NOT exist
+- ❌ Dashboard page does NOT exist
+
+#### Implementation Sub-Phases
+
+**6.1.1 Database Schema (2 hours)**
+- [ ] Add 7 columns to fact_production:
+  - `prep_time_days INT` (MTO only)
+  - `production_time_days INT`
+  - `transit_time_days INT`
+  - `storage_time_days INT`
+  - `delivery_time_days INT` (MTO only)
+  - `total_leadtime_days INT`
+  - `leadtime_status VARCHAR(20)` (ON_TIME/DELAYED/STUCK)
+- [ ] Create database view: `view_leadtime_analysis`
+- [ ] Write migration script
+- [ ] Test schema changes
+
+**6.1.2 Calculation Engine (4 hours)**
+- [ ] Create `src/core/leadtime_calculator.py` (450 lines)
+- [ ] Implement `LeadTimeCalculator` class
+- [ ] Implement `calculate_mts_leadtime()` (3 components)
+- [ ] Implement `calculate_mto_leadtime()` (5 components)
+- [ ] Integrate stack netting for MVT 601
+- [ ] Link to ZRMM024 (purchase orders) for prep time
+- [ ] Link to ZRSD004 (deliveries) for delivery time
+- [ ] Add to ETL transform pipeline
+- [ ] Unit tests for edge cases
+
+**6.1.3 Backend API (2 hours)**
+- [ ] Create `src/api/routers/leadtime.py` router
+- [ ] Endpoint: `GET /api/v1/leadtime/summary` (KPIs)
+- [ ] Endpoint: `GET /api/v1/leadtime/breakdown` (MTO vs MTS)
+- [ ] Endpoint: `GET /api/v1/leadtime/orders` (detail table)
+- [ ] Pydantic response models
+- [ ] Date range filtering
+- [ ] Error handling
+
+**6.1.4 Frontend Dashboard (3 hours)**
+- [ ] Create `web/src/pages/LeadTimeDashboard.tsx` (200+ lines)
+- [ ] 4 KPI cards: Avg MTO, Avg MTS, On-Time %, Delayed Count
+- [ ] Stacked bar chart: Time breakdown (5 stages for MTO, 3 for MTS)
+- [ ] Trend line chart: Lead-time over time
+- [ ] Detail table: Order-level with 7 time columns
+- [ ] Status badges (ON_TIME=green, DELAYED=yellow, STUCK=red)
+- [ ] Date range picker integration
+- [ ] Add to sidebar navigation
+
+**Success Criteria:**
+- ✅ MTO orders show 5-stage breakdown
+- ✅ MTS orders show 3-stage breakdown
+- ✅ Average lead-time KPIs calculated correctly
+- ✅ Stack netting applied for storage time (MVT 601↔602)
+- ✅ User can filter by date range and order status
+
+---
+
+### Phase 6.2: Alert System Activation (4 hours)
+
+**Status:** 🟡 **MODULE EXISTS BUT NOT ACTIVE**  
+**Primary Skills:** `backend-development`, `ui-ux-pro-max`  
+**Reference:** IMPLEMENTATION_PLAN.md Section 12 (Lines 1427-1557)  
+**Gap Analysis:** [COMPREHENSIVE_GAP_ANALYSIS.md](COMPREHENSIVE_GAP_ANALYSIS.md) Section 12
+
+#### Current State
+- ✅ `src/core/alerts.py` exists with 2 detectors
+- ✅ `fact_alerts` table exists
+- ❌ Alert detection NOT running
+- ❌ No API endpoints
+- ❌ No dashboard page
+
+#### Implementation Tasks
+
+**6.2.1 ETL Integration (1 hour)**
+- [ ] Add alert detection to `src/etl/transform.py`
+- [ ] Call `detect_stuck_in_transit(mb51_df, threshold_hours=48)`
+- [ ] Call `detect_low_yield(fact_production_chain_df, threshold_pct=85)`
+- [ ] Insert alerts into `fact_alerts` table
+- [ ] Mark previous alerts as RESOLVED
+
+**6.2.2 Backend API (1.5 hours)**
+- [ ] Create `src/api/routers/alerts.py` router
+- [ ] Endpoint: `GET /api/v1/alerts/summary` (counts by severity)
+- [ ] Endpoint: `GET /api/v1/alerts/stuck-inventory` (48h threshold)
+- [ ] Endpoint: `GET /api/v1/alerts/low-yield` (< 85%)
+- [ ] Endpoint: `POST /api/v1/alerts/{id}/resolve` (mark resolved)
+- [ ] Filter by status (ACTIVE/RESOLVED)
+
+**6.2.3 Frontend Dashboard (1.5 hours)**
+- [ ] Create `web/src/pages/AlertMonitor.tsx`
+- [ ] 3 KPI cards: Critical, High, Medium severity counts
+- [ ] Alert table with severity badges
+- [ ] Filter by alert type (STUCK_IN_TRANSIT / LOW_YIELD)
+- [ ] Resolve button per alert
+- [ ] Add to Executive Dashboard (alert summary cards)
+
+**Success Criteria:**
+- ✅ Alerts auto-detected every ETL run
+- ✅ Stuck inventory (>48h) flagged
+- ✅ Low yield (<85%) flagged
+- ✅ User can view and resolve alerts
+
+---
+
+### Phase 6.3: Stack Netting Integration (3 hours)
+
+**Status:** 🟡 **MODULE EXISTS BUT NOT USED IN VIEWS**  
+**Primary Skills:** `backend-development`, `databases`  
+**Reference:** IMPLEMENTATION_PLAN.md Section 7.3 (Lines 865-950)  
+**Gap Analysis:** [COMPREHENSIVE_GAP_ANALYSIS.md](COMPREHENSIVE_GAP_ANALYSIS.md) Section 7
+
+#### Problem
+- ✅ `StackNettingEngine` class exists in `src/core/netting.py`
+- ❌ `fact_inventory.is_netted` and `net_qty` columns NOT POPULATED
+- ❌ Views use `SUM(qty)` instead of `SUM(net_qty)` → WRONG inventory quantities
+
+#### Implementation Tasks
+
+**6.3.1 ETL Application (1.5 hours)**
+- [ ] In `src/etl/transform.py`, apply stack netting:
+```python
+from src.core.netting import StackNettingEngine
+
+# After loading fact_inventory
+netting_engine = StackNettingEngine(mb51_df)
+for batch, plant in unique_combinations:
+    remaining = netting_engine.apply_netting(batch, plant, 601, 602)
+    # Mark remaining as is_netted=TRUE
+    # Calculate net_qty
+```
+- [ ] Update all rows with `is_netted` flag
+- [ ] Populate `net_qty` column
+
+**6.3.2 View Updates (1 hour)**
+- [ ] Update `view_inventory_current`:
+```sql
+-- OLD (WRONG):
+SUM(qty) as current_qty
+
+-- NEW (CORRECT):
+SUM(net_qty) as current_qty
+WHERE is_netted = TRUE
+```
+- [ ] Update all inventory-related views
+
+**6.3.3 API Updates (0.5 hours)**
+- [ ] Update `/api/inventory/*` endpoints to use `net_qty`
+- [ ] Test with reversed MVT 602 data
+
+**Success Criteria:**
+- ✅ Inventory quantities correct after MVT 602 reversals
+- ✅ `is_netted=TRUE` for valid transactions
+- ✅ `is_netted=FALSE` for cancelled transactions
+
+---
+
+**Total Week 1-2: 18 hours (Critical Features)**
+
+---
+
+## 📋 Week 3-4: Important Features (12 hours) 🟡 MEDIUM PRIORITY
+
+### Phase 7.1: Semester Target Tracking (6 hours)
+
+**Status:** ❌ **NOT IMPLEMENTED**  
+**Primary Skills:** `backend-development`, `ui-ux-pro-max`  
+**Reference:** IMPLEMENTATION_PLAN.md Section 10 (Lines 1172-1222)  
+**Gap Analysis:** [COMPREHENSIVE_GAP_ANALYSIS.md](COMPREHENSIVE_GAP_ANALYSIS.md) Section 10
+
+#### Original Requirement
+
+**Semester Definition:**
+- Semester 1: January 1 - June 30
+- Semester 2: July 1 - December 31
+
+**Target vs Actual Comparison:**
+- Compare by salesman + semester
+- Calculate achievement % (Actual / Target × 100)
+- Status flags: On Track (≥90%), Warning (70-90%), Behind (<70%)
+
+#### Current State
+- ✅ `fact_target` table has semester/year columns
+- ✅ `fact_billing` has semester/year columns
+- ❌ Columns NOT POPULATED (NULL values)
+- ❌ No comparison logic
+- ❌ No dashboard
+
+#### Implementation Tasks
+
+**7.1.1 Backend Logic (3 hours)**
+- [ ] Implement `get_semester(date)` in `business_logic.py`:
+```python
+def get_semester(date):
+    """Map date to semester 1 or 2"""
+    month = date.month
+    year = date.year
+    semester = 1 if month <= 6 else 2
+    return {'year': year, 'semester': semester, 
+            'period_start': ..., 'period_end': ...}
+```
+- [ ] Implement `calculate_target_achievement(billing_df, target_df)`:
+```python
+def calculate_target_achievement(billing_df, target_df):
+    """
+    Returns DataFrame with:
+    - Salesman Name, Year, Semester
+    - Target Value, Actual Value
+    - Achievement %, Variance
+    - Status (On Track / Warning / Behind)
+    """
+```
+- [ ] Update ETL to populate semester/year on insert
+- [ ] Create API endpoint: `GET /api/v1/sales/target-vs-actual`
+
+**7.1.2 Frontend Dashboard (3 hours)**
+- [ ] Create `web/src/pages/SalesTargetComparison.tsx`
+- [ ] 4 KPI cards: Total Target, Total Actual, Achievement %, Gap
+- [ ] Achievement by Salesman bar chart (grouped by semester)
+- [ ] Target vs Actual trend line chart (monthly breakdown)
+- [ ] Salesman comparison table with status badges
+- [ ] Semester filter (Sem 1 / Sem 2 / Both)
+
+**Success Criteria:**
+- ✅ Semester auto-calculated from billing date
+- ✅ Achievement % correct for each salesman
+- ✅ Status badges show correctly
+- ✅ User can compare Semester 1 vs Semester 2
+
+---
+
+### Phase 7.2: UOM Conversion Full Application (2 hours)
+
+**Status:** 🟡 **MODULE EXISTS BUT NOT FULLY APPLIED**  
+**Primary Skills:** `backend-development`  
+**Reference:** IMPLEMENTATION_PLAN.md Section 8.2 (Lines 1014-1070)  
+**Gap Analysis:** [COMPREHENSIVE_GAP_ANALYSIS.md](COMPREHENSIVE_GAP_ANALYSIS.md) Section 8
+
+#### Problem
+- ✅ `UOMConverter` class exists in `src/core/uom_converter.py`
+- ✅ `dim_uom_conversion` table populated
+- ❌ `*_qty_kg` columns in fact tables are NULL
+- ❌ Cannot compare P01 (PC) with P02/P03 (KG) accurately
+
+#### Implementation Tasks
+
+**7.2.1 ETL Application (1.5 hours)**
+- [ ] In `src/etl/transform.py`, apply conversion to all fact tables:
+```python
+from src.core.uom_converter import UOMConverter
+
+uom_converter = UOMConverter(billing_df)
+uom_converter.build_conversion_table()
+
+# fact_production
+for row in fact_production_df:
+    if row['uom'] == 'PC':
+        kg_per_unit = uom_converter.get_conversion(row['material_code'])
+        row['order_qty_kg'] = row['order_qty'] * kg_per_unit
+    elif row['uom'] == 'KG':
+        row['order_qty_kg'] = row['order_qty']
+    # Same for delivered_qty_kg
+
+# fact_inventory
+# fact_billing
+# fact_delivery
+```
+- [ ] Populate all `*_qty_kg` columns
+
+**7.2.2 View Updates (0.5 hours)**
+- [ ] Update yield calculation views to use normalized KG
+- [ ] Update inventory calculations to use qty_kg where applicable
+
+**Success Criteria:**
+- ✅ All `*_qty_kg` columns populated (no NULLs for known materials)
+- ✅ Yield calculations accurate across P01/P02/P03
+- ✅ Variance < 5% matches original spec
+
+---
+
+### Phase 7.3: Production Chain Visualization (4 hours)
+
+**Status:** 🟡 **DATA EXISTS BUT NO DASHBOARD**  
+**Primary Skills:** `ui-ux-pro-max`, `frontend-development`  
+**Reference:** IMPLEMENTATION_PLAN.md Section 9.1 (Lines 1071-1137)  
+**Gap Analysis:** [COMPREHENSIVE_GAP_ANALYSIS.md](COMPREHENSIVE_GAP_ANALYSIS.md) Section 9
+
+#### Current State
+- ✅ `fact_production_chain` table populated (127 rows)
+- ✅ API endpoint `/api/yield/records` returns data
+- ❌ Dashboard only shows aggregate yield (89.1%)
+- ❌ No P03→P02→P01 flow visualization
+
+#### Implementation Tasks
+
+**7.3.1 Frontend Enhancement (4 hours)**
+- [ ] Update `web/src/pages/ProductionYield.tsx`
+- [ ] Add "Chain Analysis" tab (second tab)
+- [ ] Sankey diagram showing P03→P02→P01 flow:
+```tsx
+<ResponsiveSankey
+    data={{
+        nodes: [
+            {id: 'P03 Input: 100 KG'},
+            {id: 'P03 Output: 95 KG'},
+            {id: 'P02 Output: 90 KG'},
+            {id: 'P01 Output: 1800 PC (90 KG)'},
+            {id: 'P03 Loss: 5 KG'},
+            {id: 'P02 Loss: 5 KG'}
+        ],
+        links: [
+            {source: 'P03 Input', target: 'P03 Output', value: 95},
+            {source: 'P03 Input', target: 'P03 Loss', value: 5},
+            // ...
+        ]
+    }}
+/>
+```
+- [ ] Production chain detail table:
+  - Columns: P01 Batch, P02 Batch, P03 Batch, P03 Input, P02 Yield %, P01 Yield %, Total Yield %, Total Loss KG
+  - Color-coded yield % (>95% green, 85-95% yellow, <85% red)
+- [ ] Loss analysis breakdown chart (by stage)
+
+**Success Criteria:**
+- ✅ Sankey diagram shows complete P03→P02→P01 flow
+- ✅ User can trace specific batch through production chain
+- ✅ Loss analysis identifies bottleneck stages
+
+---
+
+**Total Week 3-4: 12 hours (Important Features)**
+
+---
+
+## 📋 Phase 4: Docker Deployment (Next Priority After Lead Time)
+
+**Duration:** 6 hours  
+**Status:** 🔴 60% Incomplete  
+**Primary Skill:** `devops`  
+**Workflow:** `.claude/workflows/primary-workflow.md` → Integration
+
+### Task 4.1: Frontend Dockerfile (1 hour)
+
+**File:** `web/Dockerfile`
+
+**CLAUDE.md Compliance:**
+- ✅ Real implementation (no mocking)
+- ✅ Multi-stage build (optimization)
+- ✅ KISS principle (simple, clear steps)
+
+**Implementation:**
+
+```dockerfile
+# web/Dockerfile
+# Multi-stage build for React frontend
+
+# Stage 1: Build
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json package-lock.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Build for production
+RUN npm run build
+
+# Stage 2: Production
+FROM nginx:alpine
+
+# Copy built files
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Copy nginx config
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Expose port
+EXPOSE 80
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s \
+  CMD wget --quiet --tries=1 --spider http://localhost/ || exit 1
+
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+**Verification:**
+```powershell
+cd web
+docker build -t alkana-web:latest .
+docker run -p 3000:80 alkana-web:latest
+# Test: http://localhost:3000
+```
+
+---
+
+### Task 4.2: Nginx Configuration (30 minutes)
+
+**File:** `web/nginx.conf`
+
+```nginx
+server {
+    listen 80;
+    server_name localhost;
+    
+    root /usr/share/nginx/html;
+    index index.html;
+    
+    # Enable gzip
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml;
+    
+    # SPA routing
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+    
+    # API proxy (if needed for CORS)
+    location /api {
+        proxy_pass http://backend:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    
+    # Cache static assets
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+}
+```
+
+---
+
+### Task 4.3: Docker Compose (2 hours)
+
+**File:** `docker-compose.yml`
+
+**CLAUDE.md Compliance:**
+- ✅ DRY: Shared environment variables
+- ✅ KISS: Simple 3-service stack
+- ✅ Security: No hardcoded credentials
+
+```yaml
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: alkana-db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-alkana_dashboard}
+      POSTGRES_USER: ${DB_USER:-alkana}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-alkana}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # FastAPI Backend
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: alkana-api
+    environment:
+      DATABASE_URL: postgresql://${DB_USER:-alkana}:${DB_PASSWORD:-changeme}@postgres:5432/${DB_NAME:-alkana_dashboard}
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-change-in-production}
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 480
+      CORS_ORIGINS: http://localhost:3000,http://localhost:5173
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+      - ./data:/app/data
+    command: uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # React Frontend
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: alkana-web
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    name: alkana_postgres_data
+
+networks:
+  default:
+    name: alkana_network
+```
+
+**Environment File:** `.env.example`
+
+```bash
+# Database
+DB_NAME=alkana_dashboard
+DB_USER=alkana
+DB_PASSWORD=your-secure-password-here
+
+# Backend
+SECRET_KEY=your-jwt-secret-key-minimum-32-chars
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=480
+
+# CORS (comma-separated)
+CORS_ORIGINS=http://localhost:3000,http://localhost:5173
+
+# Production overrides
+# DATABASE_URL=postgresql://user:pass@host:5432/db
+```
+
+**Verification:**
+```powershell
+# Create .env from example
+cp .env.example .env
+# Edit .env with secure values
+
+# Start all services
+docker-compose up -d
+
+# Check status
+docker-compose ps
+
+# View logs
+docker-compose logs -f
+
+# Test endpoints
+curl http://localhost:8000/api/health
+curl http://localhost:3000
+```
+
+---
+
+### Task 4.4: Production Docker Compose (1 hour)
+
+**File:** `docker-compose.prod.yml`
+
+```yaml
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: alkana-db-prod
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+    networks:
+      - alkana_net
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: alkana-api-prod
+    environment:
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+      SECRET_KEY: ${SECRET_KEY}
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 480
+    expose:
+      - "8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./data:/app/data
+    command: uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --workers 4
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: always
+    networks:
+      - alkana_net
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: alkana-web-prod
+    expose:
+      - "80"
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    restart: always
+    networks:
+      - alkana_net
+
+  nginx:
+    image: nginx:alpine
+    container_name: alkana-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - web
+      - backend
+    restart: always
+    networks:
+      - alkana_net
+
+volumes:
+  postgres_data:
+    name: alkana_postgres_prod_data
+
+networks:
+  alkana_net:
+    name: alkana_production_network
+```
+
+**Nginx Reverse Proxy:** `nginx/nginx.conf`
+
+```nginx
+events {
+    worker_connections 1024;
+}
+
+http {
+    upstream backend {
+        server backend:8000;
+    }
+
+    upstream frontend {
+        server web:80;
+    }
+
+    server {
+        listen 80;
+        server_name localhost;
+
+        # Redirect to HTTPS (uncomment in production)
+        # return 301 https://$server_name$request_uri;
+
+        # Frontend
+        location / {
+            proxy_pass http://frontend;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        # API
+        location /api {
+            proxy_pass http://backend;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+    }
+
+    # HTTPS (uncomment and configure in production)
+    # server {
+    #     listen 443 ssl http2;
+    #     server_name localhost;
+    #
+    #     ssl_certificate /etc/nginx/ssl/cert.pem;
+    #     ssl_certificate_key /etc/nginx/ssl/key.pem;
+    #
+    #     # Same locations as above
+    # }
+}
+```
+
+---
+
+### Task 4.5: Deployment Documentation (1 hour)
+
+**File:** `docs/DEPLOYMENT_GUIDE.md`
+
+(See template in phase-04-docker-deployment.md)
+
+**Skill:** `devops`  
+**Verification:** Delegate to `docs-manager` agent
+
+---
+
+## 📋 Phase 5: Testing & Documentation (Critical)
+
+**Duration:** 8 hours  
+**Status:** 🔴 70% Incomplete  
+**Skills:** `code-review`, `debugging`  
+**Workflow:** `.claude/workflows/primary-workflow.md` → Testing
+
+### **CRITICAL CLAUDE.md REQUIREMENT:**
+
+> "Delegate to `tester` agent to run tests and analyze the summary report."  
+> "Delegate to `code-reviewer` agent to review code."  
+> "Delegate to `docs-manager` agent to update docs in `./docs` directory."
+
+### Task 5.1: Backend Unit Tests (3 hours)
+
+**Skill:** `code-review`  
+**Workflow Step:** "Delegate to `tester` agent"
+
+**Files:** `tests/test_auth.py`, `tests/test_api_*.py`
+
+**Implementation Plan:**
+
+1. **Setup pytest configuration:**
+
+```python
+# tests/conftest.py
+import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from src.api.main import app
+from src.db.models import Base
+from src.api.deps import get_db
+
+# Test database
+SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
+engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+@pytest.fixture
+def db_session():
+    Base.metadata.create_all(bind=engine)
+    db = TestingSessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+    Base.metadata.drop_all(bind=engine)
+
+@pytest.fixture
+def client(db_session):
+    def override_get_db():
+        try:
+            yield db_session
+        finally:
+            pass
+    app.dependency_overrides[get_db] = override_get_db
+    return TestClient(app)
+
+@pytest.fixture
+def auth_headers(client):
+    # Create test user and return auth headers
+    response = client.post("/api/v1/auth/login", data={"username": "admin", "password": "admin123"})
+    token = response.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}
+```
+
+2. **Write tests:**
+
+```python
+# tests/test_auth.py
+def test_login_success(client):
+    response = client.post("/api/v1/auth/login", data={"username": "admin", "password": "admin123"})
+    assert response.status_code == 200
+    assert "access_token" in response.json()
+
+def test_login_invalid_credentials(client):
+    response = client.post("/api/v1/auth/login", data={"username": "wrong", "password": "wrong"})
+    assert response.status_code == 401
+
+# tests/test_api_executive.py
+def test_executive_summary(client, auth_headers):
+    response = client.get("/api/v1/dashboards/executive/summary", headers=auth_headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert "total_revenue" in data
+    assert data["total_revenue"] >= 0
+```
+
+**Delegation Command:**
+
+```
+/delegate to tester agent:
+Run pytest tests and provide coverage report.
+Fix any failing tests.
+Ensure 80%+ code coverage.
+```
+
+---
+
+### Task 5.2: Code Review (2 hours)
+
+**Skill:** `code-review`  
+**Workflow Step:** "Delegate to `code-reviewer` agent"
+
+**Delegation Command:**
+
+```
+/delegate to code-reviewer agent:
+Review all files in src/api/ and web/src/.
+Check for:
+1. Files > 200 lines (need refactoring)
+2. Security issues (SQL injection, XSS)
+3. Code duplication (DRY violations)
+4. Missing error handling
+5. Typing issues (TypeScript/Python)
+
+Provide report with file-by-file recommendations.
+```
+
+**Expected Output:**
+- List of files needing refactoring
+- Security vulnerabilities found
+- Code quality improvements
+- Action items prioritized
+
+---
+
+### Task 5.3: Documentation (3 hours)
+
+**Skill:** Built-in  
+**Workflow Step:** "Delegate to `docs-manager` agent"
+
+**Files to Create:**
+
+1. `docs/USER_GUIDE.md` - How to use the dashboard
+2. `docs/TECHNICAL_GUIDE.md` - Architecture and setup
+3. `docs/API_REFERENCE.md` - API endpoint documentation
+
+**Delegation Command:**
+
+```
+/delegate to docs-manager agent:
+Create comprehensive documentation:
+1. USER_GUIDE.md - Step-by-step user instructions
+2. TECHNICAL_GUIDE.md - Architecture, setup, troubleshooting
+3. API_REFERENCE.md - All endpoints with examples
+
+Follow documentation standards in .claude/workflows/documentation-management.md
+```
+
+---
+
+## 🎯 Execution Order
+
+### Day 1: Docker Deployment (6 hours)
+
+**Morning Session (3 hours):**
+1. ✅ Create `web/Dockerfile` (1 hour)
+2. ✅ Create `web/nginx.conf` (30 min)
+3. ✅ Create `docker-compose.yml` (1.5 hours)
+
+**Afternoon Session (3 hours):**
+4. ✅ Create `docker-compose.prod.yml` (1 hour)
+5. ✅ Create `nginx/nginx.conf` (1 hour)
+6. ✅ Test deployment (1 hour)
+
+**Deliverables:**
+- [ ] Frontend containerized
+- [ ] Full stack runs via docker-compose up
+- [ ] Production-ready setup documented
+
+**Skills Used:** `devops`
+
+---
+
+### Day 2: Testing & Quality (8 hours)
+
+**Morning Session (4 hours):**
+
+1. ✅ **Delegate to `tester` agent** (3 hours)
+   - Setup pytest
+   - Write unit tests
+   - Write integration tests
+   - Generate coverage report
+
+2. ✅ **Fix failing tests** (1 hour)
+   - Address test failures
+   - Ensure 80%+ coverage
+
+**Afternoon Session (4 hours):**
+
+3. ✅ **Delegate to `code-reviewer` agent** (2 hours)
+   - Review all code files
+   - Identify quality issues
+   - Provide recommendations
+
+4. ✅ **Delegate to `docs-manager` agent** (2 hours)
+   - Create USER_GUIDE.md
+   - Create TECHNICAL_GUIDE.md
+   - Update API_REFERENCE.md
+
+**Deliverables:**
+- [ ] All tests passing
+- [ ] 80%+ code coverage
+- [ ] Code review report
+- [ ] Complete documentation
+
+**Skills Used:** `code-review`, `debugging`
+
+---
+
+## ✅ Definition of Done
+
+### Phase 4 Complete When:
+
+- [ ] Frontend Dockerfile builds successfully
+- [ ] docker-compose.yml runs all 3 services
+- [ ] docker-compose.prod.yml ready for production
+- [ ] Nginx reverse proxy configured
+- [ ] Health checks working for all containers
+- [ ] DEPLOYMENT_GUIDE.md created
+- [ ] Tested on clean machine
+
+### Phase 5 Complete When:
+
+- [ ] Backend unit tests written (80%+ coverage)
+- [ ] API integration tests written
+- [ ] All tests passing
+- [ ] Code review completed by agent
+- [ ] Code quality issues fixed
+- [ ] USER_GUIDE.md created
+- [ ] TECHNICAL_GUIDE.md created
+- [ ] API_REFERENCE.md enhanced
+- [ ] No files > 200 lines (refactored)
+
+### Project Complete When:
+
+- [ ] All 5 phases 100% done
+- [ ] All CLAUDE.md workflows followed
+- [ ] All planned skills used
+- [ ] All agent delegations documented
+- [ ] Production deployment successful
+- [ ] User acceptance testing passed
+
+---
+
+## 🚨 CLAUDE.md Compliance Checklist
+
+Before marking project as complete, verify:
+
+### Workflow Compliance
+
+- [ ] Delegated to `planner` agent (documented in plan)
+- [ ] Used multiple `researcher` agents in parallel (Phase 3 ui-ux-pro-max searches)
+- [ ] Delegated to `tester` agent for testing
+- [ ] Delegated to `code-reviewer` agent after implementation
+- [ ] Delegated to `docs-manager` agent for documentation
+- [ ] Delegated to `debugger` agent if bugs found
+
+### Development Rules
+
+- [ ] All files use kebab-case naming
+- [ ] No files > 200 lines (or documented exception)
+- [ ] YAGNI, KISS, DRY principles followed
+- [ ] Skills catalog analyzed and activated
+- [ ] No mocking/simulation (real implementation)
+- [ ] Try/catch error handling everywhere
+- [ ] Linting run before commit
+- [ ] Tests run before push (all passing)
+- [ ] Clean commit messages (no AI references)
+
+### Skills Usage
+
+- [x] `databases` - PostgreSQL views, indexes
+- [x] `backend-development` - FastAPI, JWT, OWASP
+- [x] `ui-ux-pro-max` - Design system, formatting
+- [x] `frontend-development` - React, TypeScript
+- [ ] `devops` - Docker, Nginx (TODO Phase 4)
+- [ ] `code-review` - Agent delegation (TODO Phase 5)
+- [ ] `debugging` - If needed in Phase 5
+
+---
+
+## 📊 Progress Tracking
+
+Update this section after each task:
+
+| Task | Estimated | Actual | Status | Notes |
+|------|-----------|--------|--------|-------|
+| 4.1 Frontend Dockerfile | 1h | - | 🔴 TODO | - |
+| 4.2 Nginx Config | 0.5h | - | 🔴 TODO | - |
+| 4.3 Docker Compose | 2h | - | 🔴 TODO | - |
+| 4.4 Prod Compose | 1h | - | 🔴 TODO | - |
+| 4.5 Deployment Docs | 1h | - | 🔴 TODO | - |
+| 5.1 Unit Tests | 3h | - | 🔴 TODO | Delegate to tester |
+| 5.2 Code Review | 2h | - | 🔴 TODO | Delegate to reviewer |
+| 5.3 Documentation | 3h | - | 🔴 TODO | Delegate to docs-manager |
+
+**Legend:**
+- 🔴 TODO - Not started
+- 🟡 IN PROGRESS - Currently working
+- 🟢 DONE - Completed and verified
+- ⚠️ BLOCKED - Waiting on dependency
+
+---
+
+## 🎓 Lessons Learned
+
+(To be filled after completion)
+
+### What Worked Well:
+- TBD
+
+### What Could Be Improved:
+- TBD
+
+### CLAUDE.md Insights:
+- TBD
+
+---
+
+**End of Next Steps Plan**
+
+*This plan will be executed following `.claude/workflows/primary-workflow.md` and all CLAUDE.md requirements.*

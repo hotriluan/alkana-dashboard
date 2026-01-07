@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+/* Professional color palette - no emoji icons per ui-ux-pro-max */
+:root {
+  --color-primary: #2563eb;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-text: #0f172a;
+  --color-text-light: #64748b;
+}
+
+/* Custom component classes */
+.card {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  border: 1px solid rgb(226 232 240);
+  padding: 1.5rem;
+}
+
+.btn-primary {
+  padding: 0.5rem 1rem;
+  background-color: rgb(37 99 235);
+  color: white;
+  border-radius: 0.5rem;
+  transition-property: color, background-color, border-color;
+  transition-duration: 200ms;
+  font-weight: 500;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+.btn-primary:hover {
+  background-color: rgb(29 78 216);
+}
+
+.btn-primary:focus {
+  outline: 2px solid rgb(59 130 246);
+  outline-offset: 2px;
+}
+
+.btn-secondary {
+  padding: 0.5rem 1rem;
+  background-color: rgb(241 245 249);
+  color: rgb(51 65 85);
+  border-radius: 0.5rem;
+  transition-property: background-color;
+  transition-duration: 200ms;
+  font-weight: 500;
+}
+
+.btn-secondary:hover {
+  background-color: rgb(226 232 240);
+}
+
+.input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid rgb(203 213 225);
+  border-radius: 0.5rem;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  transition-property: color, background-color, border-color;
+  transition-duration: 200ms;
+}
+
+.input:focus {
+  outline: 2px solid rgb(59 130 246);
+  border-color: transparent;
+}

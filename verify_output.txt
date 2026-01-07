@@ -1,0 +1,19 @@
+VERIFICATION: raw_zrsd006 has distribution channel data
+======================================================================
+1. Data in raw_zrsd006:
+   Total rows: 10373
+   With material: 0 (0.0%)
+   With dist_channel: 10373 (100.0%)
+
+2. Distribution channels:
+   11 (Industry): 5591 materials
+   12 (Over Sea): 219 materials
+   13 (Retail): 2362 materials
+   15 (Project): 2201 materials
+
+3. Testing JOIN with fact_production:
+   Total orders: 837
+   Matched: 0 (0.0%)
+
+======================================================================
+WARNING: Low match rate. Need to investigate material code format.

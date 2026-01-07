@@ -1,0 +1,2538 @@
+
+================================================================================
+FILE: NEXT_STEPS.md
+================================================================================
+
+# Next Steps Implementation Plan
+
+**Date:** December 25, 2025  
+**Based On:** IMPLEMENTATION_REVIEW.md  
+**Priority:** Complete Phases 4 & 5 following CLAUDE.md workflows
+
+---
+
+## 🎯 Mission Statement
+
+Complete remaining **48 hours of development work** with **STRICT CLAUDE.md compliance**. Comprehensive gap analysis reveals **22 missing features** from original IMPLEMENTATION_PLAN.md, with **6 critical gaps** requiring immediate attention.
+
+**🔴 CRITICAL DISCOVERIES (from COMPREHENSIVE_GAP_ANALYSIS.md):**
+1. **Lead-time Calculation** (Section 11) - COMPLETELY MISSING - 11 hours
+2. **Semester Target Tracking** (Section 10) - NOT IMPLEMENTED - 6 hours
+3. **Stack Netting Integration** - Module exists but NOT USED in views - 3 hours
+4. **UOM Conversion Application** - Module exists but NOT FULLY APPLIED - 2 hours
+5. **Alert System Activation** - Module exists but NOT RUNNING - 4 hours
+6. **Production Chain Visualization** - Data exists but NO DASHBOARD - 4 hours
+
+**Total Implementation Gap:** 48 hours (18 critical + 12 important + 18 nice-to-have)
+
+**Reference:** See [COMPREHENSIVE_GAP_ANALYSIS.md](COMPREHENSIVE_GAP_ANALYSIS.md) for full 82-item comparison
+
+---
+
+## 📋 Week 1-2: Critical Missing Features (18 hours) 🔴 HIGHEST PRIORITY
+
+### Phase 6.1: Lead Time Analysis (11 hours) - URGENT
+
+**Duration:** 11 hours  
+**Status:** 🔴 **NOT STARTED** - Section 11 completely missing  
+**Primary Skills:** `backend-development`, `databases`, `ui-ux-pro-max`  
+**Reference:** IMPLEMENTATION_PLAN.md Section 11 (Lines 1223-1425, 203 lines of spec)  
+**Detail:** [LEADTIME_MISSING_FEATURE.md](LEADTIME_MISSING_FEATURE.md)  
+**Gap Analysis:** [COMPREHENSIVE_GAP_ANALYSIS.md](COMPREHENSIVE_GAP_ANALYSIS.md) Section 11
+
+#### Why This Is Critical
+
+**User Question:** "lead time của MTO và MTS. Sao tới giờ tôi vẫn chưa thấy phần nào làm yêu cầu này?"
+
+**Original Requirement (IMPLEMENTATION_PLAN.md):**
+```
+11. Lead-time Calculation
+
+11.1 MTS Lead-time (Make-to-Stock) - 3 STAGES
+- Production Time: Release → Finish (days)
+- Transit Time: Finish → Receipt (MVT 101)
+- Storage Time: Receipt → Issue (MVT 601 with stack netting)
+
+11.2 MTO Lead-time (Make-to-Order) - 5 STAGES
+- Preparation Time: PO Date → Release (days)
+- Production Time: Release → Finish
+- Transit Time: Finish → Receipt (MVT 101)
+- Storage Time: Receipt → Issue (MVT 601)
+- Delivery Time: Issue → Actual GI (from ZRSD004)
+
+Total: Sum of all components
+Status: ON_TIME / DELAYED / STUCK
+```
+
+**Current Status:** ❌ ZERO implementation
+- ❌ Database columns do NOT exist (7 missing columns)
+- ❌ Calculator module does NOT exist
+- ❌ API endpoints do NOT exist
+- ❌ Dashboard page does NOT exist
+
+#### Implementation Sub-Phases
+
+**6.1.1 Database Schema (2 hours)**
+- [ ] Add 7 columns to fact_production:
+  - `prep_time_days INT` (MTO only)
+  - `production_time_days INT`
+  - `transit_time_days INT`
+  - `storage_time_days INT`
+  - `delivery_time_days INT` (MTO only)
+  - `total_leadtime_days INT`
+  - `leadtime_status VARCHAR(20)` (ON_TIME/DELAYED/STUCK)
+- [ ] Create database view: `view_leadtime_analysis`
+- [ ] Write migration script
+- [ ] Test schema changes
+
+**6.1.2 Calculation Engine (4 hours)**
+- [ ] Create `src/core/leadtime_calculator.py` (450 lines)
+- [ ] Implement `LeadTimeCalculator` class
+- [ ] Implement `calculate_mts_leadtime()` (3 components)
+- [ ] Implement `calculate_mto_leadtime()` (5 components)
+- [ ] Integrate stack netting for MVT 601
+- [ ] Link to ZRMM024 (purchase orders) for prep time
+- [ ] Link to ZRSD004 (deliveries) for delivery time
+- [ ] Add to ETL transform pipeline
+- [ ] Unit tests for edge cases
+
+**6.1.3 Backend API (2 hours)**
+- [ ] Create `src/api/routers/leadtime.py` router
+- [ ] Endpoint: `GET /api/v1/leadtime/summary` (KPIs)
+- [ ] Endpoint: `GET /api/v1/leadtime/breakdown` (MTO vs MTS)
+- [ ] Endpoint: `GET /api/v1/leadtime/orders` (detail table)
+- [ ] Pydantic response models
+- [ ] Date range filtering
+- [ ] Error handling
+
+**6.1.4 Frontend Dashboard (3 hours)**
+- [ ] Create `web/src/pages/LeadTimeDashboard.tsx` (200+ lines)
+- [ ] 4 KPI cards: Avg MTO, Avg MTS, On-Time %, Delayed Count
+- [ ] Stacked bar chart: Time breakdown (5 stages for MTO, 3 for MTS)
+- [ ] Trend line chart: Lead-time over time
+- [ ] Detail table: Order-level with 7 time columns
+- [ ] Status badges (ON_TIME=green, DELAYED=yellow, STUCK=red)
+- [ ] Date range picker integration
+- [ ] Add to sidebar navigation
+
+**Success Criteria:**
+- ✅ MTO orders show 5-stage breakdown
+- ✅ MTS orders show 3-stage breakdown
+- ✅ Average lead-time KPIs calculated correctly
+- ✅ Stack netting applied for storage time (MVT 601↔602)
+- ✅ User can filter by date range and order status
+
+---
+
+### Phase 6.2: Alert System Activation (4 hours)
+
+**Status:** 🟡 **MODULE EXISTS BUT NOT ACTIVE**  
+**Primary Skills:** `backend-development`, `ui-ux-pro-max`  
+**Reference:** IMPLEMENTATION_PLAN.md Section 12 (Lines 1427-1557)  
+**Gap Analysis:** [COMPREHENSIVE_GAP_ANALYSIS.md](COMPREHENSIVE_GAP_ANALYSIS.md) Section 12
+
+#### Current State
+- ✅ `src/core/alerts.py` exists with 2 detectors
+- ✅ `fact_alerts` table exists
+- ❌ Alert detection NOT running
+- ❌ No API endpoints
+- ❌ No dashboard page
+
+#### Implementation Tasks
+
+**6.2.1 ETL Integration (1 hour)**
+- [ ] Add alert detection to `src/etl/transform.py`
+- [ ] Call `detect_stuck_in_transit(mb51_df, threshold_hours=48)`
+- [ ] Call `detect_low_yield(fact_production_chain_df, threshold_pct=85)`
+- [ ] Insert alerts into `fact_alerts` table
+- [ ] Mark previous alerts as RESOLVED
+
+**6.2.2 Backend API (1.5 hours)**
+- [ ] Create `src/api/routers/alerts.py` router
+- [ ] Endpoint: `GET /api/v1/alerts/summary` (counts by severity)
+- [ ] Endpoint: `GET /api/v1/alerts/stuck-inventory` (48h threshold)
+- [ ] Endpoint: `GET /api/v1/alerts/low-yield` (< 85%)
+- [ ] Endpoint: `POST /api/v1/alerts/{id}/resolve` (mark resolved)
+- [ ] Filter by status (ACTIVE/RESOLVED)
+
+**6.2.3 Frontend Dashboard (1.5 hours)**
+- [ ] Create `web/src/pages/AlertMonitor.tsx`
+- [ ] 3 KPI cards: Critical, High, Medium severity counts
+- [ ] Alert table with severity badges
+- [ ] Filter by alert type (STUCK_IN_TRANSIT / LOW_YIELD)
+- [ ] Resolve button per alert
+- [ ] Add to Executive Dashboard (alert summary cards)
+
+**Success Criteria:**
+- ✅ Alerts auto-detected every ETL run
+- ✅ Stuck inventory (>48h) flagged
+- ✅ Low yield (<85%) flagged
+- ✅ User can view and resolve alerts
+
+---
+
+### Phase 6.3: Stack Netting Integration (3 hours)
+
+**Status:** 🟡 **MODULE EXISTS BUT NOT USED IN VIEWS**  
+**Primary Skills:** `backend-development`, `databases`  
+**Reference:** IMPLEMENTATION_PLAN.md Section 7.3 (Lines 865-950)  
+**Gap Analysis:** [COMPREHENSIVE_GAP_ANALYSIS.md](COMPREHENSIVE_GAP_ANALYSIS.md) Section 7
+
+#### Problem
+- ✅ `StackNettingEngine` class exists in `src/core/netting.py`
+- ❌ `fact_inventory.is_netted` and `net_qty` columns NOT POPULATED
+- ❌ Views use `SUM(qty)` instead of `SUM(net_qty)` → WRONG inventory quantities
+
+#### Implementation Tasks
+
+**6.3.1 ETL Application (1.5 hours)**
+- [ ] In `src/etl/transform.py`, apply stack netting:
+```python
+from src.core.netting import StackNettingEngine
+
+# After loading fact_inventory
+netting_engine = StackNettingEngine(mb51_df)
+for batch, plant in unique_combinations:
+    remaining = netting_engine.apply_netting(batch, plant, 601, 602)
+    # Mark remaining as is_netted=TRUE
+    # Calculate net_qty
+```
+- [ ] Update all rows with `is_netted` flag
+- [ ] Populate `net_qty` column
+
+**6.3.2 View Updates (1 hour)**
+- [ ] Update `view_inventory_current`:
+```sql
+-- OLD (WRONG):
+SUM(qty) as current_qty
+
+-- NEW (CORRECT):
+SUM(net_qty) as current_qty
+WHERE is_netted = TRUE
+```
+- [ ] Update all inventory-related views
+
+**6.3.3 API Updates (0.5 hours)**
+- [ ] Update `/api/inventory/*` endpoints to use `net_qty`
+- [ ] Test with reversed MVT 602 data
+
+**Success Criteria:**
+- ✅ Inventory quantities correct after MVT 602 reversals
+- ✅ `is_netted=TRUE` for valid transactions
+- ✅ `is_netted=FALSE` for cancelled transactions
+
+---
+
+**Total Week 1-2: 18 hours (Critical Features)**
+
+---
+
+## 📋 Week 3-4: Important Features (12 hours) 🟡 MEDIUM PRIORITY
+
+### Phase 7.1: Semester Target Tracking (6 hours)
+
+**Status:** ❌ **NOT IMPLEMENTED**  
+**Primary Skills:** `backend-development`, `ui-ux-pro-max`  
+**Reference:** IMPLEMENTATION_PLAN.md Section 10 (Lines 1172-1222)  
+**Gap Analysis:** [COMPREHENSIVE_GAP_ANALYSIS.md](COMPREHENSIVE_GAP_ANALYSIS.md) Section 10
+
+#### Original Requirement
+
+**Semester Definition:**
+- Semester 1: January 1 - June 30
+- Semester 2: July 1 - December 31
+
+**Target vs Actual Comparison:**
+- Compare by salesman + semester
+- Calculate achievement % (Actual / Target × 100)
+- Status flags: On Track (≥90%), Warning (70-90%), Behind (<70%)
+
+#### Current State
+- ✅ `fact_target` table has semester/year columns
+- ✅ `fact_billing` has semester/year columns
+- ❌ Columns NOT POPULATED (NULL values)
+- ❌ No comparison logic
+- ❌ No dashboard
+
+#### Implementation Tasks
+
+**7.1.1 Backend Logic (3 hours)**
+- [ ] Implement `get_semester(date)` in `business_logic.py`:
+```python
+def get_semester(date):
+    """Map date to semester 1 or 2"""
+    month = date.month
+    year = date.year
+    semester = 1 if month <= 6 else 2
+    return {'year': year, 'semester': semester, 
+            'period_start': ..., 'period_end': ...}
+```
+- [ ] Implement `calculate_target_achievement(billing_df, target_df)`:
+```python
+def calculate_target_achievement(billing_df, target_df):
+    """
+    Returns DataFrame with:
+    - Salesman Name, Year, Semester
+    - Target Value, Actual Value
+    - Achievement %, Variance
+    - Status (On Track / Warning / Behind)
+    """
+```
+- [ ] Update ETL to populate semester/year on insert
+- [ ] Create API endpoint: `GET /api/v1/sales/target-vs-actual`
+
+**7.1.2 Frontend Dashboard (3 hours)**
+- [ ] Create `web/src/pages/SalesTargetComparison.tsx`
+- [ ] 4 KPI cards: Total Target, Total Actual, Achievement %, Gap
+- [ ] Achievement by Salesman bar chart (grouped by semester)
+- [ ] Target vs Actual trend line chart (monthly breakdown)
+- [ ] Salesman comparison table with status badges
+- [ ] Semester filter (Sem 1 / Sem 2 / Both)
+
+**Success Criteria:**
+- ✅ Semester auto-calculated from billing date
+- ✅ Achievement % correct for each salesman
+- ✅ Status badges show correctly
+- ✅ User can compare Semester 1 vs Semester 2
+
+---
+
+### Phase 7.2: UOM Conversion Full Application (2 hours)
+
+**Status:** 🟡 **MODULE EXISTS BUT NOT FULLY APPLIED**  
+**Primary Skills:** `backend-development`  
+**Reference:** IMPLEMENTATION_PLAN.md Section 8.2 (Lines 1014-1070)  
+**Gap Analysis:** [COMPREHENSIVE_GAP_ANALYSIS.md](COMPREHENSIVE_GAP_ANALYSIS.md) Section 8
+
+#### Problem
+- ✅ `UOMConverter` class exists in `src/core/uom_converter.py`
+- ✅ `dim_uom_conversion` table populated
+- ❌ `*_qty_kg` columns in fact tables are NULL
+- ❌ Cannot compare P01 (PC) with P02/P03 (KG) accurately
+
+#### Implementation Tasks
+
+**7.2.1 ETL Application (1.5 hours)**
+- [ ] In `src/etl/transform.py`, apply conversion to all fact tables:
+```python
+from src.core.uom_converter import UOMConverter
+
+uom_converter = UOMConverter(billing_df)
+uom_converter.build_conversion_table()
+
+# fact_production
+for row in fact_production_df:
+    if row['uom'] == 'PC':
+        kg_per_unit = uom_converter.get_conversion(row['material_code'])
+        row['order_qty_kg'] = row['order_qty'] * kg_per_unit
+    elif row['uom'] == 'KG':
+        row['order_qty_kg'] = row['order_qty']
+    # Same for delivered_qty_kg
+
+# fact_inventory
+# fact_billing
+# fact_delivery
+```
+- [ ] Populate all `*_qty_kg` columns
+
+**7.2.2 View Updates (0.5 hours)**
+- [ ] Update yield calculation views to use normalized KG
+- [ ] Update inventory calculations to use qty_kg where applicable
+
+**Success Criteria:**
+- ✅ All `*_qty_kg` columns populated (no NULLs for known materials)
+- ✅ Yield calculations accurate across P01/P02/P03
+- ✅ Variance < 5% matches original spec
+
+---
+
+### Phase 7.3: Production Chain Visualization (4 hours)
+
+**Status:** 🟡 **DATA EXISTS BUT NO DASHBOARD**  
+**Primary Skills:** `ui-ux-pro-max`, `frontend-development`  
+**Reference:** IMPLEMENTATION_PLAN.md Section 9.1 (Lines 1071-1137)  
+**Gap Analysis:** [COMPREHENSIVE_GAP_ANALYSIS.md](COMPREHENSIVE_GAP_ANALYSIS.md) Section 9
+
+#### Current State
+- ✅ `fact_production_chain` table populated (127 rows)
+- ✅ API endpoint `/api/yield/records` returns data
+- ❌ Dashboard only shows aggregate yield (89.1%)
+- ❌ No P03→P02→P01 flow visualization
+
+#### Implementation Tasks
+
+**7.3.1 Frontend Enhancement (4 hours)**
+- [ ] Update `web/src/pages/ProductionYield.tsx`
+- [ ] Add "Chain Analysis" tab (second tab)
+- [ ] Sankey diagram showing P03→P02→P01 flow:
+```tsx
+<ResponsiveSankey
+    data={{
+        nodes: [
+            {id: 'P03 Input: 100 KG'},
+            {id: 'P03 Output: 95 KG'},
+            {id: 'P02 Output: 90 KG'},
+            {id: 'P01 Output: 1800 PC (90 KG)'},
+            {id: 'P03 Loss: 5 KG'},
+            {id: 'P02 Loss: 5 KG'}
+        ],
+        links: [
+            {source: 'P03 Input', target: 'P03 Output', value: 95},
+            {source: 'P03 Input', target: 'P03 Loss', value: 5},
+            // ...
+        ]
+    }}
+/>
+```
+- [ ] Production chain detail table:
+  - Columns: P01 Batch, P02 Batch, P03 Batch, P03 Input, P02 Yield %, P01 Yield %, Total Yield %, Total Loss KG
+  - Color-coded yield % (>95% green, 85-95% yellow, <85% red)
+- [ ] Loss analysis breakdown chart (by stage)
+
+**Success Criteria:**
+- ✅ Sankey diagram shows complete P03→P02→P01 flow
+- ✅ User can trace specific batch through production chain
+- ✅ Loss analysis identifies bottleneck stages
+
+---
+
+**Total Week 3-4: 12 hours (Important Features)**
+
+---
+
+## 📋 Phase 4: Docker Deployment (Next Priority After Lead Time)
+
+**Duration:** 6 hours  
+**Status:** 🔴 60% Incomplete  
+**Primary Skill:** `devops`  
+**Workflow:** `.claude/workflows/primary-workflow.md` → Integration
+
+### Task 4.1: Frontend Dockerfile (1 hour)
+
+**File:** `web/Dockerfile`
+
+**CLAUDE.md Compliance:**
+- ✅ Real implementation (no mocking)
+- ✅ Multi-stage build (optimization)
+- ✅ KISS principle (simple, clear steps)
+
+**Implementation:**
+
+```dockerfile
+# web/Dockerfile
+# Multi-stage build for React frontend
+
+# Stage 1: Build
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json package-lock.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Build for production
+RUN npm run build
+
+# Stage 2: Production
+FROM nginx:alpine
+
+# Copy built files
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Copy nginx config
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Expose port
+EXPOSE 80
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s \
+  CMD wget --quiet --tries=1 --spider http://localhost/ || exit 1
+
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+**Verification:**
+```powershell
+cd web
+docker build -t alkana-web:latest .
+docker run -p 3000:80 alkana-web:latest
+# Test: http://localhost:3000
+```
+
+---
+
+### Task 4.2: Nginx Configuration (30 minutes)
+
+**File:** `web/nginx.conf`
+
+```nginx
+server {
+    listen 80;
+    server_name localhost;
+    
+    root /usr/share/nginx/html;
+    index index.html;
+    
+    # Enable gzip
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml;
+    
+    # SPA routing
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+    
+    # API proxy (if needed for CORS)
+    location /api {
+        proxy_pass http://backend:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    
+    # Cache static assets
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+}
+```
+
+---
+
+### Task 4.3: Docker Compose (2 hours)
+
+**File:** `docker-compose.yml`
+
+**CLAUDE.md Compliance:**
+- ✅ DRY: Shared environment variables
+- ✅ KISS: Simple 3-service stack
+- ✅ Security: No hardcoded credentials
+
+```yaml
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: alkana-db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-alkana_dashboard}
+      POSTGRES_USER: ${DB_USER:-alkana}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-alkana}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # FastAPI Backend
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: alkana-api
+    environment:
+      DATABASE_URL: postgresql://${DB_USER:-alkana}:${DB_PASSWORD:-changeme}@postgres:5432/${DB_NAME:-alkana_dashboard}
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-change-in-production}
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 480
+      CORS_ORIGINS: http://localhost:3000,http://localhost:5173
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+      - ./data:/app/data
+    command: uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # React Frontend
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: alkana-web
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    name: alkana_postgres_data
+
+networks:
+  default:
+    name: alkana_network
+```
+
+**Environment File:** `.env.example`
+
+```bash
+# Database
+DB_NAME=alkana_dashboard
+DB_USER=alkana
+DB_PASSWORD=your-secure-password-here
+
+# Backend
+SECRET_KEY=your-jwt-secret-key-minimum-32-chars
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=480
+
+# CORS (comma-separated)
+CORS_ORIGINS=http://localhost:3000,http://localhost:5173
+
+# Production overrides
+# DATABASE_URL=postgresql://user:pass@host:5432/db
+```
+
+**Verification:**
+```powershell
+# Create .env from example
+cp .env.example .env
+# Edit .env with secure values
+
+# Start all services
+docker-compose up -d
+
+# Check status
+docker-compose ps
+
+# View logs
+docker-compose logs -f
+
+# Test endpoints
+curl http://localhost:8000/api/health
+curl http://localhost:3000
+```
+
+---
+
+### Task 4.4: Production Docker Compose (1 hour)
+
+**File:** `docker-compose.prod.yml`
+
+```yaml
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: alkana-db-prod
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+    networks:
+      - alkana_net
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: alkana-api-prod
+    environment:
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+      SECRET_KEY: ${SECRET_KEY}
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 480
+    expose:
+      - "8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./data:/app/data
+    command: uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --workers 4
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: always
+    networks:
+      - alkana_net
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: alkana-web-prod
+    expose:
+      - "80"
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    restart: always
+    networks:
+      - alkana_net
+
+  nginx:
+    image: nginx:alpine
+    container_name: alkana-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - web
+      - backend
+    restart: always
+    networks:
+      - alkana_net
+
+volumes:
+  postgres_data:
+    name: alkana_postgres_prod_data
+
+networks:
+  alkana_net:
+    name: alkana_production_network
+```
+
+**Nginx Reverse Proxy:** `nginx/nginx.conf`
+
+```nginx
+events {
+    worker_connections 1024;
+}
+
+http {
+    upstream backend {
+        server backend:8000;
+    }
+
+    upstream frontend {
+        server web:80;
+    }
+
+    server {
+        listen 80;
+        server_name localhost;
+
+        # Redirect to HTTPS (uncomment in production)
+        # return 301 https://$server_name$request_uri;
+
+        # Frontend
+        location / {
+            proxy_pass http://frontend;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        # API
+        location /api {
+            proxy_pass http://backend;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+    }
+
+    # HTTPS (uncomment and configure in production)
+    # server {
+    #     listen 443 ssl http2;
+    #     server_name localhost;
+    #
+    #     ssl_certificate /etc/nginx/ssl/cert.pem;
+    #     ssl_certificate_key /etc/nginx/ssl/key.pem;
+    #
+    #     # Same locations as above
+    # }
+}
+```
+
+---
+
+### Task 4.5: Deployment Documentation (1 hour)
+
+**File:** `docs/DEPLOYMENT_GUIDE.md`
+
+(See template in phase-04-docker-deployment.md)
+
+**Skill:** `devops`  
+**Verification:** Delegate to `docs-manager` agent
+
+---
+
+## 📋 Phase 5: Testing & Documentation (Critical)
+
+**Duration:** 8 hours  
+**Status:** 🔴 70% Incomplete  
+**Skills:** `code-review`, `debugging`  
+**Workflow:** `.claude/workflows/primary-workflow.md` → Testing
+
+### **CRITICAL CLAUDE.md REQUIREMENT:**
+
+> "Delegate to `tester` agent to run tests and analyze the summary report."  
+> "Delegate to `code-reviewer` agent to review code."  
+> "Delegate to `docs-manager` agent to update docs in `./docs` directory."
+
+### Task 5.1: Backend Unit Tests (3 hours)
+
+**Skill:** `code-review`  
+**Workflow Step:** "Delegate to `tester` agent"
+
+**Files:** `tests/test_auth.py`, `tests/test_api_*.py`
+
+**Implementation Plan:**
+
+1. **Setup pytest configuration:**
+
+```python
+# tests/conftest.py
+import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from src.api.main import app
+from src.db.models import Base
+from src.api.deps import get_db
+
+# Test database
+SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
+engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+@pytest.fixture
+def db_session():
+    Base.metadata.create_all(bind=engine)
+    db = TestingSessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+    Base.metadata.drop_all(bind=engine)
+
+@pytest.fixture
+def client(db_session):
+    def override_get_db():
+        try:
+            yield db_session
+        finally:
+            pass
+    app.dependency_overrides[get_db] = override_get_db
+    return TestClient(app)
+
+@pytest.fixture
+def auth_headers(client):
+    # Create test user and return auth headers
+    response = client.post("/api/v1/auth/login", data={"username": "admin", "password": "admin123"})
+    token = response.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}
+```
+
+2. **Write tests:**
+
+```python
+# tests/test_auth.py
+def test_login_success(client):
+    response = client.post("/api/v1/auth/login", data={"username": "admin", "password": "admin123"})
+    assert response.status_code == 200
+    assert "access_token" in response.json()
+
+def test_login_invalid_credentials(client):
+    response = client.post("/api/v1/auth/login", data={"username": "wrong", "password": "wrong"})
+    assert response.status_code == 401
+
+# tests/test_api_executive.py
+def test_executive_summary(client, auth_headers):
+    response = client.get("/api/v1/dashboards/executive/summary", headers=auth_headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert "total_revenue" in data
+    assert data["total_revenue"] >= 0
+```
+
+**Delegation Command:**
+
+```
+/delegate to tester agent:
+Run pytest tests and provide coverage report.
+Fix any failing tests.
+Ensure 80%+ code coverage.
+```
+
+---
+
+### Task 5.2: Code Review (2 hours)
+
+**Skill:** `code-review`  
+**Workflow Step:** "Delegate to `code-reviewer` agent"
+
+**Delegation Command:**
+
+```
+/delegate to code-reviewer agent:
+Review all files in src/api/ and web/src/.
+Check for:
+1. Files > 200 lines (need refactoring)
+2. Security issues (SQL injection, XSS)
+3. Code duplication (DRY violations)
+4. Missing error handling
+5. Typing issues (TypeScript/Python)
+
+Provide report with file-by-file recommendations.
+```
+
+**Expected Output:**
+- List of files needing refactoring
+- Security vulnerabilities found
+- Code quality improvements
+- Action items prioritized
+
+---
+
+### Task 5.3: Documentation (3 hours)
+
+**Skill:** Built-in  
+**Workflow Step:** "Delegate to `docs-manager` agent"
+
+**Files to Create:**
+
+1. `docs/USER_GUIDE.md` - How to use the dashboard
+2. `docs/TECHNICAL_GUIDE.md` - Architecture and setup
+3. `docs/API_REFERENCE.md` - API endpoint documentation
+
+**Delegation Command:**
+
+```
+/delegate to docs-manager agent:
+Create comprehensive documentation:
+1. USER_GUIDE.md - Step-by-step user instructions
+2. TECHNICAL_GUIDE.md - Architecture, setup, troubleshooting
+3. API_REFERENCE.md - All endpoints with examples
+
+Follow documentation standards in .claude/workflows/documentation-management.md
+```
+
+---
+
+## 🎯 Execution Order
+
+### Day 1: Docker Deployment (6 hours)
+
+**Morning Session (3 hours):**
+1. ✅ Create `web/Dockerfile` (1 hour)
+2. ✅ Create `web/nginx.conf` (30 min)
+3. ✅ Create `docker-compose.yml` (1.5 hours)
+
+**Afternoon Session (3 hours):**
+4. ✅ Create `docker-compose.prod.yml` (1 hour)
+5. ✅ Create `nginx/nginx.conf` (1 hour)
+6. ✅ Test deployment (1 hour)
+
+**Deliverables:**
+- [ ] Frontend containerized
+- [ ] Full stack runs via docker-compose up
+- [ ] Production-ready setup documented
+
+**Skills Used:** `devops`
+
+---
+
+### Day 2: Testing & Quality (8 hours)
+
+**Morning Session (4 hours):**
+
+1. ✅ **Delegate to `tester` agent** (3 hours)
+   - Setup pytest
+   - Write unit tests
+   - Write integration tests
+   - Generate coverage report
+
+2. ✅ **Fix failing tests** (1 hour)
+   - Address test failures
+   - Ensure 80%+ coverage
+
+**Afternoon Session (4 hours):**
+
+3. ✅ **Delegate to `code-reviewer` agent** (2 hours)
+   - Review all code files
+   - Identify quality issues
+   - Provide recommendations
+
+4. ✅ **Delegate to `docs-manager` agent** (2 hours)
+   - Create USER_GUIDE.md
+   - Create TECHNICAL_GUIDE.md
+   - Update API_REFERENCE.md
+
+**Deliverables:**
+- [ ] All tests passing
+- [ ] 80%+ code coverage
+- [ ] Code review report
+- [ ] Complete documentation
+
+**Skills Used:** `code-review`, `debugging`
+
+---
+
+## ✅ Definition of Done
+
+### Phase 4 Complete When:
+
+- [ ] Frontend Dockerfile builds successfully
+- [ ] docker-compose.yml runs all 3 services
+- [ ] docker-compose.prod.yml ready for production
+- [ ] Nginx reverse proxy configured
+- [ ] Health checks working for all containers
+- [ ] DEPLOYMENT_GUIDE.md created
+- [ ] Tested on clean machine
+
+### Phase 5 Complete When:
+
+- [ ] Backend unit tests written (80%+ coverage)
+- [ ] API integration tests written
+- [ ] All tests passing
+- [ ] Code review completed by agent
+- [ ] Code quality issues fixed
+- [ ] USER_GUIDE.md created
+- [ ] TECHNICAL_GUIDE.md created
+- [ ] API_REFERENCE.md enhanced
+- [ ] No files > 200 lines (refactored)
+
+### Project Complete When:
+
+- [ ] All 5 phases 100% done
+- [ ] All CLAUDE.md workflows followed
+- [ ] All planned skills used
+- [ ] All agent delegations documented
+- [ ] Production deployment successful
+- [ ] User acceptance testing passed
+
+---
+
+## 🚨 CLAUDE.md Compliance Checklist
+
+Before marking project as complete, verify:
+
+### Workflow Compliance
+
+- [ ] Delegated to `planner` agent (documented in plan)
+- [ ] Used multiple `researcher` agents in parallel (Phase 3 ui-ux-pro-max searches)
+- [ ] Delegated to `tester` agent for testing
+- [ ] Delegated to `code-reviewer` agent after implementation
+- [ ] Delegated to `docs-manager` agent for documentation
+- [ ] Delegated to `debugger` agent if bugs found
+
+### Development Rules
+
+- [ ] All files use kebab-case naming
+- [ ] No files > 200 lines (or documented exception)
+- [ ] YAGNI, KISS, DRY principles followed
+- [ ] Skills catalog analyzed and activated
+- [ ] No mocking/simulation (real implementation)
+- [ ] Try/catch error handling everywhere
+- [ ] Linting run before commit
+- [ ] Tests run before push (all passing)
+- [ ] Clean commit messages (no AI references)
+
+### Skills Usage
+
+- [x] `databases` - PostgreSQL views, indexes
+- [x] `backend-development` - FastAPI, JWT, OWASP
+- [x] `ui-ux-pro-max` - Design system, formatting
+- [x] `frontend-development` - React, TypeScript
+- [ ] `devops` - Docker, Nginx (TODO Phase 4)
+- [ ] `code-review` - Agent delegation (TODO Phase 5)
+- [ ] `debugging` - If needed in Phase 5
+
+---
+
+## 📊 Progress Tracking
+
+Update this section after each task:
+
+| Task | Estimated | Actual | Status | Notes |
+|------|-----------|--------|--------|-------|
+| 4.1 Frontend Dockerfile | 1h | - | 🔴 TODO | - |
+| 4.2 Nginx Config | 0.5h | - | 🔴 TODO | - |
+| 4.3 Docker Compose | 2h | - | 🔴 TODO | - |
+| 4.4 Prod Compose | 1h | - | 🔴 TODO | - |
+| 4.5 Deployment Docs | 1h | - | 🔴 TODO | - |
+| 5.1 Unit Tests | 3h | - | 🔴 TODO | Delegate to tester |
+| 5.2 Code Review | 2h | - | 🔴 TODO | Delegate to reviewer |
+| 5.3 Documentation | 3h | - | 🔴 TODO | Delegate to docs-manager |
+
+**Legend:**
+- 🔴 TODO - Not started
+- 🟡 IN PROGRESS - Currently working
+- 🟢 DONE - Completed and verified
+- ⚠️ BLOCKED - Waiting on dependency
+
+---
+
+## 🎓 Lessons Learned
+
+(To be filled after completion)
+
+### What Worked Well:
+- TBD
+
+### What Could Be Improved:
+- TBD
+
+### CLAUDE.md Insights:
+- TBD
+
+---
+
+**End of Next Steps Plan**
+
+*This plan will be executed following `.claude/workflows/primary-workflow.md` and all CLAUDE.md requirements.*
+
+
+
+================================================================================
+FILE: GAP_ANALYSIS_SUMMARY.md
+================================================================================
+
+# Gap Analysis Summary - Quick Reference
+
+**Analysis Date:** December 25, 2025  
+**Comparison:** Original IMPLEMENTATION_PLAN.md (1809 lines) vs Current Implementation
+
+---
+
+## 🎯 TÓM TẮT NHANH
+
+**Tổng số yêu cầu:** 82 items  
+**Đã hoàn thành:** 48 items (✅ 58.5%)  
+**Đang thiếu:** 34 items (❌ 41.5%)
+
+**Tổng công việc còn lại:** **48 giờ**
+- 🔴 Critical (18h): Lead-time, Alert System, Stack Netting
+- 🟡 Important (12h): Semester Target, UOM Full Apply, Chain Viz
+- ⚪ Nice-to-have (18h): Export, DSO, Testing, Docs
+
+---
+
+## 🔴 TOP 6 YÊU CẦU THIẾU (CRITICAL)
+
+### 1. Lead-time Calculation ⏱️ 11 GIỜ
+
+**Yêu cầu gốc (Section 11):**
+- MTS: 3 giai đoạn (Production → Transit → Storage)
+- MTO: 5 giai đoạn (Preparation → Production → Transit → Storage → Delivery)
+
+**Tình trạng:**
+- ❌ KHÔNG CÓ database columns (thiếu 7 cột)
+- ❌ KHÔNG CÓ calculator module
+- ❌ KHÔNG CÓ API endpoints
+- ❌ KHÔNG CÓ dashboard page
+
+**Chi tiết:** [LEADTIME_MISSING_FEATURE.md](LEADTIME_MISSING_FEATURE.md)
+
+---
+
+### 2. Semester Target Tracking 📊 6 GIỜ
+
+**Yêu cầu gốc (Section 10):**
+- Semester 1: Jan-Jun
+- Semester 2: Jul-Dec
+- So sánh Target vs Actual theo salesman + semester
+- Status: On Track (≥90%), Warning (70-90%), Behind (<70%)
+
+**Tình trạng:**
+- ❌ KHÔNG CÓ get_semester() function
+- ❌ KHÔNG CÓ calculate_target_achievement()
+- ❌ KHÔNG CÓ Target vs Actual dashboard
+
+---
+
+### 3. Alert System Activation 🚨 4 GIỜ
+
+**Yêu cầu gốc (Section 12):**
+- Stuck in Transit: > 48h không issue (MVT 601)
+- Low Yield: < 85% total yield
+
+**Tình trạng:**
+- ✅ Module EXISTS nhưng KHÔNG CHẠY
+- ❌ KHÔNG CÓ API endpoints
+- ❌ KHÔNG CÓ Alert Monitor dashboard
+
+---
+
+### 4. Stack Netting Integration 🔄 3 GIỜ
+
+**Yêu cầu gốc (Section 7.3):**
+- LIFO algorithm để bù trừ 601↔602
+- SUM(net_qty) thay vì SUM(qty)
+
+**Tình trạng:**
+- ✅ Module EXISTS nhưng KHÔNG SỬ DỤNG trong views
+- ❌ is_netted và net_qty columns NULL
+- ❌ Inventory quantities có thể SAI nếu có reversals
+
+---
+
+### 5. UOM Conversion Full Application 📏 2 GIỜ
+
+**Yêu cầu gốc (Section 8.2):**
+- Tất cả *_qty_kg columns phải được populate
+- So sánh P01 (PC) với P02/P03 (KG)
+
+**Tình trạng:**
+- ✅ Module EXISTS nhưng KHÔNG ÁP DỤNG đầy đủ
+- ❌ order_qty_kg, delivered_qty_kg, billing_qty_kg đều NULL
+
+---
+
+### 6. Production Chain Visualization 🏭 4 GIỜ
+
+**Yêu cầu gốc (Section 9.1):**
+- Sankey diagram P03→P02→P01
+- Loss analysis by stage
+
+**Tình trạng:**
+- ✅ Data EXISTS (fact_production_chain có 127 rows)
+- ❌ KHÔNG CÓ dashboard visualization
+- ❌ Chỉ hiển thị aggregate yield 89.1%
+
+---
+
+## 📋 22 YÊU CẦU THIẾU HOÀN CHỈNH
+
+| # | Requirement | Section | Status | Priority | Hours |
+|---|-------------|---------|--------|----------|-------|
+| 1 | Lead-time MTS (3 stages) | 11.1 | ❌ MISSING | 🔴 CRITICAL | 5 |
+| 2 | Lead-time MTO (5 stages) | 11.2 | ❌ MISSING | 🔴 CRITICAL | 6 |
+| 3 | Stuck in Transit Alert | 12.1 | 🟡 EXISTS | 🔴 CRITICAL | 2 |
+| 4 | Low Yield Alert | 12.2 | 🟡 EXISTS | 🔴 CRITICAL | 2 |
+| 5 | Stack Netting in Views | 7.3 | 🟡 EXISTS | 🔴 CRITICAL | 3 |
+| 6 | UOM Conversion Apply | 8.2 | 🟡 PARTIAL | 🔴 CRITICAL | 2 |
+| 7 | get_semester() | 10.1 | ❌ MISSING | 🟡 IMPORTANT | 2 |
+| 8 | calculate_target_achievement() | 10.2 | ❌ MISSING | 🟡 IMPORTANT | 2 |
+| 9 | Target vs Actual Dashboard | 10.2 | ❌ MISSING | 🟡 IMPORTANT | 2 |
+| 10 | P03→P02→P01 Sankey | 9.1 | ❌ MISSING | 🟡 IMPORTANT | 4 |
+| 11 | Alert Monitor Dashboard | 12.3 | ❌ MISSING | 🔴 CRITICAL | 2 |
+| 12 | Lead Time Dashboard | 11 | ❌ MISSING | 🔴 CRITICAL | 3 |
+| 13 | DSO Calculation | 15 | ❌ MISSING | ⚪ NICE | 2 |
+| 14 | Transit Time KPI | 15 | ❌ MISSING | 🟡 IMPORTANT | 1 |
+| 15 | Storage Time KPI | 15 | ❌ MISSING | 🟡 IMPORTANT | 1 |
+| 16 | PDF Export | - | ❌ MISSING | ⚪ NICE | 3 |
+| 17 | Excel Export | - | ❌ MISSING | ⚪ NICE | 3 |
+| 18 | Automated Tests (pytest) | Phase 5 | ❌ MISSING | ⚪ NICE | 4 |
+| 19 | E2E Tests (Playwright) | Phase 5 | ❌ MISSING | ⚪ NICE | 4 |
+| 20 | USER_GUIDE.md | Phase 5 | ❌ MISSING | ⚪ NICE | 2 |
+| 21 | TECHNICAL_GUIDE.md | Phase 5 | ❌ MISSING | ⚪ NICE | 2 |
+| 22 | docker-compose.yml | Phase 4 | ❌ MISSING | ⚪ NICE | 3 |
+
+**Total:** 48 hours
+
+---
+
+## 📅 KẾ HOẠCH THỰC HIỆN
+
+### Week 1-2: Critical Features (18h) 🔴
+1. Lead-time Calculation (11h)
+   - Database: 7 columns
+   - Calculator: MTO 5-stage, MTS 3-stage
+   - API: 3 endpoints
+   - Dashboard: LeadTimeDashboard.tsx
+2. Alert System (4h)
+   - ETL integration
+   - API endpoints
+   - AlertMonitor.tsx
+3. Stack Netting (3h)
+   - Apply netting in ETL
+   - Update views
+
+### Week 3-4: Important Features (12h) 🟡
+4. Semester Target (6h)
+   - get_semester() function
+   - Target vs Actual API
+   - SalesTargetComparison.tsx
+5. UOM Apply (2h)
+   - Populate *_qty_kg columns
+6. Chain Visualization (4h)
+   - Sankey diagram
+   - Loss analysis
+
+### Week 5+: Nice-to-Have (18h) ⚪
+7. Export (6h)
+8. Testing (8h)
+9. Documentation (4h)
+
+---
+
+## 📊 BUSINESS CRITERIA CHECK
+
+| Criterion | Plan Required | Implementation | Gap |
+|-----------|---------------|----------------|-----|
+| User login | ✅ | ✅ YES | None |
+| Executive KPIs | ✅ | ✅ YES | None |
+| Production dashboard | ✅ | ✅ YES | Missing chain viz |
+| Inventory dashboard | ✅ | ✅ YES | Missing net_qty |
+| Sales dashboard | ✅ | ✅ YES | Missing target comparison |
+| **Lead-time tracking** | ✅ | ❌ **NO** | **COMPLETE FEATURE** |
+| **Alert system** | ✅ | 🟡 **PARTIAL** | **Not active** |
+| Target vs Actual | ✅ | ❌ **NO** | **Semester logic** |
+| Export PDF/Excel | ✅ | ❌ **NO** | **Export module** |
+
+**Conclusion:** 6/9 business requirements met (67%)
+
+---
+
+## 🔗 DOCUMENTS
+
+1. **[COMPREHENSIVE_GAP_ANALYSIS.md](COMPREHENSIVE_GAP_ANALYSIS.md)** - 82-item detailed comparison
+2. **[LEADTIME_MISSING_FEATURE.md](LEADTIME_MISSING_FEATURE.md)** - 11-hour implementation plan
+3. **[IMPLEMENTATION_REVIEW.md](IMPLEMENTATION_REVIEW.md)** - Current progress review
+4. **[NEXT_STEPS.md](NEXT_STEPS.md)** - Updated action plan (48 hours)
+
+---
+
+## 💡 KEY INSIGHTS
+
+1. **Original plan was MORE COMPREHENSIVE than execution plan**
+   - IMPLEMENTATION_PLAN.md: 1809 lines (Dec 24)
+   - Execution plan (Phases 1-5): Only covered 58.5% of requirements
+
+2. **Missing features are CORE BUSINESS REQUIREMENTS**
+   - Lead-time: User explicitly asked "Sao tôi vẫn chưa thấy?"
+   - Target tracking: Essential for sales performance
+   - Alert system: Proactive supply chain monitoring
+
+3. **Good news: Infrastructure is solid**
+   - ✅ ELT architecture complete
+   - ✅ All data tables exist
+   - ✅ Core algorithms implemented (just not integrated)
+
+4. **Bad news: 48 hours of work remaining**
+   - 18h critical (must do)
+   - 12h important (should do)
+   - 18h nice-to-have (can defer)
+
+---
+
+**Next Action:** Review with stakeholders → Prioritize → Execute Phase 6 (Lead-time) ASAP
+
+
+
+================================================================================
+FILE: COMPREHENSIVE_GAP_ANALYSIS.md
+================================================================================
+
+# Comprehensive Gap Analysis: Original Plan vs Implementation
+
+**Analysis Date:** December 25, 2025  
+**Analyst:** Claude (AI Agent)  
+**Source Documents:**
+- Original Plan: [IMPLEMENTATION_PLAN.md](../../IMPLEMENTATION_PLAN.md) (1809 lines, Dec 24, 2025)
+- Current Status: [IMPLEMENTATION_REVIEW.md](IMPLEMENTATION_REVIEW.md) (635 lines, Dec 25, 2025)
+- Codebase: `c:\dev\alkana-dashboard\` (75% complete)
+
+---
+
+## 📊 Executive Summary
+
+**Total Requirements:** 82 items identified from original plan  
+**Implemented:** 48 items (✅ 58.5%)  
+**Partially Implemented:** 12 items (🟡 14.6%)  
+**Missing/Not Started:** 22 items (❌ 26.8%)
+
+**Critical Gaps (High Impact):**
+1. ❌ Lead-time Calculation (MTO/MTS) - **SECTION 11 COMPLETELY MISSING**
+2. ❌ Stuck in Transit Alerts (48h threshold)
+3. ❌ Low Yield Alerts (< 85%)
+4. ❌ Semester-based Target Comparison
+5. ❌ Export Functionality (PDF/Excel)
+6. 🟡 MVT Stack Netting (module exists but NOT integrated in views)
+7. 🟡 UOM Conversion (module exists but NOT applied to all fact tables)
+8. 🟡 Yield Tracking (fact_production_chain populated but NO dashboard)
+
+---
+
+## 📋 Section-by-Section Gap Analysis
+
+### Section 1: Data Sources ✅ 100% Complete
+
+| Item | Original Plan | Implementation Status |
+|------|---------------|----------------------|
+| Excel file loading | 8 files (cooispi, mb51, zrmm024, zrsd002, zrsd004, zrsd006, zrfi005, target) | ✅ ALL 8 files have raw_* tables |
+| Header handling | mb51 NO HEADER, others YES | ✅ Correctly implemented (col_0 - col_15 for mb51) |
+| Column mappings | All columns documented | ✅ models.py matches specs |
+
+**Evidence:** [src/db/models.py](../../src/db/models.py) Lines 1-270 - All 8 raw_* tables exist
+
+---
+
+### Section 2: Confirmed Configurations ⚠️ 90% Complete
+
+| Configuration | Original Plan | Implementation Status |
+|---------------|---------------|----------------------|
+| Plant roles | 1201=Factory, 1401=DC, 1203=Other | ✅ dim_plant with plant_role column |
+| Netting algorithm | Stack-based LIFO | ✅ StackNettingEngine exists |
+| MVT pairs | 101↔102, 201↔202, 261↔262, 301↔302, 311↔312, 351↔352, 601↔602 | ✅ dim_mvt with reversal_mvt column |
+| MTO classification | Sales Order NOT NULL AND MRP = P01 | ✅ Dual logic in business_logic.py |
+| **Alert threshold** | **48 hours stuck** | ❌ **NOT IMPLEMENTED in API/dashboard** |
+| KG/PC variance | Use Billing value if > 5% | ✅ UOMConverter calculates variance |
+
+**Missing:**
+- ❌ 48-hour alert system NOT active in production
+- ❌ No alert dashboard page (only fact_alerts table exists)
+
+---
+
+### Section 3: Architecture Overview ✅ 100% Complete
+
+| Component | Original Plan | Implementation Status |
+|-----------|---------------|----------------------|
+| ELT 3-layer | Raw Lake → Processing Core → Warehouse | ✅ All 3 layers exist |
+| Raw tables | raw_* with JSONB audit | ✅ 8 raw tables with raw_data JSONB column |
+| Processing | Python algorithms | ✅ src/core/ with 5 modules |
+| Warehouse | Star schema (fact_*, dim_*) | ✅ 8 fact tables, 7 dimension tables |
+| Visualization | Power BI / Tableau / React | ✅ React 18 dashboard (6 pages) |
+
+**Evidence:** Architecture fully implemented as designed
+
+---
+
+### Section 4: Database Schema ✅ 95% Complete
+
+#### Fact Tables Status
+
+| Table | Plan Required | Implementation | Missing Columns | Status |
+|-------|---------------|----------------|-----------------|--------|
+| fact_production | ✅ | ✅ | ❌ **7 lead-time columns** | 🟡 PARTIAL |
+| fact_inventory | ✅ | ✅ | None | ✅ COMPLETE |
+| fact_purchase_order | ✅ | ✅ | None | ✅ COMPLETE |
+| fact_billing | ✅ | ✅ | None | ✅ COMPLETE |
+| fact_delivery | ✅ | ✅ | None | ✅ COMPLETE |
+| fact_ar_aging | ✅ | ✅ | None | ✅ COMPLETE |
+| fact_target | ✅ | ✅ | None | ✅ COMPLETE |
+| fact_production_chain | ✅ | ✅ | None | ✅ COMPLETE |
+| **fact_alerts** | ✅ | ✅ | None (table exists but NOT POPULATED) | 🟡 PARTIAL |
+
+**Critical Missing Columns in fact_production:**
+
+Original plan specifies lead-time tracking columns (Section 11):
+```sql
+-- MISSING FROM CURRENT SCHEMA:
+prep_time_days INT,              -- MTO only: PO Date → Release
+production_time_days INT,        -- Release → Finish
+transit_time_days INT,           -- Finish → Receipt (MVT 101)
+storage_time_days INT,           -- Receipt → Issue (MVT 601)
+delivery_time_days INT,          -- MTO only: Issue → Actual GI
+total_leadtime_days INT,         -- Sum of all components
+leadtime_status VARCHAR(20)      -- ON_TIME / DELAYED / STUCK
+```
+
+**Impact:** Cannot calculate lead-time KPIs without these columns
+
+---
+
+#### Dimension Tables Status ✅ 100% Complete
+
+| Table | Plan | Implementation | Status |
+|-------|------|----------------|--------|
+| dim_material | ✅ | ✅ | ✅ COMPLETE |
+| dim_uom_conversion | ✅ | ✅ | ✅ COMPLETE |
+| dim_plant | ✅ | ✅ | ✅ COMPLETE |
+| dim_storage_location | ✅ | ✅ | ✅ COMPLETE |
+| dim_mvt | ✅ | ✅ | ✅ COMPLETE |
+| dim_customer_group | ✅ | ✅ | ✅ COMPLETE |
+| dim_dist_channel | ✅ | ✅ | ✅ COMPLETE |
+
+All dimension tables match spec exactly.
+
+---
+
+### Section 5: ELT Pipeline ✅ 90% Complete
+
+| Component | Plan | Implementation | Status |
+|-----------|------|----------------|--------|
+| Pandas Loader | ✅ | ✅ | ✅ COMPLETE |
+| Raw Data Lake Load | ✅ | ✅ | ✅ COMPLETE |
+| Data Cleanser | ✅ | ✅ | ✅ COMPLETE |
+| Stack Netting | ✅ | ✅ (module exists) | 🟡 EXISTS BUT NOT USED IN VIEWS |
+| UOM Normalize | ✅ | ✅ (module exists) | 🟡 EXISTS BUT PARTIAL USAGE |
+| Yield Tracker | ✅ | ✅ (module exists) | ✅ COMPLETE & POPULATED |
+| Hash Calculator | ✅ | ✅ | ✅ COMPLETE |
+| UPSERT Engine | ✅ | ✅ | ✅ COMPLETE |
+
+**Evidence:**
+- ✅ [src/etl/loaders.py](../../src/etl/loaders.py) - Pandas loaders for all 8 files
+- ✅ [src/etl/transform.py](../../src/etl/transform.py) - Complete transform pipeline
+- ✅ [src/core/netting.py](../../src/core/netting.py) - StackNettingEngine (LIFO algorithm)
+- ✅ [src/core/uom_converter.py](../../src/core/uom_converter.py) - KG/PC conversion
+- ✅ [src/core/yield_tracker.py](../../src/core/yield_tracker.py) - P03→P02→P01 chain
+
+**Gap:** Stack Netting NOT applied in database views (see Section 7 below)
+
+---
+
+### Section 6: Business Logic ✅ 95% Complete
+
+| Logic | Plan Requirement | Implementation | Status |
+|-------|------------------|----------------|--------|
+| Order Classification (MTS/MTO) | IF Sales Order NOT NULL → MTO | ✅ classify_order() in business_logic.py | ✅ COMPLETE |
+| MTO Dual Logic | Sales Order NOT NULL AND MRP = P01 | ✅ is_mto_for_analysis() | ✅ COMPLETE |
+| Order Status Detection | CANCELLED/WIP/COMPLETED/IN_TRANSIT | ✅ get_order_status() | ✅ COMPLETE |
+| Price Calculation | Billing amounts with discount/tax | ✅ calculate_billing_amounts() | ✅ COMPLETE |
+| **Semester Mapping** | **Jan-Jun=Sem1, Jul-Dec=Sem2** | ❌ **NOT IMPLEMENTED** | ❌ MISSING |
+| **Target vs Actual Comparison** | **By salesman + semester** | ❌ **NOT IMPLEMENTED** | ❌ MISSING |
+
+**Evidence:**
+- ✅ [src/core/business_logic.py](../../src/core/business_logic.py) - classify_order(), is_mto_for_analysis(), get_order_status() all exist
+
+**Critical Missing:**
+```python
+# MISSING FROM business_logic.py:
+def get_semester(date):
+    """Map date to semester (1 or 2) + year"""
+    month = date.month
+    year = date.year
+    semester = 1 if month <= 6 else 2
+    return {'year': year, 'semester': semester}
+
+def calculate_target_achievement(billing_df, target_df):
+    """Compare actual sales vs target by salesman and semester"""
+    # NOT IMPLEMENTED - Original plan lines 1205-1222
+```
+
+**Impact:** Cannot show "Target vs Actual" dashboard as per original spec
+
+---
+
+### Section 7: MVT Stack Netting Engine 🟡 50% Complete
+
+| Component | Plan | Implementation | Usage | Status |
+|-----------|------|----------------|-------|--------|
+| LIFO Algorithm | ✅ Required | ✅ Implemented | ❌ NOT USED | 🟡 PARTIAL |
+| MVT Reversal Pairs | 7 pairs (601↔602, etc.) | ✅ dim_mvt table | ❌ NOT QUERIED | 🟡 PARTIAL |
+| Stock Impact (+1/-1/0) | ✅ Required | ✅ STOCK_IMPACT dict | ❌ NOT USED | 🟡 PARTIAL |
+| Stack Processing | PUSH/POP logic | ✅ apply_stack_netting() | ❌ NOT CALLED IN VIEWS | 🟡 PARTIAL |
+| Valid Issue Date | Last valid MVT 601 | ✅ get_valid_issue_date() | ❌ NOT USED | 🟡 PARTIAL |
+| Net Quantity Calc | Per batch + plant | ✅ calculate_net_quantity() | ❌ NOT USED | 🟡 PARTIAL |
+
+**Evidence:**
+- ✅ **MODULE EXISTS:** [src/core/netting.py](../../src/core/netting.py) - 280 lines, fully implemented
+- ❌ **NOT INTEGRATED:** Database views use SUM(qty) instead of netted quantities
+- ❌ **NOT IN API:** No API endpoint exposes netting results
+
+**Example Gap:**
+
+**Original Plan (Section 7.3):**
+```python
+def apply_stack_netting(mb51_df, batch, plant, mvt_forward, mvt_reverse):
+    """Apply LIFO netting - RETURNS remaining valid transactions"""
+    stack = []
+    for row in df:
+        if row['MVT'] == mvt_forward:
+            stack.append(row)
+        elif row['MVT'] == mvt_reverse:
+            if stack:
+                stack.pop()  # LIFO: cancel most recent
+    return pd.DataFrame(stack)
+```
+
+**Current Implementation:** ✅ Exists in netting.py  
+**Usage in Views:** ❌ NOT USED
+
+**Example: view_inventory_current (should use netting but doesn't):**
+```sql
+-- CURRENT (WRONG - doesn't apply netting):
+SELECT 
+    material_code,
+    plant_code,
+    SUM(qty) as current_qty  -- WRONG: counts both 601 and 602
+FROM fact_inventory
+GROUP BY material_code, plant_code
+
+-- SHOULD BE (CORRECT - after netting):
+SELECT 
+    material_code,
+    plant_code,
+    SUM(net_qty) as current_qty  -- CORRECT: uses netted qty
+FROM fact_inventory
+WHERE is_netted = TRUE  -- Only valid transactions after netting
+GROUP BY material_code, plant_code
+```
+
+**Impact:** Inventory quantities may be INCORRECT if reversals exist (MVT 602 cancels 601)
+
+**Fix Required:**
+1. Run StackNettingEngine on fact_inventory
+2. Update `is_netted` and `net_qty` columns
+3. Modify views to use `WHERE is_netted = TRUE`
+
+---
+
+### Section 8: UOM Conversion 🟡 70% Complete
+
+| Component | Plan | Implementation | Usage | Status |
+|-----------|------|----------------|-------|--------|
+| KG per PC Calculation | From billing data | ✅ build_conversion_table() | ✅ USED | ✅ COMPLETE |
+| dim_uom_conversion | Conversion ratios | ✅ Table exists | ✅ POPULATED | ✅ COMPLETE |
+| Normalize to KG | Convert all qty to KG | ✅ normalize_to_kg() | 🟡 PARTIAL | 🟡 PARTIAL |
+| Apply to fact_production | order_qty_kg, delivered_qty_kg | ✅ Columns exist | ❌ NOT POPULATED | 🟡 PARTIAL |
+| Apply to fact_inventory | qty_kg | ✅ Column exists | ❌ NOT POPULATED | 🟡 PARTIAL |
+| Apply to fact_billing | billing_qty_kg | ✅ Column exists | ❌ NOT POPULATED | 🟡 PARTIAL |
+| Apply to fact_delivery | delivery_qty_kg | ✅ Column exists | ❌ NOT POPULATED | 🟡 PARTIAL |
+
+**Evidence:**
+- ✅ **MODULE EXISTS:** [src/core/uom_converter.py](../../src/core/uom_converter.py) - Fully implemented
+- ✅ **TABLE POPULATED:** dim_uom_conversion has conversion ratios
+- ❌ **NOT APPLIED:** *_qty_kg columns in fact tables are NULL
+
+**Example Gap:**
+
+```sql
+-- CURRENT STATE (fact_production):
+SELECT material_code, order_qty, order_qty_kg 
+FROM fact_production 
+LIMIT 5;
+
+-- Result:
+material_code | order_qty | order_qty_kg
+-------------------------------------------
+123456789     | 1000.00   | NULL         -- WRONG: should be calculated
+234567890     | 500.00    | NULL         -- WRONG
+```
+
+**Fix Required:**
+```python
+# In transform.py, add UOM normalization:
+for idx, row in fact_production_df.iterrows():
+    kg_per_unit = uom_converter.get_conversion(row['material_code'])
+    if row['uom'] == 'PC' and kg_per_unit:
+        row['order_qty_kg'] = row['order_qty'] * kg_per_unit
+    elif row['uom'] == 'KG':
+        row['order_qty_kg'] = row['order_qty']
+```
+
+**Impact:** Cannot compare P01 (PC) with P02/P03 (KG) for yield calculation
+
+---
+
+### Section 9: Yield Tracking ✅ 80% Complete
+
+| Component | Plan | Implementation | Dashboard | Status |
+|-----------|------|----------------|-----------|--------|
+| P03→P02→P01 Chain Linking | Via MVT 261 | ✅ find_production_chain() | ❌ NO DASHBOARD | 🟡 PARTIAL |
+| fact_production_chain | Fact table | ✅ Table exists | ✅ POPULATED | ✅ COMPLETE |
+| Stage Yield Calculation | Input_KG / Output_KG | ✅ calculate_stage_yield() | ✅ IN API | ✅ COMPLETE |
+| Total Yield Calculation | P03 input → P01 output | ✅ calculate_total_yield() | ✅ IN API | ✅ COMPLETE |
+| **Yield Dashboard** | **Charts + drill-down** | ❌ **NO PAGE** | ❌ **MISSING** | ❌ MISSING |
+
+**Evidence:**
+- ✅ **MODULE:** [src/core/yield_tracker.py](../../src/core/yield_tracker.py) - 340 lines, complete
+- ✅ **API:** [src/api/routers/yield_dashboard.py](../../src/api/routers/yield_dashboard.py) - 3 endpoints
+- ✅ **DATA:** fact_production_chain has 127 rows populated
+- ❌ **DASHBOARD:** web/src/pages/ProductionYield.tsx exists BUT only shows aggregate yield, NOT P03→P02→P01 chain
+
+**What's Missing:**
+
+Original Plan (Section 9.1):
+```
+Production Chain Visualization:
+┌─────────────┐
+│  P03 Order  │  Base production (100 KG input → 95 KG output)
+│  Batch: xxx │  Yield = 95%
+└──────┬──────┘
+       │ MVT 261
+       ▼
+┌─────────────┐
+│  P02 Order  │  Liquid production (95 KG input → 90 KG output)
+│  Batch: yyy │  Yield = 94.7%
+└──────┬──────┘
+       │ MVT 261
+       ▼
+┌─────────────┐
+│  P01 Order  │  Packaging (90 KG input → 1800 PC = 90 KG output)
+│  Batch: zzz │  Yield = 100%
+└─────────────┘
+
+Total Yield: 90%
+Total Loss: 10 KG
+```
+
+**Current Dashboard:** Only shows aggregate yield (89.1%), NO chain breakdown
+
+**Fix Required:**
+1. Create new tab in ProductionYield.tsx
+2. Add Sankey diagram showing P03→P02→P01 flow
+3. Add table with detailed chain records
+4. Add loss analysis by stage
+
+---
+
+### Section 10: Semester & Target Logic ❌ 0% Complete
+
+| Component | Plan | Implementation | Status |
+|-----------|------|----------------|--------|
+| get_semester() | Map date to semester 1 or 2 | ❌ NOT IMPLEMENTED | ❌ MISSING |
+| Semester field in fact_billing | Auto-calculate on insert | ✅ Column exists | ❌ NOT POPULATED |
+| Target vs Actual Comparison | By salesman + semester | ❌ NOT IMPLEMENTED | ❌ MISSING |
+| Achievement % Calculation | Actual / Target × 100 | ❌ NOT IMPLEMENTED | ❌ MISSING |
+| Status Flags | On Track / Warning / Behind | ❌ NOT IMPLEMENTED | ❌ MISSING |
+
+**Evidence:** Section 10 of original plan (lines 1172-1222) NOT implemented
+
+**Critical Missing Function (from original plan):**
+```python
+def calculate_target_achievement(billing_df, target_df):
+    """
+    Compare actual sales (billing) vs target by salesman and semester
+    
+    Returns DataFrame with:
+    - Salesman Name
+    - Year, Semester
+    - Target Value
+    - Actual Value
+    - Achievement %
+    - Variance (actual - target)
+    - Status (On Track / Warning / Behind)
+    """
+    # Lines 1205-1222 of IMPLEMENTATION_PLAN.md
+    # COMPLETELY NOT IMPLEMENTED
+```
+
+**Impact:**
+- Cannot show "Sales vs Target" dashboard
+- No semester-based performance tracking
+- Missing key business requirement
+
+**Fix Required:**
+1. Implement get_semester() in business_logic.py
+2. Update fact_billing to populate semester/year on insert
+3. Create API endpoint /api/sales/target-vs-actual
+4. Create dashboard page SalesTargetComparison.tsx
+5. Add achievement calculation with status flags
+
+---
+
+### Section 11: Lead-time Calculation ❌ **0% COMPLETE - CRITICAL**
+
+**STATUS:** 🔴 **SECTION 11 COMPLETELY MISSING** - This is the MOST CRITICAL gap
+
+| Component | Plan | Implementation | Status |
+|-----------|------|----------------|--------|
+| MTS Lead-time (3 stages) | Production + Transit + Storage | ❌ NOT IMPLEMENTED | ❌ MISSING |
+| MTO Lead-time (5 stages) | Prep + Prod + Transit + Storage + Delivery | ❌ NOT IMPLEMENTED | ❌ MISSING |
+| fact_production columns | 7 lead-time columns | ❌ COLUMNS DO NOT EXIST | ❌ MISSING |
+| calculate_mts_leadtime() | Function to calculate 3 stages | ❌ NOT IMPLEMENTED | ❌ MISSING |
+| calculate_mto_leadtime() | Function to calculate 5 stages | ❌ NOT IMPLEMENTED | ❌ MISSING |
+| Lead-time API endpoints | /api/leadtime/* | ❌ NOT IMPLEMENTED | ❌ MISSING |
+| Lead-time Dashboard | Charts showing time breakdown | ❌ NOT IMPLEMENTED | ❌ MISSING |
+
+**Original Plan Requirements (Section 11, Lines 1223-1425):**
+
+**11.1 MTS Lead-time:**
+```python
+def calculate_mts_leadtime(production_order, mb51_df):
+    """
+    3 components:
+    1. Production Time: Release → Finish
+    2. Transit Time: Finish → Receipt (MVT 101)
+    3. Storage Time: Receipt → Issue (MVT 601 with netting)
+    
+    Total: Sum of all 3
+    """
+```
+
+**11.2 MTO Lead-time:**
+```python
+def calculate_mto_leadtime(production_order, mb51_df, zrmm024_df, zrsd004_df):
+    """
+    5 components:
+    1. Preparation Time: PO Date → Release
+    2. Production Time: Release → Finish
+    3. Transit Time: Finish → Receipt (MVT 101)
+    4. Storage Time: Receipt → Issue (MVT 601)
+    5. Delivery Time: Issue → Actual GI Date (from ZRSD004)
+    
+    Total: Sum of all 5
+    """
+```
+
+**Required Database Changes:**
+```sql
+ALTER TABLE fact_production ADD COLUMN prep_time_days INT;
+ALTER TABLE fact_production ADD COLUMN production_time_days INT;
+ALTER TABLE fact_production ADD COLUMN transit_time_days INT;
+ALTER TABLE fact_production ADD COLUMN storage_time_days INT;
+ALTER TABLE fact_production ADD COLUMN delivery_time_days INT;
+ALTER TABLE fact_production ADD COLUMN total_leadtime_days INT;
+ALTER TABLE fact_production ADD COLUMN leadtime_status VARCHAR(20);
+```
+
+**Impact:**
+- Cannot track order fulfillment time
+- Missing key supply chain metric
+- User explicitly asked: "lead time của MTO và MTS. Sao tới giờ tôi vẫn chưa thấy?"
+- **THIS IS A CORE BUSINESS REQUIREMENT**
+
+**Fix Required:**
+- See [LEADTIME_MISSING_FEATURE.md](LEADTIME_MISSING_FEATURE.md) for 11-hour implementation plan
+
+---
+
+### Section 12: Alert System 🟡 30% Complete
+
+| Component | Plan | Implementation | Active | Status |
+|-----------|------|----------------|--------|--------|
+| fact_alerts Table | Alert storage | ✅ Table exists | ❌ NOT POPULATED | 🟡 PARTIAL |
+| Stuck in Transit Detector | 48h threshold | ✅ detect_stuck_in_transit() | ❌ NOT RUNNING | 🟡 PARTIAL |
+| Low Yield Detector | < 85% threshold | ✅ detect_low_yield() | ❌ NOT RUNNING | 🟡 PARTIAL |
+| Alert Severity Levels | CRITICAL/HIGH/MEDIUM | ✅ Severity column exists | ❌ NO DATA | 🟡 PARTIAL |
+| Alert Dashboard Page | Real-time alerts | ❌ NO DASHBOARD | ❌ MISSING | ❌ MISSING |
+| Alert API Endpoints | /api/alerts/* | ❌ NO API | ❌ MISSING | ❌ MISSING |
+
+**Evidence:**
+- ✅ **MODULE:** [src/core/alerts.py](../../src/core/alerts.py) - detect_stuck_in_transit(), detect_low_yield()
+- ✅ **TABLE:** fact_alerts exists with severity, status, stuck_hours columns
+- ❌ **NOT INTEGRATED:** Alerts module NOT called by ETL pipeline
+- ❌ **NO DASHBOARD:** No page to display alerts
+
+**Example from Original Plan (Section 12.1):**
+
+```python
+def detect_stuck_in_transit(mb51_df, threshold_hours=48):
+    """
+    Logic:
+    1. Find all MVT 101 (Receipt at Factory 1201)
+    2. Check for MVT 601 (Issue) within 48 hours
+    3. If no 601 → ALERT: STUCK
+    4. If 601 > 48h after 101 → ALERT: DELAYED
+    
+    Returns: DataFrame of alerts with batch, material, stuck_hours
+    """
+```
+
+**Current Status:** Function exists but:
+- ❌ NOT scheduled to run automatically
+- ❌ NOT triggered by ETL pipeline
+- ❌ fact_alerts table has 0 rows
+- ❌ No dashboard to view alerts
+
+**Fix Required:**
+1. Add alert detection to ETL transform pipeline
+2. Create API router /api/v1/alerts
+   - GET /api/alerts/stuck-inventory
+   - GET /api/alerts/low-yield
+   - GET /api/alerts/summary (counts by severity)
+3. Create AlertMonitor.tsx dashboard page
+4. Add real-time alert cards to Executive Dashboard
+
+---
+
+### Section 13: Technology Stack ✅ 100% Complete
+
+**All technology choices match original plan:**
+
+| Component | Plan | Implementation | Status |
+|-----------|------|----------------|--------|
+| Database | PostgreSQL 16 | ✅ PostgreSQL 16 | ✅ MATCH |
+| ORM | SQLAlchemy 2.0 | ✅ SQLAlchemy 2.0.36 | ✅ MATCH |
+| API | FastAPI | ✅ FastAPI 0.115.6 | ✅ MATCH |
+| Frontend (Option B) | React 18 | ✅ React 18.3.1 | ✅ MATCH |
+| Charts | Apache ECharts / Recharts | ✅ Recharts 2.15.0 | ✅ MATCH |
+| Styling | TailwindCSS | ✅ Tailwind CSS v4 | ✅ MATCH |
+| Container | Docker | ✅ Docker support | ✅ MATCH |
+
+No gaps in technology stack.
+
+---
+
+### Section 14: Implementation Steps ⚠️ 60% Complete
+
+**8-Week Plan Status:**
+
+| Phase | Plan | Implementation | Completion | Status |
+|-------|------|----------------|------------|--------|
+| **Phase 1: Foundation (Week 1-2)** | Database + Raw Data Lake | ✅ DONE | 100% | ✅ COMPLETE |
+| **Phase 2: Transform Layer (Week 3-4)** | Core Algorithms | ✅ DONE | 90% | 🟡 PARTIAL |
+| **Phase 3: Warehouse Load (Week 5)** | UPSERT Engine | ✅ DONE | 100% | ✅ COMPLETE |
+| **Phase 4: Analytics & KPIs (Week 6)** | Lead-time + Semester | ❌ INCOMPLETE | **0%** | ❌ MISSING |
+| **Phase 5: Visualization (Week 7-8)** | Dashboards | ✅ DONE | 80% | 🟡 PARTIAL |
+
+**Critical Gaps in Phase 2:**
+- 🟡 Stack Netting exists but NOT integrated in views
+- 🟡 UOM Conversion exists but NOT applied to all qty_kg columns
+
+**Critical Gaps in Phase 4 (COMPLETELY SKIPPED):**
+- ❌ Lead-time Calculator (Section 11) - **0% implemented**
+- ❌ Semester Analytics (Section 10) - **0% implemented**
+
+**Critical Gaps in Phase 5:**
+- ❌ P03→P02→P01 Chain visualization
+- ❌ Alert Monitor dashboard
+- ❌ Target vs Actual dashboard
+
+---
+
+### Section 15: KPIs Summary ⚠️ 75% Complete
+
+**Implemented KPIs:**
+
+| Category | KPI | Plan | Implementation | Status |
+|----------|-----|------|----------------|--------|
+| **Sales** | Revenue | ✅ | ✅ Sum(Net Value) | ✅ COMPLETE |
+| Sales | Order Count | ✅ | ✅ Count(Billing Doc) | ✅ COMPLETE |
+| Sales | **Achievement %** | ✅ | ❌ **MISSING** | ❌ MISSING |
+| Sales | **Variance** | ✅ | ❌ **MISSING** | ❌ MISSING |
+| **Production** | Production Time | ✅ | ✅ Finish - Release | ✅ COMPLETE |
+| Production | Order Completion % | ✅ | ✅ Delivered / Order × 100 | ✅ COMPLETE |
+| Production | Stage Yield % | ✅ | ✅ Output/Input × 100 | ✅ COMPLETE |
+| Production | Total Loss KG | ✅ | ✅ P03_Input - P01_Output | ✅ COMPLETE |
+| **Inventory** | Net Stock | ✅ | ❌ **SUM(qty) instead of SUM(net_qty)** | 🟡 PARTIAL |
+| Inventory | **Transit Time** | ✅ | ❌ **MISSING** | ❌ MISSING |
+| Inventory | **Storage Time** | ✅ | ❌ **MISSING** | ❌ MISSING |
+| **AR** | Collection Rate | ✅ | ✅ Realization / Target × 100 | ✅ COMPLETE |
+| AR | Overdue % | ✅ | ✅ (Buckets > 30) / Total × 100 | ✅ COMPLETE |
+| AR | DSO | ✅ | ❌ **MISSING** | ❌ MISSING |
+
+**Missing KPIs (HIGH PRIORITY):**
+
+1. **Sales Achievement %** - Requires Semester logic (Section 10)
+2. **Sales Variance** - Requires Semester logic (Section 10)
+3. **Transit Time** - Requires Lead-time calculation (Section 11)
+4. **Storage Time** - Requires Lead-time calculation (Section 11)
+5. **DSO (Days Sales Outstanding)** - Requires average calculation
+6. **Net Stock** - Requires Stack Netting integration (Section 7)
+
+---
+
+## 🔴 Critical Missing Features Summary
+
+### 1. Lead-time Calculation (HIGHEST PRIORITY)
+
+**Requirement:** IMPLEMENTATION_PLAN.md Section 11 (203 lines of detailed spec)  
+**Status:** ❌ **COMPLETELY NOT IMPLEMENTED**  
+**Impact:** Cannot track order fulfillment time (MTO 5 stages, MTS 3 stages)  
+**Effort:** 11 hours (per LEADTIME_MISSING_FEATURE.md)
+
+**Required Deliverables:**
+- [ ] Database: Add 7 lead-time columns to fact_production
+- [ ] Backend: Create src/core/leadtime_calculator.py module
+- [ ] Backend: Create /api/v1/leadtime router (3 endpoints)
+- [ ] Frontend: Create LeadTimeDashboard.tsx page
+- [ ] ETL: Integrate lead-time calculation into transform pipeline
+
+---
+
+### 2. Semester-based Target Tracking
+
+**Requirement:** IMPLEMENTATION_PLAN.md Section 10 (50 lines of spec)  
+**Status:** ❌ **NOT IMPLEMENTED**  
+**Impact:** Cannot compare sales vs targets by salesman  
+**Effort:** 6 hours
+
+**Required Deliverables:**
+- [ ] Backend: Implement get_semester() in business_logic.py
+- [ ] Backend: Implement calculate_target_achievement()
+- [ ] Backend: Create /api/v1/sales/target-vs-actual endpoint
+- [ ] Frontend: Create SalesTargetComparison.tsx page
+- [ ] ETL: Auto-populate semester/year in fact_billing
+
+---
+
+### 3. Active Alert System
+
+**Requirement:** IMPLEMENTATION_PLAN.md Section 12 (130 lines of spec)  
+**Status:** 🟡 **MODULE EXISTS BUT NOT ACTIVE**  
+**Impact:** No proactive alerts for stuck inventory or low yield  
+**Effort:** 4 hours
+
+**Required Deliverables:**
+- [ ] ETL: Integrate alert detection into transform.py
+- [ ] Backend: Create /api/v1/alerts router
+- [ ] Frontend: Create AlertMonitor.tsx page
+- [ ] Frontend: Add alert cards to Executive Dashboard
+- [ ] Scheduler: Run alert detection every 6 hours
+
+---
+
+### 4. Stack Netting Integration in Views
+
+**Requirement:** IMPLEMENTATION_PLAN.md Section 7.3  
+**Status:** 🟡 **MODULE EXISTS BUT NOT USED**  
+**Impact:** Inventory quantities may be incorrect if reversals exist  
+**Effort:** 3 hours
+
+**Required Deliverables:**
+- [ ] ETL: Run StackNettingEngine on fact_inventory
+- [ ] ETL: Populate is_netted and net_qty columns
+- [ ] Views: Update view_inventory_current to use `WHERE is_netted = TRUE`
+- [ ] API: Update /api/inventory/* to use net_qty
+
+---
+
+### 5. UOM Conversion Application
+
+**Requirement:** IMPLEMENTATION_PLAN.md Section 8.2  
+**Status:** 🟡 **MODULE EXISTS BUT NOT FULLY APPLIED**  
+**Impact:** Cannot compare P01 (PC) with P02/P03 (KG) accurately  
+**Effort:** 2 hours
+
+**Required Deliverables:**
+- [ ] ETL: Apply normalize_to_kg() to all fact tables
+- [ ] ETL: Populate *_qty_kg columns (production, inventory, billing, delivery)
+- [ ] Views: Update yield calculation to use normalized KG
+
+---
+
+### 6. Production Chain Visualization
+
+**Requirement:** IMPLEMENTATION_PLAN.md Section 9.1  
+**Status:** 🟡 **DATA EXISTS BUT NO DASHBOARD**  
+**Impact:** Cannot visualize P03→P02→P01 flow and loss analysis  
+**Effort:** 4 hours
+
+**Required Deliverables:**
+- [ ] Frontend: Add "Chain Analysis" tab to ProductionYield.tsx
+- [ ] Frontend: Sankey diagram showing P03→P02→P01 flow
+- [ ] Frontend: Detailed chain records table
+- [ ] Frontend: Loss analysis by stage
+
+---
+
+## 📊 Compliance Scorecard
+
+### Data Architecture: ✅ 95%
+- ✅ ELT 3-layer architecture implemented
+- ✅ All 8 raw tables created
+- ✅ All 8 fact tables created
+- ✅ All 7 dimension tables created
+- ❌ Missing 7 lead-time columns in fact_production
+
+### Core Algorithms: 🟡 70%
+- ✅ Stack Netting module exists (not integrated)
+- ✅ UOM Conversion module exists (not fully applied)
+- ✅ Yield Tracker module exists (complete)
+- ✅ Business Logic module exists (mostly complete)
+- ❌ Lead-time Calculator NOT IMPLEMENTED
+- ❌ Semester Logic NOT IMPLEMENTED
+- ❌ Alert System NOT ACTIVE
+
+### Backend API: 🟡 75%
+- ✅ 7 routers implemented
+- ✅ JWT authentication working
+- ✅ CORS configured
+- ❌ Missing /api/v1/leadtime router
+- ❌ Missing /api/v1/alerts router
+- ❌ Missing /api/v1/sales/target-vs-actual endpoint
+
+### Frontend Dashboards: 🟡 70%
+- ✅ 6 pages implemented (Executive, Sales, AR, Inventory, Yield, MTO)
+- ✅ Professional UI/UX (B/M/K formatting, charts)
+- ❌ Missing Lead Time Dashboard
+- ❌ Missing Alert Monitor page
+- ❌ Missing Target vs Actual page
+- ❌ Missing P03→P02→P01 Chain visualization
+
+### Business Requirements: 🟡 65%
+- ✅ Order classification (MTS/MTO)
+- ✅ Yield tracking (P03→P02→P01)
+- ✅ AR aging analysis
+- ✅ Sales performance tracking
+- ❌ Lead-time calculation (MTO 5-stage, MTS 3-stage)
+- ❌ Semester-based target comparison
+- ❌ Active alert system
+
+---
+
+## 🎯 Recommended Action Plan
+
+### Immediate Priority (Week 1-2)
+
+**1. Implement Lead-time Calculation** (11 hours) - HIGHEST PRIORITY
+- Follow [LEADTIME_MISSING_FEATURE.md](LEADTIME_MISSING_FEATURE.md)
+- Database migration (7 columns)
+- Calculator module (MTO 5-stage, MTS 3-stage)
+- API endpoints
+- Frontend dashboard
+
+**2. Activate Alert System** (4 hours)
+- Integrate detect_stuck_in_transit() and detect_low_yield() into ETL
+- Create /api/v1/alerts router
+- Create AlertMonitor.tsx page
+- Add alert cards to Executive Dashboard
+
+**3. Integrate Stack Netting** (3 hours)
+- Run StackNettingEngine on fact_inventory
+- Update views to use `WHERE is_netted = TRUE`
+- Fix inventory quantities
+
+**Total Week 1-2: 18 hours**
+
+---
+
+### Short-term Priority (Week 3-4)
+
+**4. Implement Semester Target Tracking** (6 hours)
+- Implement get_semester() and calculate_target_achievement()
+- Create /api/v1/sales/target-vs-actual endpoint
+- Create SalesTargetComparison.tsx page
+
+**5. Apply UOM Conversion Fully** (2 hours)
+- Populate all *_qty_kg columns
+- Update yield calculations
+
+**6. Add Production Chain Visualization** (4 hours)
+- Sankey diagram P03→P02→P01
+- Loss analysis dashboard
+
+**Total Week 3-4: 12 hours**
+
+---
+
+### Nice-to-Have (Week 5+)
+
+**7. Additional KPIs** (4 hours)
+- DSO (Days Sales Outstanding) calculation
+- Transit time analytics
+- Storage time analytics
+
+**8. Export Functionality** (6 hours)
+- PDF export (ReportLab)
+- Excel export (openpyxl)
+
+**9. Testing & Documentation** (8 hours)
+- Automated tests (pytest)
+- User guide
+- Technical documentation
+
+**Total Week 5+: 18 hours**
+
+---
+
+## 📝 Conclusion
+
+**Total Gap: 48 hours of development work remaining**
+
+**Breakdown:**
+- Critical Missing Features (High Priority): 18 hours
+- Important Features (Medium Priority): 12 hours
+- Nice-to-Have Features (Low Priority): 18 hours
+
+**Key Insight:** Original IMPLEMENTATION_PLAN.md Section 11 (Lead-time) and Section 10 (Semester) were completely missed in execution phases. These are **core business requirements** that must be implemented before the system can be considered complete.
+
+**Next Steps:**
+1. Review this gap analysis with stakeholders
+2. Prioritize features based on business impact
+3. Execute Phase 6 (Lead-time Implementation) ASAP
+4. Complete remaining critical features
+5. Deploy to production
+
+---
+
+**Document prepared by:** Claude (AI Agent)  
+**Skills used:** `databases`, `backend-development`, `ui-ux-pro-max`, `planning`  
+**CLAUDE.md compliance:** ✅ Full analysis, systematic comparison, evidence-based findings
+
+
+
+================================================================================
+FILE: plan.md
+================================================================================
+
+# Full-Stack Web Dashboard - Master Implementation Plan
+
+**Plan Date:** December 25, 2025  
+**Version:** 1.0  
+**Status:** 🔵 APPROVED - Ready for Implementation  
+**Architect/BA/Lead Engineer:** Claude (AI)
+
+---
+
+## 📋 Executive Summary
+
+Triển khai Full-Stack Web Dashboard cho Alkana ELT Project với architecture FastAPI + React + PostgreSQL. Document này tuân thủ nghiêm ngặt các workflows và skills được định nghĩa trong `CLAUDE.md`.
+
+**Duration Estimate:** 5-6 days (full-time development)  
+**Tech Stack:** FastAPI (Python) + React 18 (TypeScript) + PostgreSQL 16 + Docker
+
+---
+
+## 🎯 Project Goals
+
+1. ✅ Web-based dashboard accessible qua browser
+2. ✅ Multi-user với authentication & RBAC
+3. ✅ 4 dashboards: Executive, Production, Inventory, Sales
+4. ✅ Real-time data refresh
+5. ✅ Export capabilities (PDF/Excel)
+6. ✅ Mobile responsive
+7. ✅ On-premises deployment via Docker
+
+---
+
+## 📚 Skills Activation Map
+
+| Phase | Primary Skills | Support Skills | Why This Skill |
+|-------|---------------|----------------|----------------|
+| 1. Database Schema | `databases` | - | PostgreSQL user/role tables, indexes |
+| 2. Backend API | `backend-development` | `code-review` | FastAPI endpoints, auth, security (OWASP) |
+| 3. Frontend UI | `ui-ux-pro-max`, `frontend-development` | `code-review` | React components, professional UI |
+| 4. Deployment | `devops` | - | Docker, Nginx, production config |
+| 5. Testing | `code-review` | `debugging` | Verification gates, quality assurance |
+
+---
+
+## 🏗️ Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                         PRESENTATION LAYER                          │
+├─────────────────────────────────────────────────────────────────────┤
+│  React 18 + TypeScript + Vite                                       │
+│  ├── Tailwind CSS (styling)                                        │
+│  ├── Recharts (visualizations)                                     │
+│  ├── TanStack Query (data fetching)                                │
+│  ├── React Router v6 (routing)                                     │
+│  └── Axios (HTTP client)                                           │
+│                                                                      │
+│  Pages:                                                              │
+│  ├── /login                    → Login page                        │
+│  ├── /                         → Executive Dashboard               │
+│  ├── /production               → Production Performance            │
+│  ├── /inventory                → Inventory Management              │
+│  ├── /sales                    → Sales Analytics                   │
+│  └── /alerts                   → Alert Management                  │
+└──────────────────────────┬──────────────────────────────────────────┘
+                           │ HTTPS / REST API
+┌──────────────────────────┴──────────────────────────────────────────┐
+│                          API LAYER                                   │
+├─────────────────────────────────────────────────────────────────────┤
+│  FastAPI (Python 3.14)                                              │
+│  ├── JWT Authentication (python-jose + passlib)                    │
+│  ├── RBAC Middleware (admin/analyst/viewer roles)                  │
+│  ├── Rate Limiting (slowapi)                                       │
+│  └── CORS + Security Headers                                       │
+│                                                                      │
+│  Endpoints:                                                          │
+│  ├── POST /api/v1/auth/login   → JWT token                         │
+│  ├── GET  /api/v1/auth/me      → Current user                      │
+│  ├── GET  /api/v1/dashboards/executive                             │
+│  ├── GET  /api/v1/dashboards/production                            │
+│  ├── GET  /api/v1/dashboards/inventory                             │
+│  ├── GET  /api/v1/dashboards/sales                                 │
+│  ├── GET  /api/v1/alerts                                           │
+│  └── GET  /api/v1/exports/{type}                                   │
+│                                                                      │
+│  Reuse Existing:                                                     │
+│  ├── src/db/models.py          → SQLAlchemy models                 │
+│  ├── src/db/connection.py      → Database connection               │
+│  └── src/core/*                → Business logic (netting, yield)   │
+└──────────────────────────┬──────────────────────────────────────────┘
+                           │ SQLAlchemy ORM
+┌──────────────────────────┴──────────────────────────────────────────┐
+│                         DATA LAYER                                   │
+├─────────────────────────────────────────────────────────────────────┤
+│  PostgreSQL 16                                                       │
+│  ├── Existing tables (fact_*, dim_*, raw_*)                        │
+│  ├── NEW: users, roles, permissions, user_roles                    │
+│  └── NEW: Analytics views (view_*)                                 │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 📂 Project Structure (After Implementation)
+
+```
+alkana-dashboard/
+├── src/                          # Backend (Python)
+│   ├── api/                      # NEW - FastAPI application
+│   │   ├── __init__.py
+│   │   ├── main.py              # FastAPI app entry
+│   │   ├── deps.py              # Dependencies (DB, auth)
+│   │   ├── auth.py              # JWT authentication
+│   │   ├── middleware.py        # CORS, security headers
+│   │   └── routers/
+│   │       ├── __init__.py
+│   │       ├── auth.py          # /api/v1/auth/*
+│   │       ├── dashboards.py    # /api/v1/dashboards/*
+│   │       ├── alerts.py        # /api/v1/alerts
+│   │       └── exports.py       # /api/v1/exports/*
+│   ├── db/
+│   │   ├── models.py            # UPDATED - Add User, Role models
+│   │   ├── connection.py        # Existing
+│   │   └── views.py             # NEW - Analytics SQL views
+│   ├── core/                    # Existing business logic
+│   ├── etl/                     # Existing ETL code
+│   └── main.py                  # Existing CLI entry
+│
+├── web/                          # NEW - Frontend (React)
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── common/          # Reusable components
+│   │   │   │   ├── KPICard.tsx
+│   │   │   │   ├── DataTable.tsx
+│   │   │   │   ├── LoadingSpinner.tsx
+│   │   │   │   └── FilterPanel.tsx
+│   │   │   ├── charts/          # Chart components
+│   │   │   │   ├── RevenueChart.tsx
+│   │   │   │   ├── YieldChart.tsx
+│   │   │   │   └── InventoryChart.tsx
+│   │   │   └── layout/          # Layout components
+│   │   │       ├── Navbar.tsx
+│   │   │       ├── Sidebar.tsx
+│   │   │       └── Layout.tsx
+│   │   ├── pages/               # Page components
+│   │   │   ├── Login.tsx
+│   │   │   ├── Executive.tsx
+│   │   │   ├── Production.tsx
+│   │   │   ├── Inventory.tsx
+│   │   │   ├── Sales.tsx
+│   │   │   └── Alerts.tsx
+│   │   ├── services/
+│   │   │   └── api.ts           # Axios client
+│   │   ├── hooks/
+│   │   │   ├── useAuth.ts
+│   │   │   └── useDashboard.ts
+│   │   ├── types/
+│   │   │   └── index.ts         # TypeScript interfaces
+│   │   ├── App.tsx
+│   │   ├── main.tsx
+│   │   └── index.css            # Tailwind imports
+│   ├── public/
+│   ├── index.html
+│   ├── package.json
+│   ├── vite.config.ts
+│   ├── tailwind.config.js
+│   ├── tsconfig.json
+│   └── Dockerfile
+│
+├── docker/                       # NEW - Docker configs
+│   ├── docker-compose.yml
+│   ├── docker-compose.prod.yml
+│   ├── Dockerfile.api
+│   └── nginx.conf
+│
+├── docs/                         # Documentation
+│   ├── USER_GUIDE.md
+│   ├── TECHNICAL_GUIDE.md
+│   └── API_REFERENCE.md
+│
+├── tests/
+│   ├── test_core.py             # Existing
+│   ├── test_api.py              # NEW - API tests
+│   └── test_integration.py      # NEW - E2E tests
+│
+├── CLAUDE.md
+├── IMPLEMENTATION_PLAN.md
+├── DEPLOYMENT_PLAN_PHASE5.md
+└── requirements.txt             # UPDATED - Add FastAPI deps
+```
+
+---
+
+## 🔄 Implementation Phases
+
+### Phase 1: Database & Models Enhancement
+**Duration:** 4-6 hours  
+**Skills:** `databases`  
+**Workflow Compliance:** `.claude/workflows/development-rules.md`
+
+See: [phase-01-database-models.md](phase-01-database-models.md)
+
+### Phase 2: Backend API Development
+**Duration:** 8-12 hours  
+**Skills:** `backend-development`  
+**Workflow Compliance:** `.claude/workflows/primary-workflow.md` → Code Implementation
+
+See: [phase-02-backend-api.md](phase-02-backend-api.md)
+
+### Phase 3: Frontend Development
+**Duration:** 12-16 hours  
+**Skills:** `ui-ux-pro-max`, `frontend-development`  
+**Workflow Compliance:** `.claude/workflows/primary-workflow.md` → Code Quality
+
+See: [phase-03-frontend-development.md](phase-03-frontend-development.md)
+
+### Phase 4: Docker Deployment
+**Duration:** 4-6 hours  
+**Skills:** `devops`  
+**Workflow Compliance:** `.claude/workflows/primary-workflow.md` → Integration
+
+See: [phase-04-docker-deployment.md](phase-04-docker-deployment.md)
+
+### Phase 5: Testing & Documentation
+**Duration:** 4-6 hours  
+**Skills:** `code-review`, `debugging`  
+**Workflow Compliance:** `.claude/workflows/primary-workflow.md` → Testing
+
+See: [phase-05-testing-docs.md](phase-05-testing-docs.md)
+
+---
+
+## ✅ Success Criteria
+
+### Technical
+- [ ] API response time < 500ms for all endpoints
+- [ ] Frontend loads in < 3 seconds
+- [ ] All 4 dashboards display data correctly
+- [ ] JWT authentication working
+- [ ] Role-based access enforced
+- [ ] Docker deployment runs without errors
+- [ ] All tests pass (unit + integration)
+
+### Business
+- [ ] Users can login với username/password
+- [ ] Executive dashboard shows KPIs: Revenue, Orders, Yield
+- [ ] Production dashboard shows MTO orders với status
+- [ ] Inventory dashboard shows current stock by plant
+- [ ] Sales dashboard shows performance vs targets
+- [ ] Alerts dashboard shows stuck inventory
+- [ ] Export to PDF/Excel working
+
+---
+
+## 📝 CLAUDE.md Compliance Checklist
+
+| Rule | How We Comply | Phase |
+|------|---------------|-------|
+| YAGNI | Only implement features specified in requirements | All |
+| KISS | Simple architecture: FastAPI + React + PostgreSQL | All |
+| DRY | Reuse existing models, business logic from src/core | 2, 3 |
+| File naming: kebab-case | All new files use kebab-case | All |
+| File < 200 lines | Split large components into smaller modules | 3 |
+| No mocking in tests | Real database, real API calls | 5 |
+| Run compile check after edits | `tsc --noEmit` for frontend, mypy for backend | All |
+| Code review after implementation | Delegate to code-reviewer agent | All |
+| Update docs | Update docs/ folder with new documentation | 5 |
+| No confidential info in git | Use .env files, add to .gitignore | 4 |
+
+---
+
+## 🚨 Risk Mitigation
+
+| Risk | Impact | Probability | Mitigation |
+|------|--------|-------------|------------|
+| FastAPI learning curve | LOW | LOW | Well-documented, simple patterns |
+| React complexity | MEDIUM | MEDIUM | Use ui-ux-pro-max skill for guidance |
+| Docker issues on Windows | MEDIUM | MEDIUM | Provide troubleshooting steps |
+| Database schema conflicts | HIGH | LOW | Use Alembic migrations |
+| CORS issues | LOW | HIGH | Configure properly in middleware |
+| JWT token security | HIGH | LOW | Follow backend-security best practices |
+
+---
+
+## 📊 Dependency Graph
+
+```
+Phase 1 (Database)
+     │
+     ├──────────────────────┐
+     ▼                      ▼
+Phase 2 (Backend)     Phase 3 (Frontend)
+     │                      │
+     └──────────┬───────────┘
+                ▼
+         Phase 4 (Docker)
+                │
+                ▼
+         Phase 5 (Testing)
+```
+
+**Notes:**
+- Phase 2 & 3 can run in parallel (after Phase 1)
+- Phase 4 requires both Phase 2 & 3 complete
+- Phase 5 is final validation
+
+---
+
+## 🎬 Quick Start Commands
+
+```bash
+# Phase 1: Setup database
+python -m src.main init
+python -m src.db.views
+
+# Phase 2: Start backend
+cd alkana-dashboard
+pip install fastapi uvicorn[standard] python-jose[cryptography] passlib[bcrypt]
+uvicorn src.api.main:app --reload --port 8000
+
+# Phase 3: Start frontend
+cd web
+npm install
+npm run dev
+
+# Phase 4: Docker deployment
+docker-compose up --build -d
+
+# Phase 5: Run tests
+python -m pytest tests/ -v
+```
+
+---
+
+## 📎 Related Documents
+
+- [CLAUDE.md](../../CLAUDE.md) - Project configuration
+- [IMPLEMENTATION_PLAN.md](../../IMPLEMENTATION_PLAN.md) - Original ELT plan
+- [DEPLOYMENT_PLAN_PHASE5.md](../../DEPLOYMENT_PLAN_PHASE5.md) - Phase 5 overview
+- [.claude/workflows/primary-workflow.md](../../.claude/workflows/primary-workflow.md) - Workflow rules
+- [.claude/workflows/development-rules.md](../../.claude/workflows/development-rules.md) - Development rules
+
+---
+
+## 🔜 Next Steps
+
+1. **Immediately:** Start Phase 1 - Database & Models Enhancement
+2. **Day 1-2:** Complete Phase 1 + Phase 2 (Backend API)
+3. **Day 2-3:** Complete Phase 3 (Frontend)
+4. **Day 4:** Complete Phase 4 (Docker)
+5. **Day 5:** Complete Phase 5 (Testing & Documentation)
+
+---
+
+**Plan Created By:** Claude (AI Architect)  
+**Approved By:** User  
+**Date:** December 25, 2025
+
+---
+
+*This plan follows all rules defined in CLAUDE.md and activates appropriate skills for each phase.*
+
+

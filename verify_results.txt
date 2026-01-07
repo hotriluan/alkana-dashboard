@@ -1,0 +1,28 @@
+================================================================================
+ALERT SYSTEM VERIFICATION TEST
+================================================================================
+
+[TEST 1] Database - fact_alerts Table
+--------------------------------------------------------------------------------
+Total alerts: 0
+Active: 0
+Resolved: 0
+Traceback (most recent call last):
+  File "C:\dev\alkana-dashboard\verify_alert_system.py", line 31, in <module>
+    print("Status: \u2705 PASS")
+    ~~~~~^^^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2705' in position 8: character maps to <undefined>
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\dev\alkana-dashboard\verify_alert_system.py", line 33, in <module>
+    print(f"Status: \u274c FAIL - {e}")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u274c' in position 8: character maps to <undefined>

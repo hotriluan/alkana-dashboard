@@ -1,0 +1,18 @@
+======================================================================
+UPDATING raw_zrsd006: Extracting data from JSONB to columns
+======================================================================
+
+1. Current state:
+   Total rows: 10373
+   material column populated: 0
+   Material Code in JSON: 10373
+
+2. Extracting data from JSONB...
+Traceback (most recent call last):
+  File "C:\dev\alkana-dashboard\extract_zrsd006_from_json.py", line 50, in <module>
+    print("   \u2705 Data extracted")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2705' in position 3: character maps to <undefined>

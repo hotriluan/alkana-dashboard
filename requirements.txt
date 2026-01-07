@@ -1,0 +1,29 @@
+# Alkana Dashboard - Dependencies
+# ELT Pipeline & Data Processing
+
+# Database
+psycopg2-binary==2.9.9
+sqlalchemy==2.0.23
+alembic==1.13.1
+
+# Data Processing
+pandas==2.1.4
+polars==0.20.3
+openpyxl==3.1.2
+xlrd==2.0.1
+
+# Utilities
+python-dotenv==1.0.0
+hashlib-compat==1.0.1
+
+# API (Phase 5)
+fastapi==0.109.0
+uvicorn==0.25.0
+pydantic==2.5.3
+python-multipart==0.0.6  # File upload support
+aiofiles==23.2.1  # Async file operations
+python-magic==0.4.27  # MIME type detection
+
+# Testing
+pytest==7.4.4
+pytest-cov==4.1.0

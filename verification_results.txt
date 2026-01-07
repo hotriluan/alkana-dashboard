@@ -1,0 +1,27 @@
+Loading data...
+Reading c:\dev\alkana-dashboard\demodata\cooispi.xlsx...
+Reading c:\dev\alkana-dashboard\demodata\mb51.xlsx...
+Reading c:\dev\alkana-dashboard\demodata\zrmm024.xlsx...
+
+--- Verifying MTO Logic ---
+Found 219 unique MTO materials in ZRMM024.
+
+Checking COOISPI (Production Orders)...
+Found 164 production orders for MTO materials.
+WARNING: Found 23 orders for MTO materials MISSING Sales Order assignment!
+           Order Material Number  Sales Order
+134  10000108083       100001069          NaN
+136  10000108596       100001351          NaN
+172  10000107783       100002043          NaN
+173  10000108085       100002200          NaN
+178  10000108174       100002262          NaN
+
+Checking MB51 (Material Movements)...
+Found 1114 movements for MTO materials.
+WARNING: Found 826 movements for MTO materials without Sales Order reference.
+     Material Movement Type Sales Order
+1   100004636           413         NaN
+2   100004636           413         NaN
+85  100004868           101         NaN
+86  100004868           351         NaN
+87  100004868           351         NaN

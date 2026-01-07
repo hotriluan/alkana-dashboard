@@ -1,0 +1,34 @@
+======================================================================
+CHECKING DISTRIBUTION CHANNEL DATA IN ZRSD006
+======================================================================
+
+1. Distribution Channels in raw_zrsd006:
+----------------------------------------------------------------------
+  Channel 11 (Industry  ):  5591 materials
+  Channel 12 (Over Sea  ):   219 materials
+  Channel 13 (Retail    ):  2362 materials
+  Channel 15 (Project   ):  2201 materials
+
+2. JOIN Test: fact_production with raw_zrsd006:
+----------------------------------------------------------------------
+  Total materials in production: 559
+  Matched with zrsd006: 0 (0.0%)
+  Have distribution channel: 0 (0.0%)
+
+3. Production Orders by Distribution Channel:
+----------------------------------------------------------------------
+
+Channel              Type   Orders   Avg Lead-time
+----------------------------------------------------------------------
+No Channel Data      MTO       119          7.0 days
+No Channel Data      MTS       718          4.7 days
+
+======================================================================
+Traceback (most recent call last):
+  File "C:\dev\alkana-dashboard\check_dist_channel.py", line 75, in <module>
+    print("\u2705 CONCLUSION: Can use raw_zrsd006.dist_channel for grouping!")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2705' in position 0: character maps to <undefined>

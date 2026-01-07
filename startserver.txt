@@ -1,0 +1,6 @@
+# Tại thư mục gốc c:\dev\alkana-dashboard
+python -m uvicorn src.api.main:app --reload --port 8000
+
+# Tại thư mục c:\dev\alkana-dashboard\web
+cd web
+npm run dev

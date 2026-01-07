@@ -1,0 +1,468 @@
+
+================================================================================
+FILE: NEXT_STEPS.md
+================================================================================
+
+# Next Steps Implementation Plan
+
+**Date:** December 25, 2025  
+**Based On:** IMPLEMENTATION_REVIEW.md  
+**Priority:** Complete Phases 4 & 5 following CLAUDE.md workflows
+
+---
+
+## ≡ƒÄ» Mission Statement
+
+Complete remaining **48 hours of development work** with **STRICT CLAUDE.md compliance**. Comprehensive gap analysis reveals **22 missing features** from original IMPLEMENTATION_PLAN.md, with **6 critical gaps** requiring immediate attention.
+
+**≡ƒö┤ CRITICAL DISCOVERIES (from COMPREHENSIVE_GAP_ANALYSIS.md):**
+1. **Lead-time Calculation** (Section 11) - COMPLETELY MISSING - 11 hours
+2. **Semester Target Tracking** (Section 10) - NOT IMPLEMENTED - 6 hours
+3. **Stack Netting Integration** - Module exists but NOT USED in views - 3 hours
+4. **UOM Conversion Application** - Module exists but NOT FULLY APPLIED - 2 hours
+5. **Alert System Activation** - Module exists but NOT RUNNING - 4 hours
+6. **Production Chain Visualization** - Data exists but NO DASHBOARD - 4 hours
+
+**Total Implementation Gap:** 48 hours (18 critical + 12 important + 18 nice-to-have)
+
+**Reference:** See [COMPREHENSIVE_GAP_ANALYSIS.md](COMPREHENSIVE_GAP_ANALYSIS.md) for full 82-item comparison
+
+---
+
+## ≡ƒôï Week 1-2: Critical Missing Features (18 hours) ≡ƒö┤ HIGHEST PRIORITY
+
+### Phase 6.1: Lead Time Analysis (11 hours) - URGENT
+
+**Duration:** 11 hours  
+**Status:** ≡ƒö┤ **NOT STARTED** - Section 11 completely missing  
+**Primary Skills:** `backend-development`, `databases`, `ui-ux-pro-max`  
+**Reference:** IMPLEMENTATION_PLAN.md Section 11 (Lines 1223-1425, 203 lines of spec)  
+**Detail:** [LEADTIME_MISSING_FEATURE.md](LEADTIME_MISSING_FEATURE.md)  
+**Gap Analysis:** [COMPREHENSIVE_GAP_ANALYSIS.md](COMPREHENSIVE_GAP_ANALYSIS.md) Section 11
+
+#### Why This Is Critical
+
+**User Question:** "lead time cß╗ºa MTO v├á MTS. Sao tß╗¢i giß╗¥ t├┤i vß║½n ch╞░a thß║Ñy phß║ºn n├áo l├ám y├¬u cß║ºu n├áy?"
+
+**Original Requirement (IMPLEMENTATION_PLAN.md):**
+```
+11. Lead-time Calculation
+
+11.1 MTS Lead-time (Make-to-Stock) - 3 STAGES
+- Production Time: Release ΓåÆ Finish (days)
+- Transit Time: Finish ΓåÆ Receipt (MVT 101)
+- Storage Time: Receipt ΓåÆ Issue (MVT 601 with stack netting)
+
+11.2 MTO Lead-time (Make-to-Order) - 5 STAGES
+- Preparation Time: PO Date ΓåÆ Release (days)
+- Production Time: Release ΓåÆ Finish
+- Transit Time: Finish ΓåÆ Receipt (MVT 101)
+- Storage Time: Receipt ΓåÆ Issue (MVT 601)
+- Delivery Time: Issue ΓåÆ Actual GI (from ZRSD004)
+
+Total: Sum of all components
+Status: ON_TIME / DELAYED / STUCK
+```
+
+**Current Status:** Γ¥î ZERO implementation
+- Γ¥î Database columns do NOT exist (7 missing columns)
+- Γ¥î Calculator module does NOT exist
+- Γ¥î API endpoints do NOT exist
+- Γ¥î Dashboard page does NOT exist
+
+#### Implementation Sub-Phases
+
+**6.1.1 Database Schema (2 hours)**
+- [ ] Add 7 columns to fact_production:
+  - `prep_time_days INT` (MTO only)
+  - `production_time_days INT`
+  - `transit_time_days INT`
+  - `storage_time_days INT`
+  - `delivery_time_days INT` (MTO only)
+  - `total_leadtime_days INT`
+  - `leadtime_status VARCHAR(20)` (ON_TIME/DELAYED/STUCK)
+- [ ] Create database view: `view_leadtime_analysis`
+- [ ] Write migration script
+- [ ] Test schema changes
+
+**6.1.2 Calculation Engine (4 hours)**
+- [ ] Create `src/core/leadtime_calculator.py` (450 lines)
+- [ ] Implement `LeadTimeCalculator` class
+- [ ] Implement `calculate_mts_leadtime()` (3 components)
+- [ ] Implement `calculate_mto_leadtime()` (5 components)
+- [ ] Integrate stack netting for MVT 601
+- [ ] Link to ZRMM024 (purchase orders) for prep time
+- [ ] Link to ZRSD004 (deliveries) for delivery time
+- [ ] Add to ETL transform pipeline
+- [ ] Unit tests for edge cases
+
+**6.1.3 Backend API (2 hours)**
+- [ ] Create `src/api/routers/leadtime.py` router
+- [ ] Endpoint: `GET /api/v1/leadtime/summary` (KPIs)
+- [ ] Endpoint: `GET /api/v1/leadtime/breakdown` (MTO vs MTS)
+- [ ] Endpoint: `GET /api/v1/leadtime/orders` (detail table)
+- [ ] Pydantic response models
+- [ ] Date range filtering
+- [ ] Error handling
+
+**6.1.4 Frontend Dashboard (3 hours)**
+- [ ] Create `web/src/pages/LeadTimeDashboard.tsx` (200+ lines)
+- [ ] 4 KPI cards: Avg MTO, Avg MTS, On-Time %, Delayed Count
+- [ ] Stacked bar chart: Time breakdown (5 stages for MTO, 3 for MTS)
+- [ ] Trend line chart: Lead-time over time
+- [ ] Detail table: Order-level with 7 time columns
+- [ ] Status badges (ON_TIME=green, DELAYED=yellow, STUCK=red)
+- [ ] Date range picker integration
+- [ ] Add to sidebar navigation
+
+**Success Criteria:**
+- Γ£à MTO orders show 5-stage breakdown
+- Γ£à MTS orders show 3-stage breakdown
+- Γ£à Average lead-time KPIs calculated correctly
+- Γ£à Stack netting applied for storage time (MVT 601Γåö602)
+- Γ£à User can filter by date range and order status
+
+---
+
+### Phase 6.2: Alert System Activation (4 hours)
+
+**Status:** ≡ƒƒí **MODULE EXISTS BUT NOT ACTIVE**  
+**Primary Skills:** `backend-development`, `ui-ux-pro-max`  
+**Reference:** IMPLEMENTATION_PLAN.md Section 12 (Lines 1427-1557)  
+**Gap Analysis:** [COMPREHENSIVE_GAP_ANALYSIS.md](COMPREHENSIVE_GAP_ANALYSIS.md) Section 12
+
+#### Current State
+- Γ£à `src/core/alerts.py` exists with 2 detectors
+- Γ£à `fact_alerts` table exists
+- Γ¥î Alert detection NOT running
+- Γ¥î No API endpoints
+- Γ¥î No dashboard page
+
+#### Implementation Tasks
+
+**6.2.1 ETL Integration (1 hour)**
+- [ ] Add alert detection to `src/etl/transform.py`
+- [ ] Call `detect_stuck_in_transit(mb51_df, threshold_hours=48)`
+- [ ] Call `detect_low_yield(fact_production_chain_df, threshold_pct=85)`
+- [ ] Insert alerts into `fact_alerts` table
+- [ ] Mark previous alerts as RESOLVED
+
+**6.2.2 Backend API (1.5 hours)**
+- [ ] Create `src/api/routers/alerts.py` router
+- [ ] Endpoint: `GET /api/v1/alerts/summary` (counts by severity)
+- [ ] Endpoint: `GET /api/v1/alerts/stuck-inventory` (48h threshold)
+- [ ] Endpoint: `GET /api/v1/alerts/low-yield` (< 85%)
+- [ ] Endpoint: `POST /api/v1/alerts/{id}/resolve` (mark resolved)
+
+
+================================================================================
+FILE: GAP_ANALYSIS_SUMMARY.md
+================================================================================
+
+# Gap Analysis Summary - Quick Reference
+
+**Analysis Date:** December 25, 2025  
+**Comparison:** Original IMPLEMENTATION_PLAN.md (1809 lines) vs Current Implementation
+
+---
+
+## ≡ƒÄ» T├ôM Tß║«T NHANH
+
+**Tß╗òng sß╗æ y├¬u cß║ºu:** 82 items  
+**─É├ú ho├án th├ánh:** 48 items (Γ£à 58.5%)  
+**─Éang thiß║┐u:** 34 items (Γ¥î 41.5%)
+
+**Tß╗òng c├┤ng viß╗çc c├▓n lß║íi:** **48 giß╗¥**
+- ≡ƒö┤ Critical (18h): Lead-time, Alert System, Stack Netting
+- ≡ƒƒí Important (12h): Semester Target, UOM Full Apply, Chain Viz
+- ΓÜ¬ Nice-to-have (18h): Export, DSO, Testing, Docs
+
+---
+
+## ≡ƒö┤ TOP 6 Y├èU Cß║ªU THIß║╛U (CRITICAL)
+
+### 1. Lead-time Calculation ΓÅ▒∩╕Å 11 GIß╗£
+
+**Y├¬u cß║ºu gß╗æc (Section 11):**
+- MTS: 3 giai ─æoß║ín (Production ΓåÆ Transit ΓåÆ Storage)
+- MTO: 5 giai ─æoß║ín (Preparation ΓåÆ Production ΓåÆ Transit ΓåÆ Storage ΓåÆ Delivery)
+
+**T├¼nh trß║íng:**
+- Γ¥î KH├öNG C├ô database columns (thiß║┐u 7 cß╗Öt)
+- Γ¥î KH├öNG C├ô calculator module
+- Γ¥î KH├öNG C├ô API endpoints
+- Γ¥î KH├öNG C├ô dashboard page
+
+**Chi tiß║┐t:** [LEADTIME_MISSING_FEATURE.md](LEADTIME_MISSING_FEATURE.md)
+
+---
+
+### 2. Semester Target Tracking ≡ƒôè 6 GIß╗£
+
+**Y├¬u cß║ºu gß╗æc (Section 10):**
+- Semester 1: Jan-Jun
+- Semester 2: Jul-Dec
+- So s├ính Target vs Actual theo salesman + semester
+- Status: On Track (ΓëÑ90%), Warning (70-90%), Behind (<70%)
+
+**T├¼nh trß║íng:**
+- Γ¥î KH├öNG C├ô get_semester() function
+- Γ¥î KH├öNG C├ô calculate_target_achievement()
+- Γ¥î KH├öNG C├ô Target vs Actual dashboard
+
+---
+
+### 3. Alert System Activation ≡ƒÜ¿ 4 GIß╗£
+
+**Y├¬u cß║ºu gß╗æc (Section 12):**
+- Stuck in Transit: > 48h kh├┤ng issue (MVT 601)
+- Low Yield: < 85% total yield
+
+**T├¼nh trß║íng:**
+- Γ£à Module EXISTS nh╞░ng KH├öNG CHß║áY
+- Γ¥î KH├öNG C├ô API endpoints
+- Γ¥î KH├öNG C├ô Alert Monitor dashboard
+
+---
+
+### 4. Stack Netting Integration ≡ƒöä 3 GIß╗£
+
+**Y├¬u cß║ºu gß╗æc (Section 7.3):**
+- LIFO algorithm ─æß╗â b├╣ trß╗½ 601Γåö602
+- SUM(net_qty) thay v├¼ SUM(qty)
+
+**T├¼nh trß║íng:**
+- Γ£à Module EXISTS nh╞░ng KH├öNG Sß╗¼ Dß╗ñNG trong views
+- Γ¥î is_netted v├á net_qty columns NULL
+- Γ¥î Inventory quantities c├│ thß╗â SAI nß║┐u c├│ reversals
+
+---
+
+### 5. UOM Conversion Full Application ≡ƒôÅ 2 GIß╗£
+
+**Y├¬u cß║ºu gß╗æc (Section 8.2):**
+- Tß║Ñt cß║ú *_qty_kg columns phß║úi ─æ╞░ß╗úc populate
+- So s├ính P01 (PC) vß╗¢i P02/P03 (KG)
+
+**T├¼nh trß║íng:**
+- Γ£à Module EXISTS nh╞░ng KH├öNG ├üP Dß╗ñNG ─æß║ºy ─æß╗º
+- Γ¥î order_qty_kg, delivered_qty_kg, billing_qty_kg ─æß╗üu NULL
+
+---
+
+### 6. Production Chain Visualization ≡ƒÅ¡ 4 GIß╗£
+
+**Y├¬u cß║ºu gß╗æc (Section 9.1):**
+- Sankey diagram P03ΓåÆP02ΓåÆP01
+- Loss analysis by stage
+
+**T├¼nh trß║íng:**
+- Γ£à Data EXISTS (fact_production_chain c├│ 127 rows)
+- Γ¥î KH├öNG C├ô dashboard visualization
+- Γ¥î Chß╗ë hiß╗ân thß╗ï aggregate yield 89.1%
+
+---
+
+## ≡ƒôï 22 Y├èU Cß║ªU THIß║╛U HO├ÇN CHß╗êNH
+
+| # | Requirement | Section | Status | Priority | Hours |
+|---|-------------|---------|--------|----------|-------|
+| 1 | Lead-time MTS (3 stages) | 11.1 | Γ¥î MISSING | ≡ƒö┤ CRITICAL | 5 |
+| 2 | Lead-time MTO (5 stages) | 11.2 | Γ¥î MISSING | ≡ƒö┤ CRITICAL | 6 |
+| 3 | Stuck in Transit Alert | 12.1 | ≡ƒƒí EXISTS | ≡ƒö┤ CRITICAL | 2 |
+| 4 | Low Yield Alert | 12.2 | ≡ƒƒí EXISTS | ≡ƒö┤ CRITICAL | 2 |
+| 5 | Stack Netting in Views | 7.3 | ≡ƒƒí EXISTS | ≡ƒö┤ CRITICAL | 3 |
+| 6 | UOM Conversion Apply | 8.2 | ≡ƒƒí PARTIAL | ≡ƒö┤ CRITICAL | 2 |
+| 7 | get_semester() | 10.1 | Γ¥î MISSING | ≡ƒƒí IMPORTANT | 2 |
+| 8 | calculate_target_achievement() | 10.2 | Γ¥î MISSING | ≡ƒƒí IMPORTANT | 2 |
+| 9 | Target vs Actual Dashboard | 10.2 | Γ¥î MISSING | ≡ƒƒí IMPORTANT | 2 |
+| 10 | P03ΓåÆP02ΓåÆP01 Sankey | 9.1 | Γ¥î MISSING | ≡ƒƒí IMPORTANT | 4 |
+| 11 | Alert Monitor Dashboard | 12.3 | Γ¥î MISSING | ≡ƒö┤ CRITICAL | 2 |
+| 12 | Lead Time Dashboard | 11 | Γ¥î MISSING | ≡ƒö┤ CRITICAL | 3 |
+| 13 | DSO Calculation | 15 | Γ¥î MISSING | ΓÜ¬ NICE | 2 |
+| 14 | Transit Time KPI | 15 | Γ¥î MISSING | ≡ƒƒí IMPORTANT | 1 |
+| 15 | Storage Time KPI | 15 | Γ¥î MISSING | ≡ƒƒí IMPORTANT | 1 |
+| 16 | PDF Export | - | Γ¥î MISSING | ΓÜ¬ NICE | 3 |
+| 17 | Excel Export | - | Γ¥î MISSING | ΓÜ¬ NICE | 3 |
+| 18 | Automated Tests (pytest) | Phase 5 | Γ¥î MISSING | ΓÜ¬ NICE | 4 |
+| 19 | E2E Tests (Playwright) | Phase 5 | Γ¥î MISSING | ΓÜ¬ NICE | 4 |
+| 20 | USER_GUIDE.md | Phase 5 | Γ¥î MISSING | ΓÜ¬ NICE | 2 |
+| 21 | TECHNICAL_GUIDE.md | Phase 5 | Γ¥î MISSING | ΓÜ¬ NICE | 2 |
+| 22 | docker-compose.yml | Phase 4 | Γ¥î MISSING | ΓÜ¬ NICE | 3 |
+
+**Total:** 48 hours
+
+---
+
+## ≡ƒôà Kß║╛ HOß║áCH THß╗░C HIß╗åN
+
+### Week 1-2: Critical Features (18h) ≡ƒö┤
+1. Lead-time Calculation (11h)
+   - Database: 7 columns
+   - Calculator: MTO 5-stage, MTS 3-stage
+   - API: 3 endpoints
+   - Dashboard: LeadTimeDashboard.tsx
+2. Alert System (4h)
+   - ETL integration
+   - API endpoints
+   - AlertMonitor.tsx
+3. Stack Netting (3h)
+   - Apply netting in ETL
+   - Update views
+
+
+================================================================================
+FILE: plan.md
+================================================================================
+
+# Full-Stack Web Dashboard - Master Implementation Plan
+
+**Plan Date:** December 25, 2025  
+**Version:** 1.0  
+**Status:** ≡ƒö╡ APPROVED - Ready for Implementation  
+**Architect/BA/Lead Engineer:** Claude (AI)
+
+---
+
+## ≡ƒôï Executive Summary
+
+Triß╗ân khai Full-Stack Web Dashboard cho Alkana ELT Project vß╗¢i architecture FastAPI + React + PostgreSQL. Document n├áy tu├ón thß╗º nghi├¬m ngß║╖t c├íc workflows v├á skills ─æ╞░ß╗úc ─æß╗ïnh ngh─⌐a trong `CLAUDE.md`.
+
+**Duration Estimate:** 5-6 days (full-time development)  
+**Tech Stack:** FastAPI (Python) + React 18 (TypeScript) + PostgreSQL 16 + Docker
+
+---
+
+## ≡ƒÄ» Project Goals
+
+1. Γ£à Web-based dashboard accessible qua browser
+2. Γ£à Multi-user vß╗¢i authentication & RBAC
+3. Γ£à 4 dashboards: Executive, Production, Inventory, Sales
+4. Γ£à Real-time data refresh
+5. Γ£à Export capabilities (PDF/Excel)
+6. Γ£à Mobile responsive
+7. Γ£à On-premises deployment via Docker
+
+---
+
+## ≡ƒôÜ Skills Activation Map
+
+| Phase | Primary Skills | Support Skills | Why This Skill |
+|-------|---------------|----------------|----------------|
+| 1. Database Schema | `databases` | - | PostgreSQL user/role tables, indexes |
+| 2. Backend API | `backend-development` | `code-review` | FastAPI endpoints, auth, security (OWASP) |
+| 3. Frontend UI | `ui-ux-pro-max`, `frontend-development` | `code-review` | React components, professional UI |
+| 4. Deployment | `devops` | - | Docker, Nginx, production config |
+| 5. Testing | `code-review` | `debugging` | Verification gates, quality assurance |
+
+---
+
+## ≡ƒÅù∩╕Å Architecture Overview
+
+```
+ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+Γöé                         PRESENTATION LAYER                          Γöé
+Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ
+Γöé  React 18 + TypeScript + Vite                                       Γöé
+Γöé  Γö£ΓöÇΓöÇ Tailwind CSS (styling)                                        Γöé
+Γöé  Γö£ΓöÇΓöÇ Recharts (visualizations)                                     Γöé
+Γöé  Γö£ΓöÇΓöÇ TanStack Query (data fetching)                                Γöé
+Γöé  Γö£ΓöÇΓöÇ React Router v6 (routing)                                     Γöé
+Γöé  ΓööΓöÇΓöÇ Axios (HTTP client)                                           Γöé
+Γöé                                                                      Γöé
+Γöé  Pages:                                                              Γöé
+Γöé  Γö£ΓöÇΓöÇ /login                    ΓåÆ Login page                        Γöé
+Γöé  Γö£ΓöÇΓöÇ /                         ΓåÆ Executive Dashboard               Γöé
+Γöé  Γö£ΓöÇΓöÇ /production               ΓåÆ Production Performance            Γöé
+Γöé  Γö£ΓöÇΓöÇ /inventory                ΓåÆ Inventory Management              Γöé
+Γöé  Γö£ΓöÇΓöÇ /sales                    ΓåÆ Sales Analytics                   Γöé
+Γöé  ΓööΓöÇΓöÇ /alerts                   ΓåÆ Alert Management                  Γöé
+ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
+                           Γöé HTTPS / REST API
+ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+Γöé                          API LAYER                                   Γöé
+Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ
+Γöé  FastAPI (Python 3.14)                                              Γöé
+Γöé  Γö£ΓöÇΓöÇ JWT Authentication (python-jose + passlib)                    Γöé
+Γöé  Γö£ΓöÇΓöÇ RBAC Middleware (admin/analyst/viewer roles)                  Γöé
+Γöé  Γö£ΓöÇΓöÇ Rate Limiting (slowapi)                                       Γöé
+Γöé  ΓööΓöÇΓöÇ CORS + Security Headers                                       Γöé
+Γöé                                                                      Γöé
+Γöé  Endpoints:                                                          Γöé
+Γöé  Γö£ΓöÇΓöÇ POST /api/v1/auth/login   ΓåÆ JWT token                         Γöé
+Γöé  Γö£ΓöÇΓöÇ GET  /api/v1/auth/me      ΓåÆ Current user                      Γöé
+Γöé  Γö£ΓöÇΓöÇ GET  /api/v1/dashboards/executive                             Γöé
+Γöé  Γö£ΓöÇΓöÇ GET  /api/v1/dashboards/production                            Γöé
+Γöé  Γö£ΓöÇΓöÇ GET  /api/v1/dashboards/inventory                             Γöé
+Γöé  Γö£ΓöÇΓöÇ GET  /api/v1/dashboards/sales                                 Γöé
+Γöé  Γö£ΓöÇΓöÇ GET  /api/v1/alerts                                           Γöé
+Γöé  ΓööΓöÇΓöÇ GET  /api/v1/exports/{type}                                   Γöé
+Γöé                                                                      Γöé
+Γöé  Reuse Existing:                                                     Γöé
+Γöé  Γö£ΓöÇΓöÇ src/db/models.py          ΓåÆ SQLAlchemy models                 Γöé
+Γöé  Γö£ΓöÇΓöÇ src/db/connection.py      ΓåÆ Database connection               Γöé
+Γöé  ΓööΓöÇΓöÇ src/core/*                ΓåÆ Business logic (netting, yield)   Γöé
+ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
+                           Γöé SQLAlchemy ORM
+ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+Γöé                         DATA LAYER                                   Γöé
+Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ
+Γöé  PostgreSQL 16                                                       Γöé
+Γöé  Γö£ΓöÇΓöÇ Existing tables (fact_*, dim_*, raw_*)                        Γöé
+Γöé  Γö£ΓöÇΓöÇ NEW: users, roles, permissions, user_roles                    Γöé
+Γöé  ΓööΓöÇΓöÇ NEW: Analytics views (view_*)                                 Γöé
+ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
+```
+
+---
+
+## ≡ƒôé Project Structure (After Implementation)
+
+```
+alkana-dashboard/
+Γö£ΓöÇΓöÇ src/                          # Backend (Python)
+Γöé   Γö£ΓöÇΓöÇ api/                      # NEW - FastAPI application
+Γöé   Γöé   Γö£ΓöÇΓöÇ __init__.py
+Γöé   Γöé   Γö£ΓöÇΓöÇ main.py              # FastAPI app entry
+Γöé   Γöé   Γö£ΓöÇΓöÇ deps.py              # Dependencies (DB, auth)
+Γöé   Γöé   Γö£ΓöÇΓöÇ auth.py              # JWT authentication
+Γöé   Γöé   Γö£ΓöÇΓöÇ middleware.py        # CORS, security headers
+Γöé   Γöé   ΓööΓöÇΓöÇ routers/
+Γöé   Γöé       Γö£ΓöÇΓöÇ __init__.py
+Γöé   Γöé       Γö£ΓöÇΓöÇ auth.py          # /api/v1/auth/*
+Γöé   Γöé       Γö£ΓöÇΓöÇ dashboards.py    # /api/v1/dashboards/*
+Γöé   Γöé       Γö£ΓöÇΓöÇ alerts.py        # /api/v1/alerts
+Γöé   Γöé       ΓööΓöÇΓöÇ exports.py       # /api/v1/exports/*
+Γöé   Γö£ΓöÇΓöÇ db/
+Γöé   Γöé   Γö£ΓöÇΓöÇ models.py            # UPDATED - Add User, Role models
+Γöé   Γöé   Γö£ΓöÇΓöÇ connection.py        # Existing
+Γöé   Γöé   ΓööΓöÇΓöÇ views.py             # NEW - Analytics SQL views
+Γöé   Γö£ΓöÇΓöÇ core/                    # Existing business logic
+Γöé   Γö£ΓöÇΓöÇ etl/                     # Existing ETL code
+Γöé   ΓööΓöÇΓöÇ main.py                  # Existing CLI entry
+Γöé
+Γö£ΓöÇΓöÇ web/                          # NEW - Frontend (React)
+Γöé   Γö£ΓöÇΓöÇ src/
+Γöé   Γöé   Γö£ΓöÇΓöÇ components/
+Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ common/          # Reusable components
+Γöé   Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ KPICard.tsx
+Γöé   Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ DataTable.tsx
+Γöé   Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ LoadingSpinner.tsx
+Γöé   Γöé   Γöé   Γöé   ΓööΓöÇΓöÇ FilterPanel.tsx
+Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ charts/          # Chart components
+Γöé   Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ RevenueChart.tsx
+Γöé   Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ YieldChart.tsx
+Γöé   Γöé   Γöé   Γöé   ΓööΓöÇΓöÇ InventoryChart.tsx
+Γöé   Γöé   Γöé   ΓööΓöÇΓöÇ layout/          # Layout components
+Γöé   Γöé   Γöé       Γö£ΓöÇΓöÇ Navbar.tsx
+Γöé   Γöé   Γöé       Γö£ΓöÇΓöÇ Sidebar.tsx
+Γöé   Γöé   Γöé       ΓööΓöÇΓöÇ Layout.tsx
+Γöé   Γöé   Γö£ΓöÇΓöÇ pages/               # Page components
+Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ Login.tsx
+Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ Executive.tsx
+Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ Production.tsx
+Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ Inventory.tsx
+Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ Sales.tsx
+Γöé   Γöé   Γöé   ΓööΓöÇΓöÇ Alerts.tsx
+Γöé   Γöé   Γö£ΓöÇΓöÇ services/
+

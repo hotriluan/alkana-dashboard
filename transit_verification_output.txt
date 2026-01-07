@@ -1,0 +1,35 @@
+================================================================================
+VERIFICATION: Transit Time Alerts
+================================================================================
+
+1. Alert Types Summary:
+   DELAYED_TRANSIT: 4 alerts
+   LOW_YIELD: 18 alerts
+
+2. DELAYED_TRANSIT Alerts:
+
+   Batch: 25L2502310
+   Transit Hours: 144.00
+   Severity: CRITICAL
+   Message: None
+
+   Batch: 25L2502510
+   Transit Hours: 120.00
+   Severity: CRITICAL
+   Message: None
+
+   Batch: 25L2507510
+   Transit Hours: 120.00
+   Severity: CRITICAL
+   Message: None
+
+   Batch: 25L2479110
+   Transit Hours: 72.00
+   Severity: HIGH
+   Message: None
+
+3. Batch 25L2492010 Verification:
+   No alert for batch 25L2492010
+   Checking raw data...
+
+================================================================================
