@@ -11,7 +11,7 @@ Applies all business logic:
 import pandas as pd
 import numpy as np
 from typing import Dict, List, Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 import hashlib
 import json
 from sqlalchemy import func
@@ -32,7 +32,6 @@ from src.db.models import (
 from src.core.netting import StackNettingEngine, get_stock_impact
 from src.core.uom_converter import UomConverter
 from src.core.business_logic import OrderClassifier, LeadTimeCalculator
-from src.core.yield_tracker import YieldTracker
 from src.core.alerts import AlertDetector
 from src.config import PLANT_ROLES, MVT_REVERSAL_PAIRS, STOCK_IMPACT
 
@@ -547,7 +546,7 @@ class Transformer:
         print(f"  ✓ Transformed {count} billing records")
     
     def transform_zrsd004(self):
-        """Transform raw_zrsd004 to fact_delivery"""
+        """Transform raw_zrsd004 to fact_delivery with upsert logic"""
         print("Transforming zrsd004 → fact_delivery...")
         
         raw_df = self.load_raw_to_df(RawZrsd004)
@@ -555,7 +554,10 @@ class Transformer:
             print("  ⚠ No data in raw_zrsd004")
             return
         
-        count = 0
+        inserted = 0
+        updated = 0
+        skipped = 0
+        
         for _, row in raw_df.iterrows():
             delivery_number = row.get('delivery')
             
@@ -581,39 +583,79 @@ class Transformer:
             }
             row_hash = compute_row_hash(hash_data)
             
-            fact = FactDelivery(
-                actual_gi_date=clean_value(row.get('actual_gi_date')),
+            # Check if record exists (business key: delivery + line_item)
+            existing = self.db.query(FactDelivery).filter_by(
                 delivery=clean_value(delivery_number),
-                line_item=clean_value(row.get('line_item')),
-                so_reference=clean_value(row.get('so_reference')),
-                shipping_point=clean_value(row.get('shipping_point')),
-                sloc=clean_value(row.get('sloc')),
-                sales_office=clean_value(row.get('sales_office')),
-                dist_channel=clean_value(row.get('dist_channel')),
-                cust_group=clean_value(row.get('cust_group')),
-                sold_to_party=clean_value(row.get('sold_to_party')),
-                ship_to_party=clean_value(row.get('ship_to_party')),
-                ship_to_name=clean_value(row.get('ship_to_name')),
-                ship_to_city=clean_value(row.get('ship_to_city')),
-                salesman_id=clean_value(row.get('salesman_id')),
-                salesman_name=clean_value(row.get('salesman_name')),
-                material_code=clean_value(row.get('material')),
-                material_description=clean_value(row.get('material_desc')),
-                delivery_qty=clean_value(row.get('delivery_qty')),
-                delivery_qty_kg=clean_value(delivery_qty_kg),
-                tonase=clean_value(row.get('tonase')),
-                tonase_unit=clean_value(row.get('tonase_unit')),
-                net_weight=clean_value(row.get('net_weight')),
-                volume=clean_value(row.get('volume')),
-                prod_hierarchy=clean_value(row.get('prod_hierarchy')),
-                row_hash=row_hash,
-                raw_id=clean_value(row.get('id'))
-            )
-            self.db.add(fact)
-            count += 1
+                line_item=clean_value(row.get('line_item'))
+            ).first()
+            
+            if existing:
+                # Check if data changed
+                if existing.row_hash == row_hash:
+                    skipped += 1
+                    continue
+                
+                # Update existing record
+                existing.actual_gi_date = clean_value(row.get('actual_gi_date'))
+                existing.so_reference = clean_value(row.get('so_reference'))
+                existing.shipping_point = clean_value(row.get('shipping_point'))
+                existing.sloc = clean_value(row.get('sloc'))
+                existing.sales_office = clean_value(row.get('sales_office'))
+                existing.dist_channel = clean_value(row.get('dist_channel'))
+                existing.cust_group = clean_value(row.get('cust_group'))
+                existing.sold_to_party = clean_value(row.get('sold_to_party'))
+                existing.ship_to_party = clean_value(row.get('ship_to_party'))
+                existing.ship_to_name = clean_value(row.get('ship_to_name'))
+                existing.ship_to_city = clean_value(row.get('ship_to_city'))
+                existing.salesman_id = clean_value(row.get('salesman_id'))
+                existing.salesman_name = clean_value(row.get('salesman_name'))
+                existing.material_code = clean_value(row.get('material'))
+                existing.material_description = clean_value(row.get('material_desc'))
+                existing.delivery_qty = clean_value(row.get('delivery_qty'))
+                existing.delivery_qty_kg = clean_value(delivery_qty_kg)
+                existing.tonase = clean_value(row.get('tonase'))
+                existing.tonase_unit = clean_value(row.get('tonase_unit'))
+                existing.net_weight = clean_value(row.get('net_weight'))
+                existing.volume = clean_value(row.get('volume'))
+                existing.prod_hierarchy = clean_value(row.get('prod_hierarchy'))
+                existing.row_hash = row_hash
+                existing.raw_id = clean_value(row.get('id'))
+                updated += 1
+            else:
+                # Insert new record
+                fact = FactDelivery(
+                    actual_gi_date=clean_value(row.get('actual_gi_date')),
+                    delivery=clean_value(delivery_number),
+                    line_item=clean_value(row.get('line_item')),
+                    so_reference=clean_value(row.get('so_reference')),
+                    shipping_point=clean_value(row.get('shipping_point')),
+                    sloc=clean_value(row.get('sloc')),
+                    sales_office=clean_value(row.get('sales_office')),
+                    dist_channel=clean_value(row.get('dist_channel')),
+                    cust_group=clean_value(row.get('cust_group')),
+                    sold_to_party=clean_value(row.get('sold_to_party')),
+                    ship_to_party=clean_value(row.get('ship_to_party')),
+                    ship_to_name=clean_value(row.get('ship_to_name')),
+                    ship_to_city=clean_value(row.get('ship_to_city')),
+                    salesman_id=clean_value(row.get('salesman_id')),
+                    salesman_name=clean_value(row.get('salesman_name')),
+                    material_code=clean_value(row.get('material')),
+                    material_description=clean_value(row.get('material_desc')),
+                    delivery_qty=clean_value(row.get('delivery_qty')),
+                    delivery_qty_kg=clean_value(delivery_qty_kg),
+                    tonase=clean_value(row.get('tonase')),
+                    tonase_unit=clean_value(row.get('tonase_unit')),
+                    net_weight=clean_value(row.get('net_weight')),
+                    volume=clean_value(row.get('volume')),
+                    prod_hierarchy=clean_value(row.get('prod_hierarchy')),
+                    row_hash=row_hash,
+                    raw_id=clean_value(row.get('id'))
+                )
+                self.db.add(fact)
+                inserted += 1
         
         self.db.commit()
-        print(f"  ✓ Transformed {count} delivery records")
+        print(f"  ✓ Transformed {inserted} new, {updated} updated, {skipped} skipped")
     
     def transform_zrfi005(self, target_date: Optional[str] = None):
         """
@@ -991,12 +1033,36 @@ class Transformer:
                 prod_days = (end - start).days
                 if prod_days < 0: continue
                 
-                # Calculate Storage Time
+                # Calculate Transit Time (Factory → DC for P01 batches)
+                # Transit = Time from production finish (Factory) to MVT 101 at DC (1401)
+                transit_days = 0
+                mrp_controller = safe_convert(row.get('mrp_controller'))
+                if batch and mrp_controller == 'P01':
+                    # Get MVT 101 at DC (plant 1401) for this batch
+                    dc_receipt = self.db.query(func.min(RawMb51.col_0_posting_date))\
+                        .filter(RawMb51.col_6_batch == batch)\
+                        .filter(RawMb51.col_1_mvt_type == 101)\
+                        .filter(RawMb51.col_2_plant == 1401)\
+                        .scalar()
+                    
+                    if dc_receipt:
+                        if isinstance(dc_receipt, datetime):
+                            dc_receipt = dc_receipt.date()
+                        if dc_receipt >= end:
+                            transit_days = (dc_receipt - end).days
+                
+                # Calculate Storage Time (DC receipt to DC issue)
+                # Note: For batches with transit, storage starts from DC receipt, not production finish
                 storage_days = 0
+                storage_start = end
+                if transit_days > 0:
+                    # Storage starts after transit completes
+                    storage_start = end + timedelta(days=transit_days)
+                
                 if batch and batch in batch_issue_map:
                     issue_date = batch_issue_map[batch]
-                    if issue_date >= end:
-                        storage_days = (issue_date - end).days
+                    if issue_date >= storage_start:
+                        storage_days = (issue_date - storage_start).days
                 
                 # Calculate Preparation Time (MTO only)
                 prep_days = 0
@@ -1041,11 +1107,11 @@ class Transformer:
                     channel_code=channel_code,
                     start_date=start,
                     end_date=end,
-                    lead_time_days=prod_days + storage_days + prep_days, # Total
+                    lead_time_days=prod_days + transit_days + storage_days + prep_days, # Total
                     production_days=prod_days, # Map to Production
+                    transit_days=transit_days, # Map to Transit (Factory → DC)
                     storage_days=storage_days, # Map to Storage
-                    preparation_days=prep_days, # Map to Preparation
-                    transit_days=0
+                    preparation_days=prep_days # Map to Preparation
                 )
                 self.db.add(fact)
                 count += 1
@@ -1137,101 +1203,19 @@ class Transformer:
         print("=" * 60)
     
     def build_production_chains(self):
-        """Build fact_production_chain from cooispi + mb51"""
+        """Production chain analysis removed - yield module decommissioned"""
         print("Building production chains (P03→P02→P01)...")
-        
-        cooispi_df = self.load_raw_to_df(RawCooispi)
-        mb51_df = self.normalize_mb51_df(self.load_raw_to_df(RawMb51))
-        
-        if cooispi_df.empty or mb51_df.empty:
-            print("  ⚠ Missing data for production chain analysis")
-            return
-        
-        tracker = YieldTracker(cooispi_df, mb51_df, self.uom_converter)
-        
-        # Find all P01 orders
-        p01_orders = tracker.find_p01_orders()
-        
-        if p01_orders.empty:
-            print("  ⚠ No P01 orders found")
-            return
-        
-        count = 0
-        for _, p01_row in p01_orders.iterrows():
-            try:
-                # Build chain
-                chain = tracker.build_chain_from_p01(p01_row['order'])
-                
-                if chain and chain.chain_complete:
-                    # Insert into fact_production_chain
-                    fact = FactProductionChain(
-                        p01_order=chain.p01.order if chain.p01 else None,
-                        p01_batch=chain.p01.batch if chain.p01 else None,
-                        p01_material=chain.p01.material if chain.p01 else None,
-                        p01_output_qty=chain.p01.output_qty if chain.p01 else None,
-                        p01_output_kg=chain.p01.output_kg if chain.p01 else None,
-                        p02_order=chain.p02.order if chain.p02 else None,
-                        p02_batch=chain.p02.batch if chain.p02 else None,
-                        p02_material=chain.p02.material if chain.p02 else None,
-                        p02_yield_pct=chain.p02.yield_pct if chain.p02 else None,
-                        p03_order=chain.p03.order if chain.p03 else None,
-                        p03_batch=chain.p03.batch if chain.p03 else None,
-                        p03_material=chain.p03.material if chain.p03 else None,
-                        p03_yield_pct=chain.p03.yield_pct if chain.p03 else None,
-                        total_yield_pct=chain.total_yield_pct,
-                        total_loss_kg=chain.total_loss_kg,
-                        chain_complete=chain.chain_complete
-                    )
-                    self.db.add(fact)
-                    count += 1
-            except Exception as e:
-                print(f"  ⚠ Error building chain for order {p01_row.get('order')}: {e}")
-        
-        self.db.commit()
-        print(f"  ✓ Built {count} production chains")
+        print("  ⚠ Production chain analysis removed (yield module decommissioned)")
+        print("  ✓ Skipped production chain building")
     
     def calculate_p02_p01_yields(self):
-        """Calculate P02→P01 yields using dual validation"""
+        """P02→P01 yield calculation removed - yield module decommissioned"""
         print("Calculating P02→P01 yields...")
-        
-        from src.db.models import FactP02P01Yield
-        from src.core.p02_p01_yield import find_all_p02_p01_pairs
-        
-        mb51_df = self.normalize_mb51_df(self.load_raw_to_df(RawMb51))
-        
-        if mb51_df.empty:
-            print("  ⚠ No MB51 data for yield calculation")
-            return
-        
-        # Find all valid P02→P01 pairs
-        yield_pairs = find_all_p02_p01_pairs(mb51_df, self.uom_converter)
-        
-        count = 0
-        for yield_data in yield_pairs:
-            try:
-                fact = FactP02P01Yield(
-                    p02_batch=yield_data.p02_batch,
-                    p01_batch=yield_data.p01_batch,
-                    p02_material_code=yield_data.p02_material_code,
-                    p02_material_desc=yield_data.p02_material_desc,
-                    p01_material_code=yield_data.p01_material_code,
-                    p01_material_desc=yield_data.p01_material_desc,
-                    p02_consumed_kg=yield_data.p02_consumed_kg,
-                    p01_produced_kg=yield_data.p01_produced_kg,
-                    yield_pct=yield_data.yield_pct,
-                    loss_kg=yield_data.loss_kg,
-                    production_date=yield_data.production_date
-                )
-                self.db.add(fact)
-                count += 1
-            except Exception as e:
-                print(f"  ⚠ Error inserting yield data: {e}")
-        
-        self.db.commit()
-        print(f"  ✓ Calculated {count} P02→P01 yields")
+        print("  ⚠ Yield calculation removed (yield module decommissioned)")
+        print("  ✓ Skipped yield calculations")
     
     def detect_alerts(self):
-        """Detect and insert alerts (stuck transit, low yield)"""
+        """Detect and insert alerts (stuck transit only - yield alerts removed)"""
         print("Detecting alerts...")
         
         mb51_df = self.normalize_mb51_df(self.load_raw_to_df(RawMb51))
@@ -1240,23 +1224,19 @@ class Transformer:
             print("  ⚠ No mb51 data for alert detection")
             return
         
-        # Load production chains
-        production_chain_df = pd.read_sql_table('fact_production_chain', self.db.bind)
-        
         detector = AlertDetector(
             mb51_df=mb51_df,
-            production_chain_df=production_chain_df if not production_chain_df.empty else None,
+            production_chain_df=None,  # No longer used - yield module decommissioned
             uom_converter=self.uom_converter
         )
         
         # Detect stuck in transit (Factory → DC, so check at DC plant 1401)
         stuck_alerts = detector.detect_stuck_in_transit(plant=1401)
         
-        # Detect low yield (using view_yield_dashboard, not production chains)
-        low_yield_alerts = detector.detect_low_yield()
+        # Yield alerts removed - decommissioned
         
         # Insert alerts
-        all_alerts = stuck_alerts + low_yield_alerts
+        all_alerts = stuck_alerts
         count = 0
         
         for alert in all_alerts:

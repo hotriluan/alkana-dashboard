@@ -14,7 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.api.routers import (
     alerts, lead_time,
     auth, ar_aging, mto_orders, 
-    yield_dashboard, sales_performance, executive,
+    sales_performance, executive,
     inventory, upload
 )
 
@@ -54,7 +54,6 @@ app.include_router(lead_time.router, prefix="/api/v1")
 app.include_router(ar_aging.router, prefix="/api/v1/dashboards")
 app.include_router(inventory.router, prefix="/api/v1/dashboards")
 app.include_router(mto_orders.router, prefix="/api/v1/dashboards")
-app.include_router(yield_dashboard.router, prefix="/api/v1/dashboards")
 app.include_router(sales_performance.router, prefix="/api/v1/dashboards")
 
 app.include_router(alerts.router)

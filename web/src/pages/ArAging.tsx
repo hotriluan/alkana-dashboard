@@ -31,7 +31,7 @@ const ArAging = () => {
     }
   }, [snapshots, selectedSnapshot]);
 
-  const { data: summary, isLoading: summaryLoading, error: summaryError, refetch: refetchSummary } = useQuery({
+  const { data: summary, isLoading: summaryLoading, error: summaryError } = useQuery({
     queryKey: ['ar-summary', selectedSnapshot],
     queryFn: () => arAgingAPI.getSummary(selectedSnapshot || undefined),
   });

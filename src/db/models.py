@@ -802,3 +802,125 @@ class FactP02P01Yield(Base):
         Index('idx_p02_p01_yield_pct', 'yield_pct'),
         Index('idx_p02_p01_yield_date', 'production_date'),
     )
+
+
+# =============================================================================
+# V2 PRODUCTION PERFORMANCE (Isolated - ADR-2026-01-07)
+# Source: zrpp062.XLSX - Production Variance Analysis
+# =============================================================================
+
+class RawZrpp062(Base):
+    """Raw Production Performance from zrpp062.XLSX - V2 Isolated"""
+    __tablename__ = "raw_zrpp062"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    
+    # Key Identifiers
+    process_order = Column(String(50))
+    batch = Column(String(50))
+    material = Column(String(50))
+    material_description = Column(String(200))
+    order_sfg_liquid = Column(String(50))  # Parent order (leading zeros stripped)
+    
+    # Hierarchy
+    mrp_controller = Column(String(50))
+    product_group_1 = Column(String(100))
+    product_group_2 = Column(String(100))
+    
+    # Order Details
+    qty_order_sfg_liquid = Column(Numeric(18, 4))
+    process_order_qty = Column(Numeric(18, 4))
+    uom = Column(String(20))
+    bom_alt = Column(String(20))
+    bom_text = Column(String(200))
+    group_recipe = Column(String(100))
+    
+    # Metrics - Input
+    gi_packaging_to_order = Column(Numeric(18, 4))
+    gi_sfg_liquid_to_order = Column(Numeric(18, 4))
+    
+    # Metrics - Output
+    gr_qty_to_0201 = Column(Numeric(18, 4))
+    tonase_alkana_0201 = Column(Numeric(18, 4))  # output_actual_kg
+    gr_by_product = Column(Numeric(18, 4))
+    
+    # Quality - SG (Specific Gravity)
+    sg_theoretical = Column(Numeric(10, 4))
+    sg_actual = Column(Numeric(10, 4))
+    bar_sfg = Column(Numeric(18, 4))
+    qty_allowance = Column(Numeric(18, 4))
+    
+    # Variance Metrics
+    variant_prod_sfg_pct = Column(Numeric(10, 4))
+    variant_fg_pc = Column(Numeric(18, 4))
+    variant_fg_pct = Column(Numeric(10, 4))
+    loss_kg = Column(Numeric(18, 4))  # Lossess FG Result (Kg)
+    loss_pct = Column(Numeric(10, 4))  # Lossess FG Result (%)
+    pc_to_kg_actual = Column(Numeric(18, 6))
+    
+    # Status
+    system_status = Column(String(100))
+    ud_status = Column(String(100))
+    
+    # Personnel
+    pd_manager = Column(String(100))
+    pd_leader = Column(String(100))
+    
+    # Date (ADR decision: add posting_date since CSV lacks date)
+    posting_date = Column(Date)
+    
+    # Metadata
+    source_file = Column(String(100))
+    source_row = Column(Integer)
+    loaded_at = Column(DateTime, default=datetime.utcnow)
+    raw_data = Column(JSONB)
+
+
+class FactProductionPerformanceV2(Base):
+    """Fact: Production Performance V2 - Variance Analysis (Isolated)"""
+    __tablename__ = "fact_production_performance_v2"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    
+    # Identifiers
+    process_order_id = Column(String(50), nullable=False)
+    batch_id = Column(String(50))
+    material_code = Column(String(50))
+    material_description = Column(String(200))
+    parent_order_id = Column(String(50))  # Link to Order SFG Liquid
+    
+    # Hierarchy (for filtering)
+    mrp_controller = Column(String(50))
+    product_group_1 = Column(String(100))
+    product_group_2 = Column(String(100))
+    
+    # Metrics - Production
+    output_actual_kg = Column(Numeric(15, 3))  # Tonase Alkana(0201)
+    input_actual_kg = Column(Numeric(15, 3))   # GI SFG Liquid to Order
+    process_order_qty = Column(Numeric(15, 3))
+    
+    # Metrics - Loss
+    loss_kg = Column(Numeric(15, 3))           # Lossess FG Result (Kg)
+    loss_pct = Column(Numeric(10, 4))          # Lossess FG Result (%)
+    
+    # Quality - SG
+    sg_theoretical = Column(Numeric(10, 4))
+    sg_actual = Column(Numeric(10, 4))
+    
+    # Variance
+    variant_prod_sfg_pct = Column(Numeric(10, 4))
+    variant_fg_pct = Column(Numeric(10, 4))
+    
+    # Date (for filtering)
+    posting_date = Column(Date, index=True)
+    
+    # Audit
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Unique constraint for upsert (ADR decision)
+    __table_args__ = (
+        Index('idx_fact_perf_v2_material', 'material_code'),
+        Index('idx_fact_perf_v2_parent', 'parent_order_id'),
+        Index('idx_fact_perf_v2_loss', 'loss_kg'),
+        {'sqlite_autoincrement': True},
+    )

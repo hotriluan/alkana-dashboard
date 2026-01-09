@@ -116,7 +116,7 @@ async def get_executive_summary(
         FROM view_inventory_current
     """)).fetchone()
     
-    # AR metrics - Total AR from target, Overdue from target buckets 31+ days
+    # AR metrics - Total AR from latest snapshot only (not sum of all snapshots)
     ar_result = db.execute(text("""
         SELECT 
             COALESCE(SUM(total_target), 0) as total_ar,
@@ -124,6 +124,11 @@ async def get_executive_summary(
                          COALESCE(target_91_120, 0) + COALESCE(target_121_180, 0) + 
                          COALESCE(target_over_180, 0)), 0) as overdue_ar
         FROM fact_ar_aging
+        WHERE snapshot_date = (
+            SELECT MAX(snapshot_date) 
+            FROM fact_ar_aging 
+            WHERE snapshot_date IS NOT NULL
+        )
     """)).fetchone()
     
     total_orders = int(production_result[0] or 0)

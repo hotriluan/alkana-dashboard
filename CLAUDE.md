@@ -44,3 +44,29 @@ We keep all important docs in `./docs` folder and keep updating them, structure 
 ```
 
 **IMPORTANT:** *MUST READ* and *MUST COMPLY* all *INSTRUCTIONS* in project `./CLAUDE.md`, especially *WORKFLOWS* section is *CRITICALLY IMPORTANT*, this rule is *MANDATORY. NON-NEGOTIABLE. NO EXCEPTIONS. MUST REMEMBER AT ALL TIMES!!!*
+
+## Claude Kit Compliance
+
+- Follow workflows in `./.claude/workflows/` for planning, development, orchestration, and docs.
+- Read `./README.md` first on every task; align with architecture and conventions.
+- Prefer concise reports; include unresolved questions at the end.
+- Activate only the necessary skills; keep scope tight and iterative.
+- Keep `./docs` as the single source of truth; update alongside code changes.
+
+## Skills
+
+- Backend: FastAPI, SQLAlchemy, Pydantic, PostgreSQL.
+- ETL: Pandas/Polars, hashing strategies, dedup/upsert, data validation.
+- Data Modeling: Dimensions/facts, materialized views, numeric types.
+- Frontend: React, TypeScript, date handling, state sync, UX defaults.
+- DevOps: Docker Compose, environment config, secrets hygiene.
+- Documentation: CHANGELOG, upload guides, troubleshooting, architecture diagrams.
+
+## Key Docs
+
+- Project Overview: [docs/project-overview-pdr.md](docs/project-overview-pdr.md)
+- Codebase Summary: [docs/codebase-summary.md](docs/codebase-summary.md)
+- Code Standards: [docs/code-standards.md](docs/code-standards.md)
+- System Architecture: [docs/system-architecture.md](docs/system-architecture.md)
+- Upload Guide: [docs/upload-guide.md](docs/upload-guide.md)
+- ETL Fixes (2026-01-07): [docs/ETL_FIXES_2026-01-07.md](docs/ETL_FIXES_2026-01-07.md)

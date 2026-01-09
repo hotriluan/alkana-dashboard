@@ -310,19 +310,40 @@ def trace_batch(batch_id: str, db: Session = Depends(get_db)):
                 "details": f"In Transit (Order {fact.order_number})"
             })
 
-    # Event 3: Storage (All orders)
+    # Event 3: Transit (MTO/MTS with Factory → DC transit)
+    if is_production and fact.transit_days and fact.transit_days > 0:
+        transit_start = fact.start_date + datetime.timedelta(days=int(fact.production_days or 0))
+        events.append({
+            "stage": "Transit",
+            "date": transit_start,
+            "duration": fact.transit_days,
+            "status": "COMPLETED",
+            "details": "Factory → DC (Goods in Transit)"
+        })
+
+    # Event 4: Storage (All orders)
     if fact.end_date:
+        # For production orders with transit, storage starts after transit
+        storage_start = fact.end_date
+        if is_production and fact.transit_days and fact.transit_days > 0:
+            storage_start = fact.end_date + datetime.timedelta(days=int(fact.transit_days))
+        
         events.append({
             "stage": "Storage",
-            "date": fact.end_date,
+            "date": storage_start,
             "duration": fact.storage_days or 0,
             "status": "COMPLETED" if fact.storage_days and fact.storage_days > 0 else "IN_PROGRESS",
             "details": "Goods Receipt / Production Finished"
         })
 
-    # Event 4: Delivery (Milestone - only if storage completed)
+    # Event 5: Delivery (Milestone - only if storage completed)
     if fact.storage_days and fact.storage_days > 0 and fact.end_date:
-        delivery_date = fact.end_date + datetime.timedelta(days=int(fact.storage_days))
+        # Calculate delivery date from storage start + storage duration
+        storage_start = fact.end_date
+        if is_production and fact.transit_days and fact.transit_days > 0:
+            storage_start = fact.end_date + datetime.timedelta(days=int(fact.transit_days))
+        
+        delivery_date = storage_start + datetime.timedelta(days=int(fact.storage_days))
         events.append({
             "stage": "Delivery",
             "date": delivery_date,

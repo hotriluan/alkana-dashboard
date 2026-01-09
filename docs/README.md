@@ -1,254 +1,342 @@
-# Documentation Index
+# Alkana Dashboard
 
-Complete documentation guide for the Alkana Dashboard project.
+> **Supply Chain Analytics Platform** - Real-time visibility into manufacturing operations, inventory management, sales performance, and financial metrics.
 
-## 📚 Documentation Structure
+[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.109-green.svg)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/React-19-blue.svg)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg)](https://www.typescriptlang.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-blue.svg)](https://www.postgresql.org/)
+
+## 📋 Overview
+
+Alkana Dashboard is a comprehensive supply chain analytics platform that transforms raw SAP data into actionable insights. The system processes data from SAP ERP exports and provides real-time dashboards for:
+
+- **Executive KPIs**: Revenue trends, inventory turnover, top products/customers
+- **Inventory Management**: Stock levels, movements, slow-moving alerts
+- **Lead Time Analytics**: End-to-end tracking, bottleneck identification
+- **Sales Performance**: Revenue by channel/customer/product, trends
+- **Production Yield**: Batch-level tracking, material consumption
+- **MTO Orders**: Make-to-order tracking and compliance
+- **AR Aging**: Receivables analysis and collection prioritization
+- **Alert Monitoring**: Proactive notifications for critical events
+
+## 🏗️ Architecture
+
+**Full-Stack Application**
+- **Backend**: Python/FastAPI with ETL pipeline and business logic
+- **Frontend**: React/TypeScript SPA with interactive dashboards
+- **Database**: PostgreSQL with dimensional warehouse model
 
 ```
-docs/
-├── Getting Started
-│   ├── USER_GUIDE.md         - End-user instructions
-│   └── GLOSSARY.md           - Business/technical terms
-│
-├── Development
-│   ├── API_REFERENCE.md      - REST API documentation
-│   ├── DATABASE.md           - Schema and data model
-│   ├── DEV_SCRIPTS.md        - Utility scripts catalog
-│   ├── TESTING.md            - Testing guide
-│   └── CONTRIBUTING.md       - Git workflow and standards
-│
-├── Operations
-│   ├── DEPLOYMENT.md         - Production deployment
-│   ├── MONITORING.md         - Logging and metrics
-│   ├── TROUBLESHOOTING.md    - Common issues
-│   ├── SECURITY.md           - Security best practices
-│   └── PERFORMANCE.md        - Optimization guide
-│
-└── Reference
-    ├── system-architecture.md - Architecture diagrams
-    └── CHANGELOG.md          - Version history
+SAP Exports (Excel) → ETL Pipeline → PostgreSQL → REST API → React Dashboards
 ```
 
-## 🚀 Getting Started
+## 🚀 Quick Start
 
-### For End Users
+### Prerequisites
+- Python 3.11+
+- Node.js 18+
+- PostgreSQL 15+
 
-Start here if you're using the dashboard to view data and generate reports:
+### Backend Setup
 
-1. **[User Guide](USER_GUIDE.md)** - Complete guide to all 9 dashboard modules
-   - Executive Dashboard
-   - Inventory Management
-   - Lead Time Analytics
-   - Sales Performance
-   - Production Yield
-   - MTO Orders
-   - AR Aging
-   - Alert Monitor
-
-2. **[Glossary](GLOSSARY.md)** - Understand the terminology
-   - Business terms (MTO, MTS, P01-P03, yield)
-   - Technical terms (API, ETL, netting)
-   - SAP-specific terms (COOISPI, MB51, ZRSD)
-
-### For Developers
-
-Start here if you're developing new features or maintaining the system:
-
-1. **[README](../README.md)** - Project overview and quick start
-2. **[API Reference](API_REFERENCE.md)** - All API endpoints and examples
-3. **[Database Documentation](DATABASE.md)** - Complete schema reference
-4. **[Contributing Guide](CONTRIBUTING.md)** - Development workflow
-
-### For System Administrators
-
-Start here if you're deploying or operating the system:
-
-1. **[Deployment Guide](DEPLOYMENT.md)** - Production setup
-2. **[Monitoring Guide](MONITORING.md)** - Set up logging and alerts
-3. **[Security Guide](SECURITY.md)** - Security configuration
-4. **[Troubleshooting](TROUBLESHOOTING.md)** - Fix common issues
-
-## 📖 Documentation by Task
-
-### "I want to..."
-
-#### ...understand the business logic
-- [User Guide](USER_GUIDE.md) - Dashboard explanations
-- [Glossary](GLOSSARY.md) - Business terminology
-- [Database Documentation](DATABASE.md) - Data model and business rules
-
-#### ...build a new feature
-- [API Reference](API_REFERENCE.md) - Existing endpoints
-- [Database Documentation](DATABASE.md) - Available data
-- [Testing Guide](TESTING.md) - Write tests
-- [Contributing Guide](CONTRIBUTING.md) - Code standards
-
-#### ...deploy to production
-- [Deployment Guide](DEPLOYMENT.md) - Step-by-step deployment
-- [Security Guide](SECURITY.md) - Secure configuration
-- [Monitoring Guide](MONITORING.md) - Set up monitoring
-- [Performance Guide](PERFORMANCE.md) - Optimize settings
-
-#### ...troubleshoot an issue
-- [Troubleshooting Guide](TROUBLESHOOTING.md) - Common problems
-- [Monitoring Guide](MONITORING.md) - Check logs and metrics
-- [Database Documentation](DATABASE.md) - Query data directly
-
-#### ...optimize performance
-- [Performance Guide](PERFORMANCE.md) - Database and API optimization
-- [Database Documentation](DATABASE.md) - Indexes and views
-- [Monitoring Guide](MONITORING.md) - Track metrics
-
-#### ...understand the codebase
-- [System Architecture](system-architecture.md) - High-level design
-- [Database Documentation](DATABASE.md) - Data flow
-- [Development Scripts](DEV_SCRIPTS.md) - Utility scripts
-- [API Reference](API_REFERENCE.md) - API structure
-
-## 📋 Quick Reference
-
-### Essential Links
-
-| Document | Purpose | When to Use |
-|----------|---------|-------------|
-| [USER_GUIDE.md](USER_GUIDE.md) | Dashboard usage | Using the application |
-| [API_REFERENCE.md](API_REFERENCE.md) | API endpoints | Building integrations |
-| [DATABASE.md](DATABASE.md) | Schema reference | Database queries |
-| [DEPLOYMENT.md](DEPLOYMENT.md) | Production setup | Deploying system |
-| [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | Problem solving | Fixing issues |
-| [SECURITY.md](SECURITY.md) | Security config | Securing system |
-| [PERFORMANCE.md](PERFORMANCE.md) | Optimization | Improving speed |
-
-### Key Concepts
-
-**Data Flow:**
-```
-SAP Exports → ETL Pipeline → PostgreSQL Warehouse → REST API → React Dashboards
-```
-
-**Architecture:**
-- Backend: Python 3.11+, FastAPI 0.109
-- Frontend: React 19, TypeScript 5.9
-- Database: PostgreSQL 15+
-- Deployment: Docker or manual
-
-**Core Modules:**
-- 8 Raw tables (SAP imports)
-- 5 Dimension tables
-- 5 Fact tables
-- 4 Materialized views
-- 10 API routers
-- 9 Dashboard pages
-
-## 🔍 Finding Information
-
-### Search Guide
-
-**By Technology:**
-- Python/FastAPI → [API Reference](API_REFERENCE.md), [Performance](PERFORMANCE.md)
-- PostgreSQL → [Database Documentation](DATABASE.md), [Performance](PERFORMANCE.md)
-- React/TypeScript → [User Guide](USER_GUIDE.md), [../web/README.md](../web/README.md)
-- Docker → [Deployment Guide](DEPLOYMENT.md), [Troubleshooting](TROUBLESHOOTING.md)
-
-**By Topic:**
-- Authentication → [API Reference](API_REFERENCE.md#authentication), [Security](SECURITY.md)
-- Testing → [Testing Guide](TESTING.md), [Contributing](CONTRIBUTING.md)
-- Deployment → [Deployment Guide](DEPLOYMENT.md), [Security](SECURITY.md)
-- Monitoring → [Monitoring Guide](MONITORING.md), [Troubleshooting](TROUBLESHOOTING.md)
-- Performance → [Performance Guide](PERFORMANCE.md), [Database](DATABASE.md)
-
-**By User Role:**
-- Business User → [User Guide](USER_GUIDE.md), [Glossary](GLOSSARY.md)
-- Developer → [API Reference](API_REFERENCE.md), [Database](DATABASE.md), [Testing](TESTING.md)
-- DevOps → [Deployment](DEPLOYMENT.md), [Monitoring](MONITORING.md), [Security](SECURITY.md)
-- DBA → [Database](DATABASE.md), [Performance](PERFORMANCE.md), [Monitoring](MONITORING.md)
-
-## 📝 Documentation Standards
-
-### Contributing to Documentation
-
-When updating documentation:
-
-1. **Keep it current** - Update docs when code changes
-2. **Be specific** - Include examples and code snippets
-3. **Cross-reference** - Link to related documents
-4. **Test examples** - Verify all code examples work
-5. **Use templates** - Follow existing document structure
-
-### Document Templates
-
-**Code Examples:**
-```python
-# ✅ GOOD: Clear example with comments
-from fastapi import APIRouter
-
-router = APIRouter()
-
-@router.get("/endpoint")
-async def example():
-    """Endpoint description"""
-    return {"result": "value"}
-```
-
-**Configuration Examples:**
 ```bash
-# Production configuration
-DATABASE_URL=postgresql://user:pass@localhost:5432/db
+# Install dependencies
+pip install -r requirements.txt
+
+# Configure environment
+cp .env.example .env
+# Edit .env with your database credentials
+
+# Initialize database
+python -m src.main init
+
+# Load sample data
+python -m src.main load
+
+# Transform to warehouse
+python -m src.main transform
+
+# Start API server
+cd src && uvicorn api.main:app --reload
+```
+
+Backend runs at: `http://localhost:8000`
+
+### Frontend Setup
+
+```bash
+# Navigate to frontend
+cd web
+
+# Install dependencies
+npm install
+
+# Start dev server
+npm run dev
+```
+
+Frontend runs at: `http://localhost:5173`
+
+### Default Date Range
+- Dashboards default to the current month: from the first day of the month to today.
+- Implemented with timezone-safe local date helpers to avoid UTC shifts.
+
+### Upload Behavior (ZRSD002)
+- Multiple files with overlapping periods can be uploaded safely.
+- Deduplication keys: `(billing_document, billing_item)` with an upsert flow.
+- `row_hash` excludes `source_file` so re-uploads with identical data are skipped; changes overwrite the existing business record.
+- Example: Upload 2025 full year then Dec 2025–Jan 2026 → 396 inserted, 2,118 updated, 0 duplicates.
+
+### Docker Deployment
+
+```bash
+# Build and start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+```
+
+## 📊 Dashboard Modules
+
+| Module | Description | Key Features |
+|--------|-------------|--------------|
+| **Executive** | High-level KPIs | Revenue trends, inventory turnover, top performers |
+| **Inventory** | Stock management | Current levels, movement history, alerts |
+| **Lead Time** | Supply chain analytics | Production vs. transit time, bottlenecks |
+| **Sales** | Revenue analysis | Channel/customer/product breakdown, trends |
+| **Production** | Yield tracking | Batch-level analysis, material consumption |
+| **MTO Orders** | Custom orders | Order status, lead time compliance |
+| **AR Aging** | Receivables | Aging buckets, payment patterns, overdue |
+| **Alerts** | Monitoring | Inventory, production, quality, financial alerts |
+
+## 🗂️ Project Structure
+
+```
+alkana-dashboard/
+├── src/                    # Python Backend
+│   ├── api/               # FastAPI application
+│   │   ├── routers/       # API endpoints
+│   │   ├── auth.py        # Authentication
+│   │   └── main.py        # App setup
+│   ├── core/              # Business logic
+│   │   ├── alerts.py      # Alert system
+│   │   ├── leadtime_calculator.py
+│   │   ├── netting.py     # Material reconciliation
+│   │   ├── yield_tracker.py
+│   │   └── uom_converter.py
+│   ├── db/                # Database layer
+│   │   ├── models.py      # SQLAlchemy models
+│   │   ├── views.py       # Materialized views
+│   │   └── connection.py  # DB connection
+│   ├── etl/               # ETL pipeline
+│   │   ├── loaders.py     # Excel data loaders
+│   │   └── transform.py   # Data transformers
+│   └── main.py            # CLI entry point
+├── web/                   # React Frontend
+│   ├── src/
+│   │   ├── pages/         # Dashboard pages
+│   │   ├── components/    # UI components
+│   │   ├── services/      # API client
+│   │   └── types/         # TypeScript types
+│   └── package.json
+├── docs/                  # Documentation
+│   ├── project-overview-pdr.md
+│   ├── codebase-summary.md
+│   ├── code-standards.md
+│   └── system-architecture.md
+├── demodata/              # Sample Excel files
+├── docker-compose.yml     # Docker orchestration
+└── requirements.txt       # Python dependencies
+```
+
+## 📚 Documentation
+
+Comprehensive documentation is available in the `docs/` directory:
+
+- **[Project Overview & PDR](docs/project-overview-pdr.md)**: Business objectives, features, roadmap
+- **[Codebase Summary](docs/codebase-summary.md)**: Project structure, architecture, technologies
+- **[Code Standards](docs/code-standards.md)**: Coding conventions and best practices
+- **[System Architecture](docs/system-architecture.md)**: Technical architecture with diagrams
+- **[Upload Guide](docs/upload-guide.md)**: Upload flow, detection, dedup, troubleshooting
+- **[ETL Fixes Report (2026-01-07)](docs/ETL_FIXES_2026-01-07.md)**: Recent ETL and frontend fixes
+
+## 🔧 Technology Stack
+
+### Backend
+- **Python 3.11+**: Core language
+- **FastAPI**: Modern async web framework
+- **SQLAlchemy 2.0**: ORM and database toolkit
+- **Pandas/Polars**: Data processing
+- **Pydantic**: Data validation
+- **PostgreSQL**: Relational database
+
+### Frontend
+- **React 19**: UI library
+- **TypeScript**: Type-safe JavaScript
+- **Vite**: Build tool and dev server
+- **TailwindCSS 4**: Utility-first CSS
+- **Recharts**: Data visualization
+- **TanStack Query**: Server state management
+- **React Router 7**: Client-side routing
+
+## 🔐 Authentication
+
+The system uses JWT-based authentication with role-based access control:
+
+- **Admin**: Full access to all modules
+- **Manager**: Read access, limited export
+- **Analyst**: Department-specific access
+- **Viewer**: Read-only executive dashboard
+
+**Default Credentials** (Development)
+- Username: `admin`
+- Password: `admin123`
+
+> ⚠️ **Change default credentials in production!**
+
+## 📦 Data Sources
+
+The system processes Excel exports from SAP:
+
+- **MB51**: Material movements and transactions
+- **ZRSD002**: Sales orders and deliveries
+- **ZRSD006**: Customer master and sales data
+- **ZRFI005**: Accounts receivable and debt
+- **COOISPI**: Production orders and confirmations
+- **COGS**: Cost of goods sold
+- **ZRSD003**: Additional sales metrics
+
+Place Excel files in the `demodata/` directory before running the ETL pipeline.
+
+## 🧪 Testing
+
+### Backend Tests
+```bash
+# Run all tests
+pytest
+
+# Run with coverage
+pytest --cov=src --cov-report=html
+
+# Run specific test file
+pytest tests/test_leadtime.py
+```
+
+### Frontend Tests
+```bash
+cd web
+
+# Run tests
+npm test
+
+# Run with coverage
+npm test -- --coverage
+```
+
+## 🛠️ Development
+
+### CLI Commands
+
+```bash
+# Initialize database schema
+python -m src.main init
+
+# Load raw data from Excel
+python -m src.main load
+
+# Transform to warehouse
+python -m src.main transform
+
+# Truncate warehouse tables
+python -m src.main truncate
+
+# Run full ELT pipeline
+python -m src.main run
+
+# Test database connection
+python -m src.main test
+```
+
+### API Documentation
+
+FastAPI provides interactive API documentation:
+- **Swagger UI**: `http://localhost:8000/docs`
+- **ReDoc**: `http://localhost:8000/redoc`
+
+## 🚢 Deployment
+
+### Production Checklist
+
+- [ ] Update `.env` with production credentials
+- [ ] Change default admin password
+- [ ] Configure CORS allowed origins
+- [ ] Enable HTTPS
+- [ ] Set up database backups
+- [ ] Configure logging and monitoring
+- [ ] Review security settings
+
+### Environment Variables
+
+```bash
+# Database
+DATABASE_URL=postgresql://user:password@localhost:5432/alkana_db
+
+# API
 SECRET_KEY=your-secret-key-here
+ALLOWED_ORIGINS=https://yourdomain.com
+
+# Frontend
+VITE_API_URL=https://api.yourdomain.com
 ```
 
-**Command Examples:**
-```bash
-# Description of what this does
-command --option value
+## 📚 Documentation
 
-# Expected output:
-# Success message
-```
+### Getting Started
+- **[README](README.md)** - Project overview and quick start (this file)
+- **[User Guide](docs/USER_GUIDE.md)** - End-user instructions for all dashboards
+- **[Glossary](docs/GLOSSARY.md)** - Business and technical terminology
 
-## 🆘 Getting Help
+### Development
+- **[API Reference](docs/API_REFERENCE.md)** - Complete REST API documentation
+- **[Database Documentation](docs/DATABASE.md)** - Schema, tables, and data model
+- **[Development Scripts](docs/DEV_SCRIPTS.md)** - Catalog of ad-hoc utility scripts
+- **[Testing Guide](docs/TESTING.md)** - Testing strategy and examples
+- **[Contributing Guide](docs/CONTRIBUTING.md)** - Git workflow and code standards
 
-### Support Channels
+### Operations
+- **[Deployment Guide](docs/DEPLOYMENT.md)** - Production deployment instructions
+- **[Monitoring Guide](docs/MONITORING.md)** - Logging, metrics, and alerting
+- **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Common issues and solutions
+- **[Security Guide](docs/SECURITY.md)** - Security best practices
+- **[Performance Guide](docs/PERFORMANCE.md)** - Optimization strategies
 
-1. **Documentation** - Search this documentation first
-2. **Troubleshooting Guide** - [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
-3. **Development Team** - Contact for complex issues
-4. **Issue Tracker** - Report bugs or request features
+### Reference
+- **[System Architecture](docs/system-architecture.md)** - Technical architecture diagrams
+- **[Changelog](CHANGELOG.md)** - Version history and release notes
 
-### Common Questions
+## 🤝 Contributing
 
-**Q: Where do I start?**
-A: See [Getting Started](#getting-started) section above based on your role.
+1. Follow the [Code Standards](docs/code-standards.md)
+2. Write tests for new features
+3. Update documentation as needed
+4. Submit pull requests with clear descriptions
 
-**Q: How do I deploy to production?**
-A: Follow the [Deployment Guide](DEPLOYMENT.md) step-by-step.
+See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for detailed guidelines.
 
-**Q: The application is slow. How do I optimize it?**
-A: See [Performance Guide](PERFORMANCE.md) for optimization strategies.
+## 📝 License
 
-**Q: Where is the API documentation?**
-A: See [API Reference](API_REFERENCE.md) or visit `/docs` when running the backend.
+This project is proprietary and confidential.
 
-**Q: How do I add a new dashboard?**
-A: See [Contributing Guide](CONTRIBUTING.md) for development workflow.
+## 📧 Support
 
-**Q: What does "MTO" mean?**
-A: See [Glossary](GLOSSARY.md) for all terminology.
-
-## 🔄 Documentation Updates
-
-### Version History
-
-See [CHANGELOG.md](../CHANGELOG.md) for version history and release notes.
-
-### Last Updated
-
-This documentation index was last updated: **January 2025**
-
-Individual document update dates are noted in each file.
+For questions or issues, contact the development team.
 
 ---
 
-**Happy reading! 📚**
-
-For questions about this documentation, contact the development team.
+**Built with ❤️ for supply chain excellence**

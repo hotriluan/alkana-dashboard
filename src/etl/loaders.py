@@ -315,7 +315,10 @@ class Mb51Loader(BaseLoader):
         print(f"  Found {len(df)} rows, {len(df.columns)} columns")
         print(f"  Columns: {list(df.columns)}")
         
+        # Track seen hashes in current batch to prevent intra-batch duplicates
+        seen_hashes = set()
         records = []
+        
         for idx, row in df.iterrows():
             try:
                 # Build raw_data with ALL columns
@@ -346,11 +349,21 @@ class Mb51Loader(BaseLoader):
                     'row_hash': compute_row_hash({**raw_data, 'source_file': str(file_path.name)})
                 }
                 
+                row_hash = record_data['row_hash']
+                
+                # Skip if already seen in this batch
+                if row_hash in seen_hashes:
+                    self.skipped_count += 1
+                    continue
+                
                 if self.mode == 'upsert':
-                    self.upsert_record(RawMb51, {'col_11_material_doc': material_doc}, record_data, record_data['row_hash'])
+                    result = self.upsert_record(RawMb51, {'col_11_material_doc': material_doc}, record_data, row_hash)
+                    if result in ('inserted', 'updated'):
+                        seen_hashes.add(row_hash)
                 else:
                     record = RawMb51(**record_data)
                     records.append(record)
+                    seen_hashes.add(row_hash)
                     self.loaded_count += 1
                 
             except Exception as e:
@@ -468,7 +481,16 @@ class Zrsd002Loader(BaseLoader):
         file_path = EXCEL_FILES['zrsd002']
         print(f"Loading {file_path}...")
         
-        df = pd.read_excel(file_path, header=0, dtype=str)
+        # File has hidden/merged row 0 (all NaN), row 1 has headers (openpyxl can see it)
+        # Read headers from openpyxl, then load data with pandas
+        import openpyxl
+        wb = openpyxl.load_workbook(file_path)
+        ws = wb.active
+        headers = [cell.value for cell in next(ws.iter_rows(min_row=1, max_row=1))]
+        wb.close()
+        
+        # Read data starting from row 2 (skip hidden row 0 and header row 1)
+        df = pd.read_excel(file_path, header=None, skiprows=1, dtype=str, names=headers)
         print(f"  Found {len(df)} rows, {len(df.columns)} columns")
         print(f"  Columns: {list(df.columns)}")
         
@@ -747,8 +769,20 @@ class Zrfi005Loader(BaseLoader):
                     'source_file': str(file_path.name),
                     'source_row': idx + 2,
                     'raw_data': raw_data,
-                    'row_hash': compute_row_hash({**raw_data, 'snapshot_date': snapshot_date.isoformat() if snapshot_date else None})
                 }
+                
+                # Compute row_hash ONLY from business data (exclude metadata: source_file, source_row)
+                # This ensures same data uploaded twice has same hash
+                hash_data = {
+                    'customer_name': customer_name,
+                    'dist_channel': record_data['dist_channel'],
+                    'cust_group': record_data['cust_group'],
+                    'salesman_name': record_data['salesman_name'],
+                    'total_target': record_data['total_target'],
+                    'total_realization': record_data['total_realization'],
+                    'snapshot_date': snapshot_date.isoformat() if snapshot_date else None
+                }
+                record_data['row_hash'] = compute_row_hash(hash_data)
                 
                 if self.mode == 'upsert':
                     # Upsert mode: update existing record with same business key

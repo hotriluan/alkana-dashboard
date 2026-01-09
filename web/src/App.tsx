@@ -5,7 +5,6 @@ import ExecutiveDashboard from './pages/ExecutiveDashboard';
 import ArAging from './pages/ArAging';
 import Inventory from './pages/Inventory';
 import MTOOrders from './pages/MTOOrders';
-import ProductionYield from './pages/ProductionYield';
 import SalesPerformance from './pages/SalesPerformance';
 import LeadTimeDashboard from './pages/LeadTimeDashboard';
 import AlertMonitor from './pages/AlertMonitor';
@@ -65,16 +64,6 @@ function App() {
               <ProtectedRoute>
                 <DashboardLayout>
                   <MTOOrders />
-                </DashboardLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/yield"
-            element={
-              <ProtectedRoute>
-                <DashboardLayout>
-                  <ProductionYield />
                 </DashboardLayout>
               </ProtectedRoute>
             }

@@ -79,6 +79,16 @@ npm run dev
 
 Frontend runs at: `http://localhost:5173`
 
+### Default Date Range
+- Dashboards default to the current month: from the first day of the month to today.
+- Implemented with timezone-safe local date helpers to avoid UTC shifts.
+
+### Upload Behavior (ZRSD002)
+- Multiple files with overlapping periods can be uploaded safely.
+- Deduplication keys: `(billing_document, billing_item)` with an upsert flow.
+- `row_hash` excludes `source_file` so re-uploads with identical data are skipped; changes overwrite the existing business record.
+- Example: Upload 2025 full year then Dec 2025–Jan 2026 → 396 inserted, 2,118 updated, 0 duplicates.
+
 ### Docker Deployment
 
 ```bash
@@ -153,6 +163,8 @@ Comprehensive documentation is available in the `docs/` directory:
 - **[Codebase Summary](docs/codebase-summary.md)**: Project structure, architecture, technologies
 - **[Code Standards](docs/code-standards.md)**: Coding conventions and best practices
 - **[System Architecture](docs/system-architecture.md)**: Technical architecture with diagrams
+- **[Upload Guide](docs/upload-guide.md)**: Upload flow, detection, dedup, troubleshooting
+- **[ETL Fixes Report (2026-01-07)](docs/ETL_FIXES_2026-01-07.md)**: Recent ETL and frontend fixes
 
 ## 🔧 Technology Stack
 

@@ -210,9 +210,10 @@ async def process_file(upload_id: int, file_path: Path, db: Session) -> Dict:
         # Transform only the relevant table based on file type
         if file_type == 'COOISPI':
             transformer.transform_cooispi()
-            # COOISPI impacts production chains and alerts
+            # COOISPI impacts production chains, lead time, and alerts
             transformer.build_production_chains()
             transformer.calculate_p02_p01_yields()
+            transformer.transform_lead_time()  # Calculate transit days for P01 batches
             transformer.detect_alerts()
         elif file_type == 'MB51':
             transformer.transform_mb51()

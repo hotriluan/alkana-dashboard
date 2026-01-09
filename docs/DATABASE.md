@@ -129,32 +129,42 @@ SELECT * FROM raw_mb51 LIMIT 3;
 
 ---
 
-#### raw_zrsd002 (Sales Orders)
+#### raw_zrsd002 (Sales Orders & Billing)
 **Purpose:** Customer orders and billing data
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
 | `id` | SERIAL | No | Primary key |
-| `sales_order` | VARCHAR(20) | No | Sales order number |
-| `so_item` | VARCHAR(6) | Yes | Line item number |
-| `customer_code` | VARCHAR(20) | No | Customer ID |
-| `customer_name` | VARCHAR(200) | Yes | Customer name |
-| `material_code` | VARCHAR(40) | No | Sold product |
-| `order_qty` | NUMERIC(15,3) | Yes | Ordered quantity |
-| `delivered_qty` | NUMERIC(15,3) | Yes | Delivered quantity |
-| `sales_amount` | NUMERIC(15,2) | Yes | Revenue |
-| `order_date` | DATE | Yes | Order creation date |
-| `requested_delivery` | DATE | Yes | Customer requested date |
-| `actual_delivery` | DATE | Yes | Actual ship date |
-| `distribution_channel` | VARCHAR(2) | Yes | Channel code (10, 20, 30) |
-| `plant` | VARCHAR(4) | Yes | Fulfilling plant |
-| `created_at` | TIMESTAMP | No | DB load timestamp |
+| `billing_document` | VARCHAR(50) | No | Billing document number |
+| `billing_item` | INTEGER | No | Billing item number |
+| `billing_date` | TIMESTAMP | Yes | Billing date |
+| `customer_name` | VARCHAR(200) | Yes | Customer name (from "Name of Bill to") |
+| `material` | VARCHAR(50) | Yes | Material code |
+| `material_desc` | VARCHAR(200) | Yes | Material description |
+| `billing_qty` | NUMERIC(18,4) | Yes | Billed quantity |
+| `net_value` | NUMERIC(18,4) | Yes | Net value |
+| `sales_office` | VARCHAR(20) | Yes | Sales office |
+| `dist_channel` | VARCHAR(20) | Yes | Distribution channel |
+| `so_number` | VARCHAR(50) | Yes | Sales order number |
+| `so_date` | TIMESTAMP | Yes | Sales order date |
+| `doc_reference_od` | VARCHAR(50) | Yes | Document reference (OD) |
+| `source_file` | VARCHAR(100) | Yes | Source Excel filename |
+| `source_row` | INTEGER | Yes | Row number in Excel |
+| `loaded_at` | TIMESTAMP | No | DB load timestamp |
+| `raw_data` | JSONB | Yes | Full raw row as JSON |
+| `row_hash` | VARCHAR(32) | Yes | MD5 hash for dedup (excludes source_file) |
+
+**Business Keys:**
+- Unique constraint: `(billing_document, billing_item)`
+- Deduplication: `row_hash` computed from `raw_data` only (not `source_file`)
+- Upsert mode: Uploading overlapping files updates existing records, inserts new ones
 
 **Indexes:**
-- `idx_zrsd002_sales_order` on `sales_order`
-- `idx_zrsd002_customer` on `customer_code`
-- `idx_zrsd002_material` on `material_code`
-- `idx_zrsd002_order_date` on `order_date`
+- `idx_zrsd002_billing_doc` on `billing_document`
+- `idx_zrsd002_customer` on `customer_name`
+- `idx_zrsd002_material` on `material`
+- `idx_zrsd002_billing_date` on `billing_date`
+- Unique index on `row_hash`
 
 ---
 

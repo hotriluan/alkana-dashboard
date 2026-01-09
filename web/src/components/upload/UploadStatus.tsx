@@ -8,7 +8,6 @@ import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { CheckCircle, XCircle, Clock, Loader2, FileSpreadsheet, AlertCircle } from 'lucide-react';
 import { uploadAPI } from '../../services/api';
-import type { UploadStatus } from '../../types/upload';
 
 interface UploadStatusProps {
   uploadId: number;

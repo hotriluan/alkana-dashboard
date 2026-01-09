@@ -99,6 +99,12 @@
    - Quality issues
    - Financial exceptions
 
+9. **Data Upload & Management**
+   - Multi-file upload with auto-detection (ZRSD006, ZRSD002, MB51, etc.)
+   - Smart deduplication (business key upsert for ZRSD002)
+   - Snapshot date support (ZRFI005 AR data)
+   - Frontend date defaults (first day of month → today, timezone-safe)
+
 ### 4. Data Sources
 
 #### SAP Exports (Excel Format)
@@ -156,11 +162,15 @@
 
 ### 8. Future Roadmap
 
-#### Phase 1 (Current)
-- ✅ Core dashboard modules
-- ✅ ELT pipeline
-- ✅ Authentication system
+#### Phase 1 (Completed - Jan 2026)
+- ✅ Core dashboard modules (8 dashboards)
+- ✅ ELT pipeline with smart deduplication
+- ✅ Authentication system (JWT)
 - ✅ Alert monitoring
+- ✅ Multi-file upload with auto-detection
+- ✅ Frontend date range defaults (timezone-safe)
+- ✅ ZRSD002 upsert deduplication
+- ✅ UOM conversion (KG normalization)
 
 #### Phase 2 (Planned)
 - [ ] Real-time data streaming

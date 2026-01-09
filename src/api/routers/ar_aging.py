@@ -140,11 +140,36 @@ async def get_ar_collection_summary(
         from src.etl.transform import Transformer
         transformer = Transformer(db)
         transformer.transform_zrfi005(target_date=snapshot_date)
+    
+    # Query fact_ar_aging directly with snapshot filter instead of view
     results = db.execute(text("""
-        SELECT division, dist_channel, total_target, total_realization,
-               collection_rate_pct, report_date::text
-        FROM view_ar_collection_summary
-    """)).fetchall()
+        SELECT 
+            CASE dist_channel
+                WHEN '11' THEN 'Industry'
+                WHEN '13' THEN 'Retails'
+                WHEN '15' THEN 'Project'
+                ELSE 'Other'
+            END as division,
+            dist_channel,
+            SUM(COALESCE(total_target, 0)) as total_target,
+            SUM(COALESCE(total_realization, 0)) as total_realization,
+            CASE 
+                WHEN SUM(COALESCE(total_target, 0)) > 0 
+                THEN ROUND((SUM(COALESCE(total_realization, 0)) / SUM(total_target) * 100)::numeric, 0)
+                ELSE 0 
+            END as collection_rate_pct,
+            MAX(report_date)::text as report_date
+        FROM fact_ar_aging
+        WHERE snapshot_date = :snapshot_date
+        GROUP BY dist_channel
+        ORDER BY 
+            CASE dist_channel
+                WHEN '11' THEN 1
+                WHEN '13' THEN 2
+                WHEN '15' THEN 3
+                ELSE 4
+            END
+    """), {"snapshot_date": snapshot_date}).fetchall()
     
     divisions = [ARCollectionSummary(
         division=r[0], dist_channel=r[1],

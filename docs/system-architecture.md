@@ -193,9 +193,14 @@ erDiagram
 - Handle encoding issues (UTF-8, Latin-1)
 
 #### Load
-- Batch insert into raw tables
+- **Upsert Mode**: For business-critical files (ZRSD002, ZRFI005)
+  - Business keys: `(billing_document, billing_item)` for ZRSD002
+  - `row_hash`: MD5 of raw_data (excludes `source_file` for cross-file dedup)
+  - Upsert logic: Update if business key exists, insert if new, skip if hash identical
+- **Insert Mode**: Batch insert for historical imports
 - Transaction management for data integrity
 - Error logging and rollback on failure
+- Auto file-type detection via header patterns
 
 #### Transform
 - **Dimension Population**: Extract unique values from raw data
@@ -258,6 +263,19 @@ sequenceDiagram
 - Converts between units of measure (KG, L, EA, etc.)
 - Maintains conversion factors
 - Standardizes metrics for analytics
+
+#### Frontend Utilities
+
+**Date Range Helpers** (`web/src/utils/dateHelpers.ts`)
+- Timezone-safe date formatting using local date components
+- Default range: First day of current month → Today
+- Functions: `getFirstDayOfMonth()`, `getToday()`, `getDefaultDateRange()`
+- Prevents Dec 31 bug caused by UTC midnight offset
+
+**DateRangePicker Component** (`web/src/components/common/DateRangePicker.tsx`)
+- Shared date filter UI across all dashboards
+- Syncs local state with props via `useEffect`
+- Reset button uses local-date strings, not `toISOString()`
 
 ### 4. API Layer
 

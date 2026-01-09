@@ -103,14 +103,39 @@ docker build -t alkana-frontend:latest -f Dockerfile.frontend ./web
 
 #### Step 2: Configure Docker Compose
 
-Update `docker-compose.yml`:
+**Current State (Development):**  
+The project currently has a minimal `docker-compose.yml` with only PostgreSQL:
 
 ```yaml
 version: '3.8'
 
 services:
   postgres:
-    image: postgres:15-alpine
+    image: postgres:16-alpine
+    container_name: alkana_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: alkana_dashboard
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+
+volumes:
+  postgres_data:
+```
+
+**Full Production Setup** (requires Dockerfile.backend and Dockerfile.frontend):
+
+```yaml
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
     container_name: alkana-postgres
     environment:
       POSTGRES_DB: alkana_dashboard
@@ -148,6 +173,7 @@ services:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./ssl:/etc/nginx/ssl:ro
     restart: unless-stopped
+```
 
 volumes:
   postgres_data:

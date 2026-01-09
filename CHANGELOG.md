@@ -7,6 +7,82 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### [Decommissioned] 2026-01-08
+
+**PRODUCTION YIELD MODULE REMOVED**
+- Removed entire Production Yield functionality (V1 Legacy + V2 Variance Analysis)
+- Business directive: Module no longer required for operations
+- All data backed up to: `backups/yield-decommission-2026-01-08/yield_tables_backup.sql` (2.4 MB)
+
+#### Removed Components
+
+**Frontend:**
+- Deleted `/yield` route and ProductionYield.tsx component
+- Deleted `/variance-analysis` route and VarianceAnalysisTable.tsx component
+- Removed V2 TypeScript interfaces (VarianceRecord, VarianceAnalysisSummary, VarianceAnalysisResponse)
+- Removed navigation menu items for Production Yield and Variance Analysis
+
+**Backend:**
+- Deleted `src/api/routers/yield_dashboard.py` (V1 legacy router)
+- Deleted `src/api/routers/yield_v2.py` (V2 variance analysis router)
+- Removed router registrations from `main.py`
+
+**ETL & Core Logic:**
+- Deleted `src/etl/loaders/loader_zrpp062.py` (V2 ETL loader, 425 lines)
+- Deleted `src/core/yield_tracker.py` (Production chain logic, 396 lines)
+- Deleted `src/core/p02_p01_yield.py` (Yield calculation helper)
+- Preserved `src/core/netting.py` (still required for Supply Chain/Lead Time)
+
+**Database:**
+- Dropped `fact_production_performance_v2` (606 records)
+- Dropped `raw_zrpp062` (610 records)
+- Dropped `fact_p02_p01_yield`
+- Dropped `fact_production_chain` (127 records)
+
+**Files:**
+- Deleted `demodata/zrpp062.XLSX` (source data file)
+- Archived `V2_PRODUCTION_YIELD_IMPLEMENTATION_REPORT.md` to backups folder
+
+**Documentation:**
+- Updated `docs/codebase-summary.md` (removed yield sections)
+- Updated this CHANGELOG.md
+
+#### System Impact
+- ✅ Sales Performance: Unaffected
+- ✅ Inventory Dashboard: Unaffected  
+- ✅ Supply Chain / Lead Time: Unaffected
+- ✅ AR Collection: Unaffected
+- ✅ Alert System: Unaffected
+
+#### Rollback Instructions
+If yield functionality needs to be restored:
+1. Restore database: `psql -U postgres -d alkana_dashboard < backups/yield-decommission-2026-01-08/yield_tables_backup.sql`
+2. Revert git commits: `git revert <commit-hash>..HEAD`
+3. Restore archived report from backups folder
+
+---
+
+### 2026-01-08
+- **V2 Production Yield Module**
+  - Backend: New isolated tables `raw_zrpp062`, `fact_production_performance_v2`
+  - Backend: Dedicated loader `Zrpp062Loader` with reference_date parameter
+  - Backend: API endpoint `/api/v2/yield/variance` with date range and loss threshold filters
+  - Backend: Null-safe SQL aggregation (COALESCE for empty results)
+  - Frontend: New page `VarianceAnalysisTable` at `/variance-analysis`
+  - Frontend: KPI cards (Total Orders, Avg Loss %, Total Loss kg, Analysis Period)
+  - Frontend: Interactive filters (date range, loss threshold slider)
+  - Frontend: Sortable table with color-coded loss percentages
+  - Docs: Updated codebase-summary.md with V2 module details
+
+### 2026-01-07
+- Backend: ZRSD002 loader column mappings fixed (customer name, description, volume), row_hash excludes source_file, default loader mode set to upsert
+- Backend: ZRSD006 detection and loader mappings updated to match actual headers (Material Code, PH 1..7)
+- Backend: MB51 transform UOM conversion corrected (handles KG without conversion data)
+- Backend: DimUomConversion.variance_pct widened to NUMERIC(10,2)
+- Frontend: Default dashboard date range set to first day of current month → today
+- Frontend: Timezone-safe date helpers added; DateRangePicker syncs props via useEffect
+- Docs: Added ETL fixes report and Upload Guide; updated README
+
 ### Planned Features
 - Webhook support for alert notifications
 - Mobile responsive improvements

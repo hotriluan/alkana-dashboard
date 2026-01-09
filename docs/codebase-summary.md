@@ -55,7 +55,6 @@ alkana-dashboard/
 - `leadtime.py`: Additional lead time calculations
 - `mto_orders.py`: Make-to-order tracking
 - `sales_performance.py`: Sales metrics and trends
-- `yield_dashboard.py`: Production yield analysis
 
 ### 2. Core Business Logic (`src/core/`)
 
@@ -149,10 +148,19 @@ alkana-dashboard/
 ### 4. ETL Pipeline (`src/etl/`)
 
 **Data Loaders** (`loaders.py`)
-- Excel file reading
-- Data validation
-- Batch insertion
-- Error handling
+- Excel file reading with Pandas
+- Auto file-type detection (header pattern matching)
+- **Upsert Mode**: Business key-based deduplication for ZRSD002, ZRFI005
+  - ZRSD002: `(billing_document, billing_item)` unique key
+  - `row_hash`: MD5 of raw_data (excludes `source_file` for cross-file dedup)
+- **Insert Mode**: Bulk insert for historical data
+- Data validation and type conversion helpers
+- Error tracking and detailed logging
+- **V2 Loaders** (`loaders/loader_zrpp062.py`):
+  - Isolated ZRPP062 loader with `reference_date` parameter
+  - JSON sanitization (NaN→None for PostgreSQL compatibility)
+  - Upsert to `fact_production_performance_v2` with variance calculations
+  - UNIQUE constraint on `(process_order_id, batch_id, posting_date)`
 
 **Transformers** (`transform.py`)
 - Raw to warehouse transformation
@@ -177,7 +185,8 @@ alkana-dashboard/
 - `Inventory.tsx`: Stock levels and movements
 - `LeadTimeDashboard.tsx`: Lead time analytics (33KB - most complex)
 - `SalesPerformance.tsx`: Revenue and sales metrics
-- `ProductionYield.tsx`: Yield tracking and analysis
+- `ProductionYield.tsx`: Yield tracking and analysis (legacy)
+- `VarianceAnalysisTable.tsx`: **V2 Production Yield** - Variance analysis with filters
 - `MTOOrders.tsx`: Make-to-order tracking
 - `ArAging.tsx`: Accounts receivable aging
 - `AlertMonitor.tsx`: Real-time alert dashboard
@@ -198,6 +207,14 @@ alkana-dashboard/
 
 **API Client** (`api.ts`)
 - Axios-based HTTP client
+- JWT token management
+- Request/response interceptors
+- Error handling
+
+**Date Utilities** (`utils/dateHelpers.ts`)
+- Timezone-safe date formatting (avoids UTC midnight bugs)
+- Default date range helpers for dashboards
+- `getFirstDayOfMonth()`, `getToday()`, `getDefaultDateRange()`
 - Request/response interceptors
 - Authentication token management
 - Error handling
