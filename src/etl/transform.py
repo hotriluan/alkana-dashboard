@@ -25,7 +25,8 @@ from src.db.models import (
     # Fact tables
     FactProduction, FactInventory, FactPurchaseOrder,
     FactBilling, FactDelivery, FactArAging, FactTarget,
-    FactProductionChain, FactAlert, FactLeadTime,
+    # FactProductionChain - REMOVED 2026-01-12 (genealogy decommissioned)
+    FactAlert, FactLeadTime,
     # Dimension tables
     DimMaterial, DimUomConversion, DimPlant, DimMvt,
 )

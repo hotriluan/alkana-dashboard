@@ -18,7 +18,7 @@ DATABASE_URL = os.getenv(
     "postgresql://postgres:password@localhost:5432/alkana_dashboard"
 )
 
-# Excel file paths - ALL 8 source files
+# Excel file paths - ALL 9 source files
 EXCEL_FILES = {
     "cooispi": DEMODATA_DIR / "cooispi.XLSX",
     "mb51": DEMODATA_DIR / "mb51.XLSX",
@@ -27,6 +27,7 @@ EXCEL_FILES = {
     "zrsd004": DEMODATA_DIR / "zrsd004.XLSX",
     "zrsd006": DEMODATA_DIR / "zrsd006.XLSX",
     "zrfi005": DEMODATA_DIR / "ZRFI005.XLSX",
+    "zrpp062": DEMODATA_DIR / "zrpp062.XLSX",
     "target": DEMODATA_DIR / "target.xlsx",
 }
 

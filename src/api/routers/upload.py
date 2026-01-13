@@ -35,6 +35,8 @@ router = APIRouter(prefix="/upload", tags=["Upload"])
 class UploadResponse(BaseModel):
     """Response for file upload"""
     upload_id: int
+    file_name: str
+    file_type: str
     status: str
     message: str
 
@@ -65,6 +67,8 @@ class UploadHistoryItem(BaseModel):
     status: str
     uploaded_at: datetime
     rows_loaded: int
+    rows_updated: int
+    rows_skipped: int
     rows_failed: int
 
 
@@ -193,6 +197,8 @@ async def upload_file(
         
         return UploadResponse(
             upload_id=upload.id,
+            file_name=file.filename,
+            file_type=file_type,
             status='pending',
             message=f"File uploaded successfully. Type: {validation['file_type']}, Rows: {validation['rows']}"
         )
@@ -268,6 +274,8 @@ async def get_upload_history(
             status=u.status,
             uploaded_at=u.uploaded_at,
             rows_loaded=u.rows_loaded or 0,
+            rows_updated=u.rows_updated or 0,
+            rows_skipped=u.rows_skipped or 0,
             rows_failed=u.rows_failed or 0
         )
         for u in uploads

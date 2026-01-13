@@ -9,12 +9,14 @@ import { Upload, FileSpreadsheet, X } from 'lucide-react';
 
 interface FileUploadProps {
   onFileSelect: (file: File, snapshotDate?: string) => void;
+  onFileDropped?: (file: File) => void;  // V4: Auto-detect on drop
   isUploading: boolean;
   allowedTypes?: string[];
 }
 
 export const FileUpload = ({ 
-  onFileSelect, 
+  onFileSelect,
+  onFileDropped,
   isUploading,
   allowedTypes = ['.xlsx', '.xls', '.xlsm']
 }: FileUploadProps) => {
@@ -66,6 +68,11 @@ export const FileUpload = ({
     }
 
     setSelectedFile(file);
+    
+    // V4: Trigger auto-detection immediately
+    if (onFileDropped) {
+      onFileDropped(file);
+    }
   };
 
   const handleUpload = () => {
@@ -215,6 +222,7 @@ export const FileUpload = ({
           <li>ZRSD004 - Delivery</li>
           <li>ZRSD006 - Distribution Channel</li>
           <li>ZRFI005 - AR Aging (requires snapshot date)</li>
+          <li>ZRPP062 - Production Planning</li>
           <li>TARGET - Sales Targets</li>
         </ul>
       </div>

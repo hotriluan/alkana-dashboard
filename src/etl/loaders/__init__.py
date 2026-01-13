@@ -20,9 +20,9 @@ LOADERS = loaders_legacy.LOADERS
 get_loader_for_type = loaders_legacy.get_loader_for_type
 Zrfi005Loader = loaders_legacy.Zrfi005Loader
 Zrsd002Loader = loaders_legacy.Zrsd002Loader
+Zrsd006Loader = loaders_legacy.Zrsd006Loader
 Mb51Loader = loaders_legacy.Mb51Loader
-
-# Note: Zrpp062Loader removed during yield module decommissioning
+Zrpp062Loader = loaders_legacy.Zrpp062Loader
 
 __all__ = [
     'load_all_raw_data',
@@ -30,5 +30,8 @@ __all__ = [
     'get_loader_for_type',
     'Zrfi005Loader',
     'Zrsd002Loader',
-    'Mb51Loader'
+    'Zrsd006Loader',
+    'Mb51Loader',
+    'Zrpp062Loader',
 ]
+

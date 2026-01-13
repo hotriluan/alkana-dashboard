@@ -51,35 +51,8 @@ VIEWS = {
         ORDER BY fp.release_date DESC
     """,
     
-    # View 3: Production yield dashboard
-    "view_yield_dashboard": """
-        CREATE OR REPLACE VIEW view_yield_dashboard AS
-        SELECT 
-            plant_code,
-            sales_order,
-            p03_order,
-            p02_order,
-            p01_order,
-            p03_material,
-            p02_material,
-            p01_material,
-            p03_qty,
-            p02_qty,
-            p01_qty,
-            p03_to_p02_yield_pct,
-            p02_to_p01_yield_pct,
-            total_yield_pct,
-            chain_complete,
-            CASE 
-                WHEN total_yield_pct >= 90 THEN 'EXCELLENT'
-                WHEN total_yield_pct >= 85 THEN 'GOOD'
-                WHEN total_yield_pct >= 80 THEN 'ACCEPTABLE'
-                WHEN total_yield_pct >= 70 THEN 'POOR'
-                ELSE 'CRITICAL'
-            END as performance_level
-        FROM fact_production_chain
-        ORDER BY total_yield_pct ASC, plant_code
-    """,
+    # View 3: Production yield dashboard (REMOVED - legacy genealogy decommissioned 2026-01-12)
+    # "view_yield_dashboard": """...""",
     
     # View 4: Sales performance vs targets
     "view_sales_performance": """
@@ -140,14 +113,14 @@ VIEWS = {
             a.detected_at DESC
     """,
     
-    # View 6: Executive KPIs
+    # View 6: Executive KPIs (Updated 2026-01-12: removed legacy yield reference)
     "view_executive_kpis": """
         CREATE OR REPLACE VIEW view_executive_kpis AS
         SELECT 
             (SELECT COALESCE(SUM(net_value), 0) FROM fact_billing) as total_revenue,
             (SELECT COUNT(*) FROM fact_production WHERE is_mto = TRUE) as total_mto_orders,
             (SELECT COUNT(*) FROM fact_production WHERE is_mto = FALSE) as total_mts_orders,
-            (SELECT COALESCE(AVG(total_yield_pct), 0) FROM fact_production_chain WHERE chain_complete = TRUE) as avg_yield_pct,
+            0::numeric as avg_yield_pct,
             (SELECT COUNT(*) FROM fact_alert WHERE status = 'ACTIVE') as active_alerts,
             (SELECT COUNT(*) FROM fact_inventory) as total_inventory_movements,
             (SELECT COUNT(*) FROM fact_purchase_order) as total_purchase_orders

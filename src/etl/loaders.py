@@ -17,11 +17,13 @@ from openpyxl import load_workbook
 
 from sqlalchemy.orm import Session
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy import text
 
 from src.config import EXCEL_FILES
 from src.db.models import (
     RawCooispi, RawMb51, RawZrmm024, RawZrsd002,
-    RawZrsd004, RawZrsd006, RawZrfi005, RawTarget
+    RawZrsd004, RawZrsd006, RawZrfi005, RawTarget,
+    RawZrpp062, FactProductionPerformanceV2
 )
 
 
@@ -50,10 +52,16 @@ def safe_int(val) -> Optional[int]:
 
 
 def safe_float(val) -> Optional[float]:
-    """Safely convert value to float, handling NaN"""
+    """
+    Safely convert value to float, handling NaN and European decimal format.
+    Handles both dot (0.882) and comma (0,882) as decimal separator.
+    """
     if pd.isna(val):
         return None
     try:
+        # Handle European decimal format (comma as separator)
+        if isinstance(val, str):
+            val = val.replace(',', '.')
         return float(val)
     except (ValueError, TypeError):
         return None
@@ -140,12 +148,12 @@ class BaseLoader:
         """Load data and return stats"""
         raise NotImplementedError
     
-    def get_stats(self) -> Dict[str, int]:
+    def get_stats(self) -> Dict[str, Any]:
         return {
             'loaded': self.loaded_count,
             'updated': self.updated_count,
             'skipped': self.skipped_count,
-            'errors': self.error_count
+            'errors': self.errors  # Return error list, not count
         }
     
     def upsert_record(self, model_class, business_keys: Dict, record_data: Dict, row_hash: str):
@@ -646,63 +654,212 @@ class Zrsd006Loader(BaseLoader):
     """Load Material Master from zrsd006.XLSX - ALL COLUMNS"""
     
     def load(self) -> Dict[str, int]:
-        file_path = EXCEL_FILES['zrsd006']
+        # Use self.file_path if provided (from upload), otherwise use default config
+        file_path = self.file_path or EXCEL_FILES['zrsd006']
         print(f"Loading {file_path}...")
+        print(f"  DEBUG: self.file_path = {self.file_path}")
+        print(f"  DEBUG: file_path.exists() = {file_path.exists() if file_path else 'N/A'}")
         
-        df = pd.read_excel(file_path, header=0, dtype=str)
+        # Read Excel using openpyxl directly (pandas fails with these files)
+        try:
+            if not file_path:
+                raise ValueError("file_path is None")
+            if not file_path.exists():
+                raise FileNotFoundError(f"File not found: {file_path}")
+                
+            wb = load_workbook(file_path, data_only=True)
+            ws = wb.active
+            
+            # Extract headers from row 1
+            headers = {}
+            for col_idx in range(1, ws.max_column + 1):
+                header_val = ws.cell(1, col_idx).value
+                if header_val:
+                    headers[col_idx] = str(header_val).strip()
+            
+            print(f"  Found {len(headers)} header columns")
+            
+            # Extract data from rows 2 onwards  
+            records = []
+            for row_idx in range(2, ws.max_row + 1):
+                row = {}
+                for col_idx, header_name in headers.items():
+                    cell_val = ws.cell(row_idx, col_idx).value
+                    row[header_name] = str(cell_val).strip() if cell_val else ''
+                
+                try:
+                    raw_data = row
+                    
+                    # Use actual column names from file
+                    material = safe_str(row.get('Material Code'))
+                    dist_channel = safe_str(row.get('Distribution Channel'))
+                    
+                    record_data = {
+                        'material': material,
+                        'material_desc': safe_str(row.get('Mat. Description')),
+                        'dist_channel': dist_channel,
+                        'uom': safe_str(row.get('UOM')),
+                        'ph1': safe_str(row.get('PH 1')),
+                        'ph1_desc': safe_str(row.get('Division')),
+                        'ph2': safe_str(row.get('PH 2')),
+                        'ph2_desc': safe_str(row.get('Business')),
+                        'ph3': safe_str(row.get('PH 3')),
+                        'ph3_desc': safe_str(row.get('Sub Business')),
+                        'ph4': safe_str(row.get('PH 4')),
+                        'ph4_desc': safe_str(row.get('Product Group')),
+                        'ph5': safe_str(row.get('PH 5')),
+                        'ph5_desc': safe_str(row.get('Product Group 1')),
+                        'ph6': safe_str(row.get('PH 6')),
+                        'ph6_desc': safe_str(row.get('Product Group 2')),
+                        'ph7': safe_str(row.get('PH 7')),
+                        'ph7_desc': safe_str(row.get('Series')),
+                        'source_file': str(file_path.name),
+                        'source_row': row_idx,
+                        'raw_data': raw_data,
+                        'row_hash': compute_row_hash({**raw_data, 'source_file': str(file_path.name)})
+                    }
+                    
+                    if self.mode == 'upsert':
+                        self.upsert_record(RawZrsd006, {'material': material, 'dist_channel': dist_channel}, record_data, record_data['row_hash'])
+                    else:
+                        record = RawZrsd006(**record_data)
+                        records.append(record)
+                        self.loaded_count += 1
+                    
+                except Exception as e:
+                    self.error_count += 1
+                    self.errors.append(f"Row {row_idx}: {str(e)}")
+            
+            wb.close()
+            
+            if self.mode == 'insert' and records:
+                self.db.bulk_save_objects(records)
+                
+        except Exception as e:
+            print(f"  ✗ Error reading file: {e}")
+            self.error_count += 1
+            return self.get_stats()
+        self.db.commit()
+        
+        print(f"  ✓ Loaded {self.loaded_count} rows, Updated {self.updated_count}, Skipped {self.skipped_count}")
+        
+        # AUTO-POPULATE dim_product_hierarchy (V4: Centralized Smart Ingestion)
+        # This enables star schema JOINs for Production Yield V3.5+
+        print("\n  🔄 Auto-populating dim_product_hierarchy...")
+        try:
+            dim_stats = self.load_to_dimension(file_path)
+            print(f"  ✓ Dimension table updated: {dim_stats.get('loaded', 0)} materials")
+        except Exception as e:
+            print(f"  ⚠️  Warning: Failed to update dimension table: {e}")
+            # Don't fail the whole load if dimension update fails
+        
+        return self.get_stats()
+    
+    def load_to_dimension(self, file_path: Optional[Path] = None) -> Dict[str, Any]:
+        """
+        Load master data into dim_product_hierarchy dimension table.
+        
+        Strategy: UPSERT with PostgreSQL ON CONFLICT DO UPDATE
+        Key Sanitization: material_code.lstrip('0') to match fact table format
+        
+        Purpose: Enable star schema JOIN for brand/grade categorization
+        """
+        from src.db.models import DimProductHierarchy
+        
+        # Use provided file_path, then self.file_path, then default config
+        file_path = file_path or self.file_path or EXCEL_FILES.get('zrsd006')
+        if not file_path or not file_path.exists():
+            print(f"  ✗ File not found: {file_path}")
+            self.error_count += 1
+            return self.get_stats()
+        
+        print(f"Loading {file_path} into dim_product_hierarchy...")
+        
+        # Read with openpyxl directly to properly handle headers
+        # NOTE: pandas.read_excel() fails to read headers from these files
+        try:
+            wb = load_workbook(file_path, data_only=True)
+            ws = wb.active
+            
+            # Extract headers from row 1
+            headers = {}
+            for col_idx in range(1, ws.max_column + 1):
+                header_val = ws.cell(1, col_idx).value
+                if header_val:
+                    headers[col_idx] = str(header_val).strip()
+            
+            # Extract data from rows 2 onwards
+            rows_data = []
+            for row_idx in range(2, ws.max_row + 1):
+                row = {}
+                for col_idx, header_name in headers.items():
+                    cell_val = ws.cell(row_idx, col_idx).value
+                    row[header_name] = str(cell_val).strip() if cell_val else ''
+                rows_data.append(row)
+            
+            wb.close()
+            
+            # Convert to DataFrame for consistency
+            df = pd.DataFrame(rows_data)
+        except Exception as e:
+            print(f"  ✗ Failed to read Excel: {e}")
+            self.error_count += 1
+            return self.get_stats()
+        
         print(f"  Found {len(df)} rows, {len(df.columns)} columns")
-        print(f"  Columns: {list(df.columns)}")
         
-        records = []
+        # UPSERT SQL (PostgreSQL native)
+        upsert_sql = text("""
+            INSERT INTO dim_product_hierarchy (
+                material_code, material_description,
+                ph_level_1, ph_level_2, ph_level_3,
+                created_at, updated_at
+            ) VALUES (
+                :material_code, :material_description,
+                :ph_level_1, :ph_level_2, :ph_level_3,
+                NOW(), NOW()
+            )
+            ON CONFLICT (material_code) DO UPDATE SET
+                material_description = EXCLUDED.material_description,
+                ph_level_1 = EXCLUDED.ph_level_1,
+                ph_level_2 = EXCLUDED.ph_level_2,
+                ph_level_3 = EXCLUDED.ph_level_3,
+                updated_at = NOW()
+        """)
+        
         for idx, row in df.iterrows():
             try:
-                raw_data = row_to_json(row)
+                # Get material code and sanitize (CRITICAL: remove leading zeros)
+                material_raw = safe_str(row.get('Material Code'))
+                if not material_raw:
+                    self.skipped_count += 1
+                    continue
                 
-                # Use actual column names from file
-                material = safe_str(row.get('Material Code'))
-                dist_channel = safe_str(row.get('Distribution Channel'))
+                # Clean material code (match format in fact table)
+                material_code = material_raw.lstrip('0') if material_raw else None
+                if not material_code:
+                    self.skipped_count += 1
+                    continue
                 
-                record_data = {
-                    'material': material,
-                    'material_desc': safe_str(row.get('Mat. Description')),
-                    'dist_channel': dist_channel,
-                    'uom': safe_str(row.get('UOM')),
-                    'ph1': safe_str(row.get('PH 1')),
-                    'ph1_desc': safe_str(row.get('Division')),
-                    'ph2': safe_str(row.get('PH 2')),
-                    'ph2_desc': safe_str(row.get('Business')),
-                    'ph3': safe_str(row.get('PH 3')),
-                    'ph3_desc': safe_str(row.get('Sub Business')),
-                    'ph4': safe_str(row.get('PH 4')),
-                    'ph4_desc': safe_str(row.get('Product Group')),
-                    'ph5': safe_str(row.get('PH 5')),
-                    'ph5_desc': safe_str(row.get('Product Group 1')),
-                    'ph6': safe_str(row.get('PH 6')),
-                    'ph6_desc': safe_str(row.get('Product Group 2')),
-                    'ph7': safe_str(row.get('PH 7')),
-                    'ph7_desc': safe_str(row.get('Series')),
-                    'source_file': str(file_path.name),
-                    'source_row': idx + 2,
-                    'raw_data': raw_data,
-                    'row_hash': compute_row_hash({**raw_data, 'source_file': str(file_path.name)})
+                # Extract PH levels (use descriptions for better readability)
+                params = {
+                    'material_code': material_code,
+                    'material_description': safe_str(row.get('Mat. Description')),
+                    'ph_level_1': safe_str(row.get('Division')),      # PH 1 Desc
+                    'ph_level_2': safe_str(row.get('Business')),      # PH 2 Desc
+                    'ph_level_3': safe_str(row.get('Sub Business')),  # PH 3 Desc (Brand/Grade)
                 }
                 
-                if self.mode == 'upsert':
-                    self.upsert_record(RawZrsd006, {'material': material, 'dist_channel': dist_channel}, record_data, record_data['row_hash'])
-                else:
-                    record = RawZrsd006(**record_data)
-                    records.append(record)
-                    self.loaded_count += 1
+                self.db.execute(upsert_sql, params)
+                self.loaded_count += 1
                 
             except Exception as e:
                 self.error_count += 1
                 self.errors.append(f"Row {idx}: {str(e)}")
         
-        if self.mode == 'insert' and records:
-            self.db.bulk_save_objects(records)
         self.db.commit()
         
-        print(f"  ✓ Loaded {self.loaded_count} rows, Updated {self.updated_count}, Skipped {self.skipped_count}")
+        print(f"  ✓ Upserted {self.loaded_count} materials, Skipped {self.skipped_count}, Errors {len(self.errors)}")
         return self.get_stats()
 
 
@@ -871,6 +1028,228 @@ class TargetLoader(BaseLoader):
         return self.get_stats()
 
 
+class Zrpp062Loader(BaseLoader):
+    """
+    Load Production Performance Data from zrpp062.XLSX (Variance Analysis V3)
+    
+    V3 FEATURES:
+    - UPSERT using PostgreSQL ON CONFLICT DO UPDATE
+    - reference_date parameter for historical tracking
+    - Unique constraint: (process_order_id, batch_id)
+    
+    CRITICAL DATA SANITIZATION:
+    - Order SFG Liquid: .lstrip('0') to remove leading zeros (e.g., '0100255' -> '100255')
+    - Process Order: Convert float to string (e.g., 100255.0 -> '100255')
+    - Numeric fields: Convert empty/NaN to None (not 0)
+    
+    Loads into both:
+    1. raw_zrpp062 (staging, all columns as-is)
+    2. fact_production_performance_v2 (analytical, with UPSERT)
+    """
+    
+    def _clean_order_id(self, val) -> Optional[str]:
+        """
+        Clean order ID: remove leading zeros and handle float conversion
+        e.g., '0100255' -> '100255', 100255.0 -> '100255'
+        """
+        if pd.isna(val):
+            return None
+        str_val = str(val).strip()
+        if '.' in str_val:
+            try:
+                str_val = str(int(float(str_val)))
+            except (ValueError, TypeError):
+                pass
+        cleaned = str_val.lstrip('0')
+        return cleaned if cleaned else None
+    
+    def _clean_process_order(self, val) -> Optional[str]:
+        """
+        Clean Process Order: handle float conversion
+        e.g., 100255.0 -> '100255'
+        """
+        if pd.isna(val):
+            return None
+        str_val = str(val).strip()
+        if '.' in str_val:
+            try:
+                str_val = str(int(float(str_val)))
+            except (ValueError, TypeError):
+                pass
+        return str_val if str_val else None
+    
+    def load_with_period(self, file_path: Path, reference_date: date) -> Dict[str, int]:
+        """
+        V3 UPSERT Load: Load data with a specific reporting period (reference_date).
+        
+        Uses PostgreSQL ON CONFLICT DO UPDATE for efficient upsert.
+        
+        Args:
+            file_path: Path to Excel file
+            reference_date: First day of the reporting month (e.g., 2026-01-01 for Jan 2026)
+        
+        Returns:
+            Dict with load statistics {loaded, updated, skipped, errors}
+        """
+        if not file_path or not file_path.exists():
+            print(f"  ✗ File not found: {file_path}")
+            return self.get_stats()
+        
+        print(f"Loading {file_path} for period {reference_date}...")
+        
+        # Read Excel file with openpyxl engine for better compatibility
+        try:
+            df = pd.read_excel(file_path, header=0, dtype=str, engine='openpyxl')
+        except Exception as e:
+            print(f"  ✗ Failed to read Excel file: {e}")
+            self.error_count += 1
+            return self.get_stats()
+        
+        print(f"  Found {len(df)} rows, {len(df.columns)} columns")
+        print(f"  Column names: {list(df.columns)[:10]}...")  # Show first 10 columns
+        
+        # Prepare UPSERT SQL for fact table
+        upsert_sql = text("""
+            INSERT INTO fact_production_performance_v2 (
+                process_order_id, batch_id, material_code, material_description,
+                parent_order_id, mrp_controller, product_group_1, product_group_2,
+                output_actual_kg, input_actual_kg, process_order_qty,
+                loss_kg, loss_pct, sg_theoretical, sg_actual,
+                variant_prod_sfg_pct, variant_fg_pct, reference_date, created_at, updated_at
+            ) VALUES (
+                :process_order_id, :batch_id, :material_code, :material_description,
+                :parent_order_id, :mrp_controller, :product_group_1, :product_group_2,
+                :output_actual_kg, :input_actual_kg, :process_order_qty,
+                :loss_kg, :loss_pct, :sg_theoretical, :sg_actual,
+                :variant_prod_sfg_pct, :variant_fg_pct, :reference_date, NOW(), NOW()
+            )
+            ON CONFLICT (process_order_id, batch_id) DO UPDATE SET
+                material_code = EXCLUDED.material_code,
+                material_description = EXCLUDED.material_description,
+                parent_order_id = EXCLUDED.parent_order_id,
+                mrp_controller = EXCLUDED.mrp_controller,
+                product_group_1 = EXCLUDED.product_group_1,
+                product_group_2 = EXCLUDED.product_group_2,
+                output_actual_kg = EXCLUDED.output_actual_kg,
+                input_actual_kg = EXCLUDED.input_actual_kg,
+                process_order_qty = EXCLUDED.process_order_qty,
+                loss_kg = EXCLUDED.loss_kg,
+                loss_pct = EXCLUDED.loss_pct,
+                sg_theoretical = EXCLUDED.sg_theoretical,
+                sg_actual = EXCLUDED.sg_actual,
+                variant_prod_sfg_pct = EXCLUDED.variant_prod_sfg_pct,
+                variant_fg_pct = EXCLUDED.variant_fg_pct,
+                reference_date = EXCLUDED.reference_date,
+                updated_at = NOW()
+        """)
+        
+        raw_records = []
+        
+        for idx, row in df.iterrows():
+            try:
+                raw_data = row_to_json(row)
+                
+                # === Key Identifiers (with cleaning) ===
+                process_order = self._clean_process_order(row.get('Process Order'))
+                batch = safe_str(row.get('Batch'))
+                material = safe_str(row.get('Material'))
+                material_description = safe_str(row.get('Material Description'))
+                order_sfg_liquid = self._clean_order_id(row.get('Order SFG Liquid'))
+                
+                # Skip rows without process_order
+                if not process_order:
+                    self.skipped_count += 1
+                    continue
+                
+                # === Build raw record ===
+                raw_record_data = {
+                    'process_order': process_order,
+                    'batch': batch,
+                    'material': material,
+                    'material_description': material_description,
+                    'order_sfg_liquid': order_sfg_liquid,
+                    'mrp_controller': safe_str(row.get('MRP Controller')),
+                    'product_group_1': safe_str(row.get('Product Group 1')),
+                    'product_group_2': safe_str(row.get('Product Group 2')),
+                    'qty_order_sfg_liquid': safe_float(row.get('Qty Order SFG Liquid')),
+                    'process_order_qty': safe_float(row.get('Process Order Qty')),
+                    'uom': safe_str(row.get('UoM')),
+                    'bom_alt': safe_str(row.get('BOM Alt')),
+                    'bom_text': safe_str(row.get('BOM Text')),
+                    'group_recipe': safe_str(row.get('Group Recipe')),
+                    'gi_packaging_to_order': safe_float(row.get('GI Packaging to Order')),
+                    'gi_sfg_liquid_to_order': safe_float(row.get('GI SFG Liquid to Order')),
+                    'gr_qty_to_0201': safe_float(row.get('GR Qty to 0201')),
+                    'tonase_alkana_0201': safe_float(row.get('Tonase Alkana(0201)')),
+                    'gr_by_product': safe_float(row.get('GR by Product')),
+                    'sg_theoretical': safe_float(row.get('SG Theoretical')),
+                    'sg_actual': safe_float(row.get('SG Actual')),
+                    'bar_sfg': safe_float(row.get('Bar SFG')),
+                    'qty_allowance': safe_float(row.get('Qty Allowance')),
+                    'variant_prod_sfg_pct': safe_float(row.get('Variant Prod SFG (%)')),
+                    'variant_fg_pc': safe_float(row.get('Variant FG (PC)')),
+                    'variant_fg_pct': safe_float(row.get('Variant FG (%)')),
+                    'loss_kg': safe_float(row.get('Lossess FG Result (Kg)')),
+                    'loss_pct': safe_float(row.get('Lossess FG Result (%)')),
+                    'pc_to_kg_actual': safe_float(row.get('PC to KG (Actual)')),
+                    'system_status': safe_str(row.get('System Status')),
+                    'ud_status': safe_str(row.get('UD Status')),
+                    'pd_manager': safe_str(row.get('PD Manager')),
+                    'pd_leader': safe_str(row.get('PD Leader')),
+                    'posting_date': reference_date,
+                    'source_file': str(file_path.name),
+                    'source_row': idx + 2,
+                    'raw_data': raw_data,
+                }
+                raw_records.append(RawZrpp062(**raw_record_data))
+                
+                # === Execute UPSERT for fact table ===
+                fact_params = {
+                    'process_order_id': process_order,
+                    'batch_id': batch,
+                    'material_code': material,
+                    'material_description': material_description,
+                    'parent_order_id': order_sfg_liquid,
+                    'mrp_controller': safe_str(row.get('MRP Controller')),
+                    'product_group_1': safe_str(row.get('Product Group 1')),
+                    'product_group_2': safe_str(row.get('Product Group 2')),
+                    'output_actual_kg': safe_float(row.get('Tonase Alkana(0201)')),
+                    'input_actual_kg': safe_float(row.get('GI SFG Liquid to Order')),
+                    'process_order_qty': safe_float(row.get('Process Order Qty')),
+                    'loss_kg': safe_float(row.get('Lossess FG Result (Kg)')),
+                    'loss_pct': safe_float(row.get('Lossess FG Result (%)')),
+                    'sg_theoretical': safe_float(row.get('SG Theoretical')),
+                    'sg_actual': safe_float(row.get('SG Actual')),
+                    'variant_prod_sfg_pct': safe_float(row.get('Variant Prod SFG (%)')),
+                    'variant_fg_pct': safe_float(row.get('Variant FG (%)')),
+                    'reference_date': reference_date,
+                }
+                
+                self.db.execute(upsert_sql, fact_params)
+                self.loaded_count += 1
+                
+            except Exception as e:
+                self.error_count += 1
+                self.errors.append(f"Row {idx}: {str(e)}")
+        
+        # Bulk insert raw records
+        if raw_records:
+            self.db.bulk_save_objects(raw_records)
+        
+        self.db.commit()
+        
+        print(f"  ✓ Upserted {self.loaded_count} rows, Skipped {self.skipped_count}, Errors {self.error_count}")
+        return self.get_stats()
+    
+    def load(self, file_path: Optional[Path] = None) -> Dict[str, int]:
+        """
+        Legacy load method (V2 compatible) - uses current date as reference_date.
+        For V3, prefer load_with_period() method.
+        """
+        file_path = file_path or self.file_path or EXCEL_FILES.get('zrpp062')
+        return self.load_with_period(file_path, date.today())
+
+
 # Registry of all loaders
 LOADERS = {
     'cooispi': CooispiLoader,
@@ -880,6 +1259,7 @@ LOADERS = {
     'zrsd004': Zrsd004Loader,
     'zrsd006': Zrsd006Loader,
     'zrfi005': Zrfi005Loader,
+    'zrpp062': Zrpp062Loader,
     'target': TargetLoader,
 }
 

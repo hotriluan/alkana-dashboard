@@ -15,7 +15,7 @@ from src.api.routers import (
     alerts, lead_time,
     auth, ar_aging, mto_orders, 
     sales_performance, executive,
-    inventory, upload
+    inventory, upload, yield_v2, yield_v3
 )
 
 
@@ -55,6 +55,12 @@ app.include_router(ar_aging.router, prefix="/api/v1/dashboards")
 app.include_router(inventory.router, prefix="/api/v1/dashboards")
 app.include_router(mto_orders.router, prefix="/api/v1/dashboards")
 app.include_router(sales_performance.router, prefix="/api/v1/dashboards")
+
+# V2 API - Isolated Production Yield (Variance Analysis)
+app.include_router(yield_v2.router, prefix="/api/v2/yield", tags=["Yield V2"])
+
+# V3 API - Operational Efficiency Hub (Historical Trends)
+app.include_router(yield_v3.router, prefix="/api/v3/yield", tags=["Yield V3"])
 
 app.include_router(alerts.router)
 

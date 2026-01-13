@@ -13,7 +13,8 @@ import {
   LayoutDashboard,
   Clock,
   AlertTriangle,
-  Upload
+  Upload,
+  Factory
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -32,6 +33,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     { path: '/ar-aging', icon: DollarSign, label: 'AR Collection' },
     { path: '/inventory', icon: Package, label: 'Inventory' },
     { path: '/mto-orders', icon: ClipboardList, label: 'MTO Orders' },
+    { path: '/production', icon: Factory, label: 'Production Yield' },
     { path: '/sales', icon: BarChart3, label: 'Sales Performance' },
     { path: '/leadtime', icon: Clock, label: 'Lead Time Analysis' },
     { path: '/alerts', icon: AlertTriangle, label: 'Alert Monitor' },

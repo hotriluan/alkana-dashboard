@@ -9,6 +9,7 @@ import SalesPerformance from './pages/SalesPerformance';
 import LeadTimeDashboard from './pages/LeadTimeDashboard';
 import AlertMonitor from './pages/AlertMonitor';
 import DataUpload from './pages/DataUpload';
+import ProductionDashboard from './pages/ProductionDashboard';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { DashboardLayout } from './components/DashboardLayout';
 
@@ -94,6 +95,16 @@ function App() {
               <ProtectedRoute>
                 <DashboardLayout>
                   <AlertMonitor />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/production"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <ProductionDashboard />
                 </DashboardLayout>
               </ProtectedRoute>
             }

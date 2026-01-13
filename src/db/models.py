@@ -7,10 +7,10 @@ Architecture: ELT 3-Layer
 
 Note: User/Role models in auth_models.py (separation of concerns)
 """
-from datetime import datetime
+from datetime import datetime, date
 from sqlalchemy import (
     Column, Integer, String, Float, Date, DateTime, 
-    Numeric, Text, Boolean, ForeignKey, Index
+    Numeric, Text, Boolean, ForeignKey, Index, UniqueConstraint
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from src.db.connection import Base
@@ -235,6 +235,7 @@ class RawZrsd006(Base):
     source_row = Column(Integer)
     loaded_at = Column(DateTime, default=datetime.utcnow)
     raw_data = Column(JSONB)
+    row_hash = Column(String(32))  # MD5 hash for change detection
 
 
 class RawZrfi005(Base):
@@ -573,41 +574,32 @@ class FactTarget(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
-class FactProductionChain(Base):
-    """Fact: Yield Tracking P03→P02→P01"""
-    __tablename__ = "fact_production_chain"
-    
-    chain_id = Column(Integer, primary_key=True)
-    
-    # P01 (Packaged FG)
-    p01_order = Column(String(50), index=True)
-    p01_batch = Column(String(50), index=True)
-    p01_material = Column(String(50))
-    p01_qty_pc = Column(Numeric(18, 4))
-    p01_kg_per_pc = Column(Numeric(18, 4))
-    p01_total_kg = Column(Numeric(18, 4))
-    
-    # P02 (Finished Liquid)
-    p02_order = Column(String(50))
-    p02_batch = Column(String(50))
-    p02_material = Column(String(50))
-    p02_input_kg = Column(Numeric(18, 4))
-    p02_output_kg = Column(Numeric(18, 4))
-    p02_yield_pct = Column(Numeric(5, 2))
-    
-    # P03 (Base Liquid)
-    p03_order = Column(String(50))
-    p03_batch = Column(String(50))
-    p03_material = Column(String(50))
-    p03_input_kg = Column(Numeric(18, 4))
-    p03_output_kg = Column(Numeric(18, 4))
-    p03_yield_pct = Column(Numeric(5, 2))
-    
-    # Total
-    total_yield_pct = Column(Numeric(5, 2))
-    total_loss_kg = Column(Numeric(18, 4))
-    
-    created_at = Column(DateTime, default=datetime.utcnow)
+# ============================================================================
+# LEGACY TABLES (DECOMMISSIONED 2026-01-12 - Deep Clean Operation)
+# ============================================================================
+# class FactProductionChain(Base):
+#     """Fact: Yield Tracking P03→P02→P01 (REMOVED - genealogy decommissioned)"""
+#     __tablename__ = "fact_production_chain"
+#     ...
+
+# class FactP02P01Yield(Base):
+#     """P02→P01 Yield Tracking (REMOVED - genealogy decommissioned)"""
+#     __tablename__ = "fact_p02_p01_yield"
+#     ...
+
+
+# ============================================================================
+# LEGACY TABLES (DECOMMISSIONED 2026-01-12 - Deep Clean Operation)
+# ============================================================================
+# class FactProductionChain(Base):
+#     """Fact: Yield Tracking P03→P02→P01 (REMOVED - genealogy decommissioned)"""
+#     __tablename__ = "fact_production_chain"
+#     ...
+
+# class FactP02P01Yield(Base):
+#     """P02→P01 Yield Tracking (REMOVED - genealogy decommissioned)"""
+#     __tablename__ = "fact_p02_p01_yield"
+#     ...
 
 
 # =============================================================================
@@ -768,40 +760,10 @@ class FactLeadTime(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
-class FactP02P01Yield(Base):
-    """P02→P01 Yield Tracking - Material loss from liquid to packaged production"""
-    __tablename__ = "fact_p02_p01_yield"
-    
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    
-    # Batch Information
-    p02_batch = Column(String(50), nullable=False)
-    p01_batch = Column(String(50), nullable=False)
-    
-    # Material Information
-    p02_material_code = Column(String(50))
-    p02_material_desc = Column(Text)
-    p01_material_code = Column(String(50))
-    p01_material_desc = Column(Text)
-    
-    # Quantities (normalized to KG)
-    p02_consumed_kg = Column(Numeric(15, 3))
-    p01_produced_kg = Column(Numeric(15, 3))
-    
-    # Yield Metrics
-    yield_pct = Column(Numeric(5, 2))
-    loss_kg = Column(Numeric(15, 3))
-    
-    # Dates
-    production_date = Column(Date)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    
-    # Indexes
-    __table_args__ = (
-        Index('idx_p02_p01_yield_batches', 'p02_batch', 'p01_batch'),
-        Index('idx_p02_p01_yield_pct', 'yield_pct'),
-        Index('idx_p02_p01_yield_date', 'production_date'),
-    )
+# class FactP02P01Yield(Base):
+#     """P02→P01 Yield Tracking - DECOMMISSIONED 2026-01-12"""
+#     __tablename__ = "fact_p02_p01_yield"
+#     ...
 
 
 # =============================================================================
@@ -876,8 +838,25 @@ class RawZrpp062(Base):
     raw_data = Column(JSONB)
 
 
+class DimProductHierarchy(Base):
+    """Dimension: Product Master Data with PH Levels (Brand/Grade Categorization)"""
+    __tablename__ = "dim_product_hierarchy"
+    
+    material_code = Column(String(50), primary_key=True)  # Cleaned (no leading zeros)
+    material_description = Column(Text)
+    
+    # Product Hierarchy Levels
+    ph_level_1 = Column(String(100), index=True)  # Industry (e.g., Decorative)
+    ph_level_2 = Column(String(100), index=True)  # Product Line (e.g., Water based)
+    ph_level_3 = Column(String(100), index=True)  # Brand/Grade (e.g., Premium, Economy)
+    
+    # Audit
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
 class FactProductionPerformanceV2(Base):
-    """Fact: Production Performance V2 - Variance Analysis (Isolated)"""
+    """Fact: Production Performance V2/V3 - Variance Analysis with Historical Tracking"""
     __tablename__ = "fact_production_performance_v2"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -911,16 +890,20 @@ class FactProductionPerformanceV2(Base):
     variant_prod_sfg_pct = Column(Numeric(10, 4))
     variant_fg_pct = Column(Numeric(10, 4))
     
-    # Date (for filtering)
+    # Date (for filtering) - V3: reference_date is the reporting period (1st of month)
     posting_date = Column(Date, index=True)
+    reference_date = Column(Date, index=True, default=date.today)  # V3: Reporting period
     
     # Audit
     created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)  # V3: Track updates
     
-    # Unique constraint for upsert (ADR decision)
+    # Unique constraint for upsert (ADR decision - V3)
     __table_args__ = (
+        UniqueConstraint('process_order_id', 'batch_id', name='uq_prod_yield_v3'),
         Index('idx_fact_perf_v2_material', 'material_code'),
         Index('idx_fact_perf_v2_parent', 'parent_order_id'),
         Index('idx_fact_perf_v2_loss', 'loss_kg'),
+        Index('idx_yield_ref_date', 'reference_date'),
         {'sqlite_autoincrement': True},
     )

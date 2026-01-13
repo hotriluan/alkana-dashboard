@@ -249,7 +249,9 @@ async def process_file(upload_id: int, file_path: Path, db: Session) -> Dict:
         upload.rows_loaded = stats.get('loaded', 0)
         upload.rows_updated = stats.get('updated', 0)
         upload.rows_skipped = stats.get('skipped', 0)
-        upload.rows_failed = stats.get('errors', 0)
+        # errors is returned as a list; store the count in the integer column
+        error_list = stats.get('errors', []) or []
+        upload.rows_failed = len(error_list)
         upload.processed_at = datetime.utcnow()
         db.commit()
         
