@@ -99,7 +99,7 @@ async def get_executive_summary(
     production_result = db.execute(text(f"""
         SELECT 
             COUNT(*) as total_orders,
-            COUNT(CASE WHEN system_status LIKE '%%TECO%%' THEN 1 END) as completed_orders,
+            COUNT(CASE WHEN system_status LIKE '%DLV%' OR system_status LIKE '%TECO%' THEN 1 END) as completed_orders,
             COALESCE(AVG(CASE 
                 WHEN order_qty > 0 THEN (delivered_qty / order_qty * 100) 
                 ELSE 0 

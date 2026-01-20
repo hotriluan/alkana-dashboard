@@ -185,6 +185,7 @@ async def get_top_movers_and_dead_stock(
     start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
     end_date: Optional[str] = Query(None, description="End date (YYYY-MM-DD)"),
     limit: int = Query(10, ge=5, le=20, description="Number of items per list"),
+    category: str = Query('ALL_CORE', description="Material category: ALL_CORE, FG, SFG, RM"),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
@@ -195,6 +196,11 @@ async def get_top_movers_and_dead_stock(
         - start_date: Start of analysis period (defaults to 90 days ago)
         - end_date: End of analysis period (defaults to today)
         - limit: Number of items per list (default 10)
+        - category: Material type filter (default: ALL_CORE)
+            - ALL_CORE: Finish Goods (10) + Semi-Finish (12) + Raw Materials (15)
+            - FG: Finish Goods only (prefix 10)
+            - SFG: Semi-Finish Goods only (prefix 12)
+            - RM: Raw Materials only (prefix 15)
     
     Returns: 
         {
@@ -214,7 +220,8 @@ async def get_top_movers_and_dead_stock(
     top_movers, dead_stock = analytics.get_top_movers_and_dead_stock(
         start_date=start,
         end_date=end,
-        limit=limit
+        limit=limit,
+        category=category
     )
     
     return {

@@ -5,7 +5,7 @@ Provides ABC velocity analysis for inventory optimization
 from datetime import datetime, timedelta, date
 from typing import List, Optional
 from pydantic import BaseModel
-from sqlalchemy import func, and_, case
+from sqlalchemy import func, and_, case, or_
 from sqlalchemy.orm import Session
 from src.db.models import FactInventory, FactProduction
 
@@ -24,6 +24,7 @@ class TopMoverItem(BaseModel):
     material_code: str
     material_description: str
     velocity_score: int
+    material_type: str  # 'FG', 'SFG', 'RM'
 
 
 class DeadStockItem(BaseModel):
@@ -32,6 +33,7 @@ class DeadStockItem(BaseModel):
     material_description: str
     stock_kg: float
     velocity_score: int
+    material_type: str  # 'FG', 'SFG', 'RM'
 
 
 class InventoryAnalytics:
@@ -43,8 +45,42 @@ class InventoryAnalytics:
     # Movement types for inbound (receipt)
     INBOUND_MVT_TYPES = [101, 262]   # Receipt & Inbound Delivery
     
+    # Material type categories
+    MATERIAL_CATEGORIES = {
+        'FG': ('10',),      # Finish Good - prefix 10
+        'SFG': ('12',),     # Semi Finish Good - prefix 12
+        'RM': ('15',),      # Raw Material - prefix 15
+    }
+    
     def __init__(self, db: Session):
         self.db = db
+    
+    @staticmethod
+    def get_material_type(material_code: str) -> str:
+        """Determine material type from prefix"""
+        if material_code.startswith('10'):
+            return 'FG'
+        elif material_code.startswith('12'):
+            return 'SFG'
+        elif material_code.startswith('15'):
+            return 'RM'
+        return 'OTHER'
+    
+    def _get_category_filter(self, category: Optional[str] = 'ALL_CORE'):
+        """Build SQLAlchemy filter for material category"""
+        if category == 'FG':
+            return FactInventory.material_code.like('10%')
+        elif category == 'SFG':
+            return FactInventory.material_code.like('12%')
+        elif category == 'RM':
+            return FactInventory.material_code.like('15%')
+        elif category == 'ALL_CORE':
+            return or_(
+                FactInventory.material_code.like('10%'),
+                FactInventory.material_code.like('12%'),
+                FactInventory.material_code.like('15%')
+            )
+        return None
     
     def get_abc_analysis(
         self,
@@ -145,7 +181,8 @@ class InventoryAnalytics:
         self,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
-        limit: int = 10
+        limit: int = 10,
+        category: Optional[str] = 'ALL_CORE'
     ) -> tuple[List[TopMoverItem], List[DeadStockItem]]:
         """
         Get two actionable lists:
@@ -158,6 +195,7 @@ class InventoryAnalytics:
             start_date: Start of analysis period (defaults to 90 days ago)
             end_date: End of analysis period (defaults to today)
             limit: Number of items to return in each list
+            category: Material type filter - 'ALL_CORE' (default), 'FG', 'SFG', 'RM'
         
         Returns:
             Tuple of (top_movers list, dead_stock list)
@@ -168,8 +206,11 @@ class InventoryAnalytics:
         if start_date is None:
             start_date = end_date - timedelta(days=90)
         
+        # Build category filter
+        category_filter = self._get_category_filter(category)
+        
         # Get current stock levels
-        inventory_data = self.db.query(
+        inventory_query = self.db.query(
             FactInventory.material_code,
             FactInventory.material_description,
             func.sum(
@@ -178,13 +219,17 @@ class InventoryAnalytics:
                     else_=FactInventory.qty_kg
                 )
             ).label('net_qty_kg')
-        ).group_by(
+        )
+        if category_filter is not None:
+            inventory_query = inventory_query.filter(category_filter)
+        
+        inventory_data = inventory_query.group_by(
             FactInventory.material_code,
             FactInventory.material_description
         ).all()
         
         # Get velocity (count of all outbound transaction lines)
-        velocity_data = self.db.query(
+        velocity_query = self.db.query(
             FactInventory.material_code,
             func.count(FactInventory.id).label('velocity')
         ).filter(
@@ -193,7 +238,11 @@ class InventoryAnalytics:
                 FactInventory.posting_date <= end_date,
                 FactInventory.mvt_type.in_(self.OUTBOUND_MVT_TYPES)
             )
-        ).group_by(
+        )
+        if category_filter is not None:
+            velocity_query = velocity_query.filter(category_filter)
+        
+        velocity_data = velocity_query.group_by(
             FactInventory.material_code
         ).all()
         
@@ -211,6 +260,7 @@ class InventoryAnalytics:
                 'material_description': desc or '',
                 'stock_kg': float(net_qty) if net_qty else 0,
                 'velocity_score': velocity,
+                'material_type': self.get_material_type(material_code),
             })
         
         # Top Movers: ONLY items with velocity > 0, sort by velocity DESC, take top N
@@ -220,7 +270,8 @@ class InventoryAnalytics:
             TopMoverItem(
                 material_code=item['material_code'],
                 material_description=item['material_description'],
-                velocity_score=item['velocity_score']
+                velocity_score=item['velocity_score'],
+                material_type=item['material_type']
             )
             for item in top_movers
         ]
@@ -233,7 +284,8 @@ class InventoryAnalytics:
                 material_code=item['material_code'],
                 material_description=item['material_description'],
                 stock_kg=item['stock_kg'],
-                velocity_score=item['velocity_score']
+                velocity_score=item['velocity_score'],
+                material_type=item['material_type']
             )
             for item in dead_stock
         ]
