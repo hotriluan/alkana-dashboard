@@ -73,3 +73,20 @@ export const RECHARTS_DEFAULTS = {
   height: 350,
   margin: { top: 5, right: 30, left: 0, bottom: 5 },
 };
+
+/** Division Names Mapping - Business Logic */
+export const DIVISION_NAMES: Record<string, string> = {
+  '11': 'Industry',
+  '13': 'Retail',
+  '15': 'Project',
+};
+
+/**
+ * Get human-readable division name from code
+ * @param code Division code (string or number)
+ * @returns Display name or fallback format
+ */
+export const getDivisionName = (code: string | number): string => {
+  const codeStr = String(code);
+  return DIVISION_NAMES[codeStr] || `Division ${codeStr}`;
+};
