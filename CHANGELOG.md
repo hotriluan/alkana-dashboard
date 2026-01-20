@@ -7,58 +7,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### [Decommissioned] 2026-01-08
+### [Removed] 2026-01-13
 
-**PRODUCTION YIELD MODULE REMOVED**
-- Removed entire Production Yield functionality (V1 Legacy + V2 Variance Analysis)
-- Business directive: Module no longer required for operations
-- All data backed up to: `backups/yield-decommission-2026-01-08/yield_tables_backup.sql` (2.4 MB)
+**VARIANCE ANALYSIS V2 MODULE REMOVED**
+- Completed removal of V2 Variance Analysis UI and API (corrective action following scope gap)
+- V3 Efficiency Hub retained as single production yield interface
+- Database table `fact_production_performance_v2` preserved (required by V3)
+- Reference: `plans/20260112-deep-clean-legacy-yield-report.md`
 
 #### Removed Components
 
 **Frontend:**
-- Deleted `/yield` route and ProductionYield.tsx component
-- Deleted `/variance-analysis` route and VarianceAnalysisTable.tsx component
-- Removed V2 TypeScript interfaces (VarianceRecord, VarianceAnalysisSummary, VarianceAnalysisResponse)
-- Removed navigation menu items for Production Yield and Variance Analysis
+- Deleted `web/src/components/dashboard/production/VarianceAnalysisTable.tsx` (V2 component)
+- Simplified `web/src/pages/ProductionDashboard.tsx` to single-view (V3 only, no tabs)
+- Removed tab navigation system and V2 conditional rendering
 
 **Backend:**
-- Deleted `src/api/routers/yield_dashboard.py` (V1 legacy router)
-- Deleted `src/api/routers/yield_v2.py` (V2 variance analysis router)
-- Removed router registrations from `main.py`
-
-**ETL & Core Logic:**
-- Deleted `src/etl/loaders/loader_zrpp062.py` (V2 ETL loader, 425 lines)
-- Deleted `src/core/yield_tracker.py` (Production chain logic, 396 lines)
-- Deleted `src/core/p02_p01_yield.py` (Yield calculation helper)
-- Preserved `src/core/netting.py` (still required for Supply Chain/Lead Time)
+- Deleted `src/api/routers/yield_v2.py` (V2 API router)
+- Removed yield_v2 imports from `src/api/main.py`
+- Removed yield_v2 exports from `src/api/routers/__init__.py`
+- Removed `/api/v2/yield/*` endpoint registrations
 
 **Database:**
-- Dropped `fact_production_performance_v2` (606 records)
-- Dropped `raw_zrpp062` (610 records)
-- Dropped `fact_p02_p01_yield`
-- Dropped `fact_production_chain` (127 records)
-
-**Files:**
-- Deleted `demodata/zrpp062.XLSX` (source data file)
-- Archived `V2_PRODUCTION_YIELD_IMPLEMENTATION_REPORT.md` to backups folder
-
-**Documentation:**
-- Updated `docs/codebase-summary.md` (removed yield sections)
-- Updated this CHANGELOG.md
+- ✅ Preserved `fact_production_performance_v2` (V3 dependency)
+- Confirmed `fact_production_chain` dropped (legacy, from 2026-01-12)
+- Confirmed `fact_p02_p01_yield` dropped (legacy, from 2026-01-12)
 
 #### System Impact
+- ✅ V3 Efficiency Hub: Fully operational (single production yield view)
 - ✅ Sales Performance: Unaffected
-- ✅ Inventory Dashboard: Unaffected  
-- ✅ Supply Chain / Lead Time: Unaffected
-- ✅ AR Collection: Unaffected
-- ✅ Alert System: Unaffected
+- ✅ Inventory Dashboard: Unaffected
+- ✅ Lead Time Analytics: Unaffected
+- ✅ AR Aging: Unaffected
 
-#### Rollback Instructions
-If yield functionality needs to be restored:
-1. Restore database: `psql -U postgres -d alkana_dashboard < backups/yield-decommission-2026-01-08/yield_tables_backup.sql`
-2. Revert git commits: `git revert <commit-hash>..HEAD`
-3. Restore archived report from backups folder
+#### Verification
+- Frontend build: ✅ Passed (1.77s, no errors)
+- Backend imports: ✅ Passed (no module errors)
+- User experience: Simplified to single unified V3 view
+
+#### Breaking Changes
+- API endpoint `/api/v2/yield/*` removed (returns 404)
+- Production Dashboard no longer shows tabs (V3 loads directly)
+
+#### Documentation
+- Added `docs/20260113-variance-analysis-v2-removal-report.md`
+
+---
+
+### [Decommissioned] 2026-01-12
+
+**LEGACY YIELD TABLES REMOVED**
+- Dropped `fact_production_chain` (production genealogy tracking)
+- Dropped `fact_p02_p01_yield` (P02→P01 yield calculations)
+- Migration: `migrations/20260112_drop_legacy_yield_tables.sql`
+- V3 dependencies preserved: `fact_production_performance_v2`, `raw_zrpp062`, `dim_product_hierarchy`
 
 ---
 
