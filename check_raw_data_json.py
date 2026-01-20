@@ -1,24 +1,64 @@
-from src.db.connection import SessionLocal
-from src.db.models import RawZrsd002
-import json
+import psycopg2
+import os
+from dotenv import load_dotenv
+import pandas as pd
 
-db = SessionLocal()
+load_dotenv()
+conn = psycopg2.connect(os.getenv('DATABASE_URL'))
 
-try:
-    sample = db.query(RawZrsd002).first()
+print("=" * 80)
+print("🔍 INVESTIGATING NULL DELIVERY_DATE PATTERN")
+print("=" * 80)
+
+# Get sample NULL records
+query = """
+SELECT delivery, line_item, actual_gi_date, raw_data 
+FROM raw_zrsd004 
+WHERE delivery_date IS NULL 
+LIMIT 10
+"""
+
+df_null = pd.read_sql(query, conn)
+print(f"\n❌ SAMPLE RECORDS WITH NULL DELIVERY_DATE:")
+for idx, row in df_null.iterrows():
+    print(f"  Delivery {row['delivery']}, Line {row['line_item']}: actual_gi_date = {row['actual_gi_date']}")
     
-    if sample and sample.raw_data:
-        print("=== RAW_DATA JSON KEYS ===")
-        data = json.loads(sample.raw_data) if isinstance(sample.raw_data, str) else sample.raw_data
-        
-        for key in sorted(data.keys()):
-            print(f"  '{key}': {data[key]}")
-            
-        # Look for channel-related keys
-        print("\n=== CHANNEL-RELATED KEYS ===")
-        for key in data.keys():
-            if 'channel' in key.lower() or 'dist' in key.lower():
-                print(f"  FOUND: '{key}' = {data[key]}")
-                
-finally:
-    db.close()
+    # Check raw_data JSON for Delivery Date field
+    raw_data = row['raw_data']
+    if raw_data and 'Delivery Date' in raw_data:
+        print(f"    raw_data['Delivery Date'] = {repr(raw_data['Delivery Date'])}")
+
+# Get sample NON-NULL records
+query2 = """
+SELECT delivery, line_item, delivery_date, actual_gi_date, raw_data
+FROM raw_zrsd004 
+WHERE delivery_date IS NOT NULL 
+LIMIT 10
+"""
+
+df_not_null = pd.read_sql(query2, conn)
+print(f"\n✅ SAMPLE RECORDS WITH delivery_date:")
+for idx, row in df_not_null.iterrows():
+    print(f"  Delivery {row['delivery']}, Line {row['line_item']}: delivery_date = {row['delivery_date']}")
+    
+    # Check raw_data JSON for Delivery Date field
+    raw_data = row['raw_data']
+    if raw_data and 'Delivery Date' in raw_data:
+        print(f"    raw_data['Delivery Date'] = {repr(raw_data['Delivery Date'])}")
+
+# Check our specific deliveries in RAW_DATA JSON
+print(f"\n🔎 CHECKING RAW_DATA JSON FOR SPECIFIC DELIVERIES:")
+for delivery_num in ['1910053734', '1910053733', '1910053732']:
+    query3 = f"""
+    SELECT delivery, line_item, delivery_date, raw_data->>'Delivery Date' as raw_delivery_date
+    FROM raw_zrsd004
+    WHERE delivery = '{delivery_num}'
+    ORDER BY line_item
+    """
+    df_specific = pd.read_sql(query3, conn)
+    if len(df_specific) > 0:
+        print(f"\n  Delivery {delivery_num}:")
+        for idx, row in df_specific.iterrows():
+            print(f"    Line {row['line_item']}: delivery_date (column) = {row['delivery_date']}, raw_data['Delivery Date'] = {repr(row['raw_delivery_date'])}")
+
+conn.close()
