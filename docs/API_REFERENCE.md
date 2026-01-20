@@ -1,6 +1,8 @@
 # API Reference
 
-Complete reference for the Alkana Dashboard REST API.
+**Last Updated:** January 13, 2026 | **Routers:** 11 | **Endpoints:** 240+ | **Version:** v1.0+
+
+Complete reference for the Alkana Dashboard REST API (11 routers covering auth, executive, inventory, lead time, sales, yield, MTO orders, AR aging, alerts, uploads).
 
 ## Base URL
 
@@ -1022,6 +1024,7 @@ Webhook support for alert notifications is planned for v2.0.
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 1.0.1 | 2026-01-13 | OTIF delivery endpoints, V3 yield endpoints, expanded monitoring |
 | 1.0.0 | 2025-12-30 | Initial API release |
 
 ---
@@ -1030,4 +1033,8 @@ Webhook support for alert notifications is planned for v2.0.
 
 For API support:
 - Email: api-support@yourcompany.com
+
+---
+
+**Last Updated:** January 13, 2026
 - Documentation: https://docs.dashboard.yourcompany.com

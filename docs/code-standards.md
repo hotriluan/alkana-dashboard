@@ -1,5 +1,7 @@
 # Alkana Dashboard - Code Standards
 
+**Last Updated:** January 13, 2026 | **Version:** v1.0+ | **Framework:** FastAPI + React
+
 ## Code Organization Principles
 
 ### 1. Separation of Concerns
@@ -537,3 +539,7 @@ variable configuration details.
 - [ ] Edge cases are tested
 - [ ] Tests are readable and maintainable
 - [ ] Test names clearly describe what is being tested
+
+---
+
+**Last Updated:** January 13, 2026

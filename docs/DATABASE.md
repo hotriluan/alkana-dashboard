@@ -55,7 +55,9 @@ postgresql://alkana_user:secure_password@prod-db.example.com:5432/alkana_dashboa
 erDiagram
     raw_mb51 ||--o{ fact_inventory : transforms
     raw_zrsd002 ||--o{ fact_billing : transforms
+    raw_zrsd004 ||--o{ fact_delivery : transforms
     raw_cooispi ||--o{ fact_production : transforms
+    raw_zrpp062 ||--o{ fact_production_performance_v2 : transforms
     
     fact_inventory }o--|| dim_material : references
     fact_inventory }o--|| dim_location : references
@@ -68,7 +70,10 @@ erDiagram
     fact_production }o--|| dim_material : references
     fact_production }o--|| dim_date : references
     
-    fact_production_chain }o--|| fact_production : links
+    fact_delivery }o--|| dim_material : references
+    fact_delivery }o--|| dim_customer : references
+    
+    fact_production_performance_v2 }o--|| dim_material : references
     
     fact_alert }o--|| dim_material : references
     fact_alert }o--|| dim_customer : references
@@ -78,11 +83,11 @@ erDiagram
 
 | Table Type | Count | Purpose | Size Estimate |
 |------------|-------|---------|---------------|
-| Raw Tables | 8 | SAP data imports | 100K-500K rows each |
-| Dimension Tables | 5 | Reference data | 100-10K rows each |
-| Fact Tables | 5 | Business events | 50K-1M rows each |
-| Materialized Views | 4 | Aggregated metrics | N/A (derived) |
-| Auth Tables | 2 | User management | <1K rows |
+| Raw Tables | 8 | SAP data imports (MB51, ZRSD002, ZRSD004, ZRSD006, COOISPI, ZRFI005, ZRPP062, ZKO) | 100K-500K rows each |
+| Dimension Tables | 5 | Reference data (material, location, customer, date, user) | 100-10K rows each |
+| Fact Tables | 6 | Business events (inventory, billing, production, delivery, AR aging, production performance) | 50K-1M rows each |
+| Materialized Views | 4 | Aggregated metrics (inventory snapshots, production summary) | N/A (derived) |
+| Auth Tables | 2 | User management (users, sessions) | <1K rows |
 
 ---
 
@@ -243,22 +248,97 @@ SELECT * FROM raw_mb51 LIMIT 3;
 
 ---
 
-#### raw_zrsd004 (Customer Master)
-**Purpose:** Customer reference data
+#### raw_zrsd004 (Delivery Documents)
+**Purpose:** Customer delivery data with OTIF tracking
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
 | `id` | SERIAL | No | Primary key |
-| `customer_code` | VARCHAR(20) | No | Unique customer ID |
-| `customer_name` | VARCHAR(200) | No | Customer name |
-| `address` | TEXT | Yes | Full address |
-| `city` | VARCHAR(100) | Yes | City |
-| `postal_code` | VARCHAR(20) | Yes | Postal code |
-| `country` | VARCHAR(3) | Yes | Country code |
-| `contact_person` | VARCHAR(100) | Yes | Contact name |
-| `phone` | VARCHAR(30) | Yes | Phone number |
-| `email` | VARCHAR(100) | Yes | Email address |
-| `created_at` | TIMESTAMP | No | DB load timestamp |
+| `delivery_date` | TIMESTAMP | Yes | Planned delivery date (RDD - Requested Delivery Date) |
+| `actual_gi_date` | TIMESTAMP | Yes | Actual goods issue date |
+| `delivery` | VARCHAR(50) | No | Delivery document number |
+| `line_item` | INTEGER | No | Delivery line item |
+| `so_reference` | VARCHAR(50) | Yes | Sales order reference |
+| `shipping_point` | VARCHAR(20) | Yes | Shipping point code |
+| `sloc` | VARCHAR(20) | Yes | Storage location |
+| `sales_office` | VARCHAR(20) | Yes | Sales office |
+| `dist_channel` | VARCHAR(20) | Yes | Distribution channel |
+| `cust_group` | VARCHAR(20) | Yes | Customer group |
+| `sold_to_party` | VARCHAR(50) | Yes | Sold-to party code |
+| `ship_to_party` | VARCHAR(50) | Yes | Ship-to party code |
+| `ship_to_name` | VARCHAR(200) | Yes | Ship-to party name |
+| `ship_to_city` | VARCHAR(100) | Yes | Ship-to city |
+| `salesman_id` | VARCHAR(50) | Yes | Salesman ID |
+| `salesman_name` | VARCHAR(100) | Yes | Salesman name |
+| `material` | VARCHAR(50) | Yes | Material code |
+| `material_description` | VARCHAR(200) | Yes | Material description |
+| `delivery_qty` | NUMERIC(18,4) | Yes | Delivery quantity (original UOM) |
+| `delivery_qty_kg` | NUMERIC(18,4) | Yes | Normalized quantity in KG |
+| `net_weight` | NUMERIC(18,4) | Yes | Net weight |
+| `volume` | NUMERIC(18,4) | Yes | Volume |
+| `tonase` | NUMERIC(18,4) | Yes | Tonnage |
+| `tonase_unit` | VARCHAR(20) | Yes | Tonnage unit |
+| `prod_hierarchy` | VARCHAR(100) | Yes | Product hierarchy |
+| `source_file` | VARCHAR(100) | Yes | Source Excel filename |
+| `loaded_at` | TIMESTAMP | No | DB load timestamp |
+
+**Business Keys:**
+- `delivery` + `line_item` = Unique delivery line
+- `delivery_date` used for OTIF status calculation
+- `actual_gi_date` when null → OTIF = 'Pending'
+
+**Indexes:**
+- `idx_zrsd004_delivery` on `delivery`
+- `idx_zrsd004_delivery_date` on `delivery_date`
+- `idx_zrsd004_actual_gi` on `actual_gi_date`
+- `idx_zrsd004_material` on `material`
+- `idx_zrsd004_salesman` on `salesman_name`
+
+---
+
+#### raw_zrpp062 (Production Performance Data - V3 Yield)
+**Purpose:** Production performance metrics for V3 yield calculation
+
+| Column | Type | Nullable | Description |
+|--------|------|----------|-------------|
+| `id` | SERIAL | No | Primary key |
+| `process_order` | VARCHAR(50) | Yes | Process order number |
+| `batch` | VARCHAR(50) | Yes | Batch number |
+| `material` | VARCHAR(50) | Yes | Material code |
+| `material_description` | VARCHAR(200) | Yes | Material description |
+| `order_sfg_liquid` | VARCHAR(50) | Yes | Parent order (SFG Liquid) - leading zeros stripped |
+| `mrp_controller` | VARCHAR(50) | Yes | MRP controller |
+| `product_group_1` | VARCHAR(100) | Yes | Product group 1 (hierarchy) |
+| `product_group_2` | VARCHAR(100) | Yes | Product group 2 (hierarchy) |
+| `qty_order_sfg_liquid` | NUMERIC(18,4) | Yes | Order SFG Liquid quantity |
+| `process_order_qty` | NUMERIC(18,4) | Yes | Process order quantity |
+| `uom` | VARCHAR(20) | Yes | Unit of measure |
+| `bom_alt` | VARCHAR(20) | Yes | BOM alternative |
+| `bom_text` | VARCHAR(200) | Yes | BOM text |
+| `group_recipe` | VARCHAR(100) | Yes | Recipe group |
+| `gi_packaging_to_order` | NUMERIC(18,4) | Yes | GI packaging to order (input) |
+| `gi_sfg_liquid_to_order` | NUMERIC(18,4) | Yes | GI SFG Liquid to order (input) |
+| `gr_qty_to_0201` | NUMERIC(18,4) | Yes | GR quantity to 0201 (output) |
+| `tonase_alkana_0201` | NUMERIC(18,4) | Yes | Tonase Alkana 0201 (output actual KG) |
+| `gr_by_product` | NUMERIC(18,4) | Yes | GR by-product |
+| `sg_theoretical` | NUMERIC(10,4) | Yes | Specific gravity theoretical |
+| `sg_actual` | NUMERIC(10,4) | Yes | Specific gravity actual |
+| `bar_sfg` | NUMERIC(18,4) | Yes | BAR SFG |
+| `qty_allowance` | NUMERIC(18,4) | Yes | Quantity allowance |
+| `variant_prod_sfg_pct` | NUMERIC(10,4) | Yes | Variant production SFG percentage |
+| `variant_fg_pc` | NUMERIC(18,4) | Yes | Variant FG (pieces) |
+| `variant_fg_pct` | NUMERIC(10,4) | Yes | Variant FG percentage |
+| `source_file` | VARCHAR(100) | Yes | Source Excel filename (e.g., "zrpp062.xlsx") |
+| `loaded_at` | TIMESTAMP | No | DB load timestamp |
+
+**Business Keys:**
+- `process_order` + `batch` = Unique production performance record
+- Used for V3 Yield calculation (replaces deprecated P02→P01 yield tables)
+
+**Indexes:**
+- `idx_zrpp062_process_order` on `process_order`
+- `idx_zrpp062_batch` on `batch`
+- `idx_zrpp062_material` on `material`
 
 ---
 
@@ -453,26 +533,109 @@ SELECT * FROM raw_mb51 LIMIT 3;
 
 ---
 
-#### fact_production_chain
-**Purpose:** Material genealogy linking (P03→P02→P01)
+#### fact_delivery
+**Purpose:** Delivery tracking with OTIF status (2026-01-13 OTIF Implementation)
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| `chain_id` | SERIAL | No | Primary key |
-| `parent_batch` | VARCHAR(20) | No | Input batch |
-| `child_batch` | VARCHAR(20) | No | Output batch |
-| `parent_material_id` | INTEGER | No | FK to dim_material (input) |
-| `child_material_id` | INTEGER | No | FK to dim_material (output) |
-| `parent_qty` | NUMERIC(15,3) | Yes | Consumed quantity |
-| `child_qty` | NUMERIC(15,3) | Yes | Produced quantity |
-| `yield_pct` | NUMERIC(5,2) | Yes | Conversion yield |
-| `production_date` | DATE | Yes | When produced |
+| `id` | SERIAL | No | Primary key |
+| `delivery_date` | DATE | Yes | Planned delivery date (RDD) |
+| `actual_gi_date` | DATE | Yes | Actual goods issue date |
+| `delivery` | VARCHAR(50) | No | Delivery document number |
+| `line_item` | INTEGER | No | Delivery line item |
+| `so_reference` | VARCHAR(50) | Yes | Sales order reference |
+| `shipping_point` | VARCHAR(20) | Yes | Shipping point |
+| `sloc` | VARCHAR(20) | Yes | Storage location |
+| `sales_office` | VARCHAR(20) | Yes | Sales office |
+| `dist_channel` | VARCHAR(20) | Yes | Distribution channel |
+| `cust_group` | VARCHAR(20) | Yes | Customer group |
+| `sold_to_party` | VARCHAR(50) | Yes | Sold-to party |
+| `ship_to_party` | VARCHAR(50) | Yes | Ship-to party |
+| `ship_to_name` | VARCHAR(200) | Yes | Ship-to name |
+| `ship_to_city` | VARCHAR(100) | Yes | Ship-to city |
+| `salesman_id` | VARCHAR(50) | Yes | Salesman ID |
+| `salesman_name` | VARCHAR(100) | Yes | Salesman name |
+| `material_code` | VARCHAR(50) | Yes | Material code |
+| `material_description` | VARCHAR(200) | Yes | Material description |
+| `delivery_qty` | NUMERIC(18,4) | Yes | Delivery quantity |
+| `delivery_qty_kg` | NUMERIC(18,4) | Yes | Normalized quantity (KG) |
+| `tonase` | NUMERIC(18,4) | Yes | Tonnage |
+| `tonase_unit` | VARCHAR(20) | Yes | Tonnage unit |
+| `net_weight` | NUMERIC(18,4) | Yes | Net weight |
+| `volume` | NUMERIC(18,4) | Yes | Volume |
+| `prod_hierarchy` | VARCHAR(100) | Yes | Product hierarchy |
+| `row_hash` | VARCHAR(32) | Yes | MD5 hash for deduplication |
+| `raw_id` | INTEGER | Yes | FK to raw_zrsd004 |
 | `created_at` | TIMESTAMP | No | ETL timestamp |
 
 **Indexes:**
-- PK: `chain_id`
-- Index: `parent_batch`, `child_batch`
-- FK: `parent_material_id`, `child_material_id`
+- PK: `id`
+- Index: `delivery_date`, `actual_gi_date`, `material_code`, `salesman_name`, `so_reference`
+
+**Grain:** One row per delivery line item
+
+**OTIF Status Calculation:**
+```sql
+CASE 
+  WHEN actual_gi_date IS NULL THEN 'Pending'
+  WHEN actual_gi_date <= delivery_date THEN 'On Time'
+  ELSE 'Late'
+END
+```
+
+---
+
+#### fact_production_performance_v2
+**Purpose:** Production performance with variance analysis (V3 Yield - replaces fact_p02_p01_yield)
+
+| Column | Type | Nullable | Description |
+|--------|------|----------|-------------|
+| `id` | SERIAL | No | Primary key |
+| `process_order_id` | VARCHAR(50) | No | Process order number |
+| `batch_id` | VARCHAR(50) | Yes | Batch number |
+| `material_code` | VARCHAR(50) | Yes | Material code |
+| `material_description` | VARCHAR(200) | Yes | Material description |
+| `parent_order_id` | VARCHAR(50) | Yes | Parent order (SFG Liquid) |
+| `mrp_controller` | VARCHAR(50) | Yes | MRP controller |
+| `product_group_1` | VARCHAR(100) | Yes | Product group 1 |
+| `product_group_2` | VARCHAR(100) | Yes | Product group 2 |
+| `output_actual_kg` | NUMERIC(15,3) | Yes | Tonase Alkana (0201) - actual output |
+| `input_actual_kg` | NUMERIC(15,3) | Yes | GI SFG Liquid to Order - actual input |
+| `process_order_qty` | NUMERIC(15,3) | Yes | Process order quantity |
+| `loss_kg` | NUMERIC(15,3) | Yes | Loss in KG |
+| `loss_pct` | NUMERIC(10,4) | Yes | Loss percentage |
+| `sg_theoretical` | NUMERIC(10,4) | Yes | Specific gravity theoretical |
+| `sg_actual` | NUMERIC(10,4) | Yes | Specific gravity actual |
+| `variant_prod_sfg_pct` | NUMERIC(10,4) | Yes | Variant production SFG percentage |
+| `variant_fg_pct` | NUMERIC(10,4) | Yes | Variant FG percentage |
+| `posting_date` | DATE | Yes | Posting date |
+| `reference_date` | DATE | Yes | Reporting period (1st of month) |
+| `created_at` | TIMESTAMP | No | ETL timestamp |
+| `updated_at` | TIMESTAMP | No | Last updated timestamp |
+
+**Indexes:**
+- PK: `id`
+- Unique: `(process_order_id, batch_id)` - `uq_prod_yield_v3`
+- Index: `material_code`, `parent_order_id`, `loss_kg`, `reference_date`
+
+**Grain:** One row per process order + batch combination
+
+**Business Rules:**
+- Upsert mode: Same process_order + batch updates existing record
+- Used for V3 Efficiency Hub dashboard
+- Replaces deprecated `fact_production_chain` and `fact_p02_p01_yield` (dropped 2026-01-12)
+
+---
+
+#### ~~fact_production_chain~~ (DEPRECATED - Dropped 2026-01-12)
+**Status:** Table removed - replaced by `fact_production_performance_v2` for V3 Yield
+
+---
+
+#### ~~fact_p02_p01_yield~~ (DEPRECATED - Dropped 2026-01-12)
+**Status:** Table removed - consolidated into `fact_production_performance_v2`
+
+---
 
 **Grain:** One row per parent-child batch relationship
 
@@ -541,9 +704,10 @@ graph LR
     subgraph "Raw Layer"
         MB51[raw_mb51]
         ZRSD002[raw_zrsd002]
-        COOISPI[raw_cooispi]
-        ZRMM024[raw_zrmm024]
         ZRSD004[raw_zrsd004]
+        COOISPI[raw_cooispi]
+        ZRPP062[raw_zrpp062]
+        ZRMM024[raw_zrmm024]
     end
     
     subgraph "Dimension Layer"
@@ -557,7 +721,8 @@ graph LR
         FactInventory[fact_inventory]
         FactProduction[fact_production]
         FactBilling[fact_billing]
-        FactChain[fact_production_chain]
+        FactDelivery[fact_delivery]
+        FactPerfV2[fact_production_performance_v2]
     end
     
     ZRMM024 -->|Extract unique materials| DimMaterial
@@ -578,8 +743,12 @@ graph LR
     FactBilling --> DimMaterial
     FactBilling --> DimDate
     
-    MB51 -->|MVT 261 linkage| FactChain
-    FactChain --> DimMaterial
+    ZRSD004 -->|Delivery tracking + OTIF| FactDelivery
+    FactDelivery --> DimMaterial
+    FactDelivery --> DimCustomer
+    
+    ZRPP062 -->|Production performance V3| FactPerfV2
+    FactPerfV2 --> DimMaterial
 ```
 
 ### Transformation Examples
@@ -606,19 +775,70 @@ INNER JOIN dim_date dd ON mb.posting_date = dd.date
 GROUP BY dm.material_id, dl.location_id, dd.date_id;
 ```
 
-**Example 2: raw_cooispi + raw_mb51 → fact_production_chain**
+**Example 2: raw_zrsd004 → fact_delivery (OTIF Implementation)**
 
 ```sql
--- P02 to P01 linking
-INSERT INTO fact_production_chain (parent_batch, child_batch, parent_material_id, child_material_id, yield_pct)
+-- Extract delivery data with OTIF status
+INSERT INTO fact_delivery (
+    delivery_date, actual_gi_date, delivery, line_item, 
+    material_code, salesman_name, delivery_qty_kg, row_hash
+)
 SELECT 
-    p02.batch_number as parent_batch,
-    p01.batch_number as child_batch,
-    dm_p02.material_id as parent_material_id,
-    dm_p01.material_id as child_material_id,
-    (p01.delivered_qty / p02.delivered_qty * 100) as yield_pct
-FROM raw_cooispi p02
-INNER JOIN raw_mb51 mvt ON mvt.batch_number = p02.batch_number AND mvt.movement_type = '261'
+    delivery_date,
+    actual_gi_date,
+    delivery,
+    line_item,
+    material,
+    salesman_name,
+    delivery_qty_kg,
+    MD5(CONCAT(delivery, line_item)) as row_hash
+FROM raw_zrsd004
+WHERE delivery IS NOT NULL;
+
+-- OTIF Status Query
+SELECT 
+    delivery,
+    delivery_date,
+    actual_gi_date,
+    CASE 
+        WHEN actual_gi_date IS NULL THEN 'Pending'
+        WHEN actual_gi_date <= delivery_date THEN 'On Time'
+        ELSE 'Late'
+    END as otif_status
+FROM fact_delivery;
+```
+
+**Example 3: raw_zrpp062 → fact_production_performance_v2 (V3 Yield)**
+
+```sql
+-- Upsert production performance data
+INSERT INTO fact_production_performance_v2 (
+    process_order_id, batch_id, material_code, 
+    output_actual_kg, input_actual_kg, loss_kg, loss_pct,
+    reference_date
+)
+SELECT 
+    process_order,
+    batch,
+    material,
+    tonase_alkana_0201 as output_actual_kg,
+    gi_sfg_liquid_to_order as input_actual_kg,
+    (gi_sfg_liquid_to_order - tonase_alkana_0201) as loss_kg,
+    ((gi_sfg_liquid_to_order - tonase_alkana_0201) / gi_sfg_liquid_to_order * 100) as loss_pct,
+    DATE_TRUNC('month', CURRENT_DATE) as reference_date
+FROM raw_zrpp062
+WHERE process_order IS NOT NULL
+ON CONFLICT (process_order_id, batch_id) 
+DO UPDATE SET
+    output_actual_kg = EXCLUDED.output_actual_kg,
+    loss_kg = EXCLUDED.loss_kg,
+    updated_at = CURRENT_TIMESTAMP;
+```
+
+**~~Example 4: raw_cooispi + raw_mb51 → fact_production_chain~~ (DEPRECATED)**
+
+> **Note:** `fact_production_chain` was dropped on 2026-01-12. Use `fact_production_performance_v2` instead.
+
 INNER JOIN raw_cooispi p01 ON p01.order_number = mvt.order_number
 INNER JOIN dim_material dm_p02 ON p02.material_code = dm_p02.material_code
 INNER JOIN dim_material dm_p01 ON p01.material_code = dm_p01.material_code
@@ -629,6 +849,30 @@ WHERE dm_p02.material_type = 'HALB'  -- P02
 ---
 
 ## Migrations
+
+### Recent Schema Changes
+
+**2026-01-13: OTIF Implementation**
+- Added `delivery_date` and `actual_gi_date` to `raw_zrsd004`
+- Created `fact_delivery` table for OTIF tracking
+- Added indexes on delivery date columns
+
+**2026-01-12: V3 Yield Migration**
+- Dropped `fact_production_chain` (replaced by V3)
+- Dropped `fact_p02_p01_yield` (consolidated into V3)
+- Retained `raw_zrpp062` and `fact_production_performance_v2` for V3 Efficiency Hub
+
+**2026-01-08: V2 Production Performance**
+- Added `raw_zrpp062` (production performance source)
+- Added `fact_production_performance_v2` (variance analysis)
+- Added `reference_date` column for monthly reporting periods
+
+**2026-01-07: Row Hash Deduplication**
+- Added `row_hash` column to `raw_zrsd002` (excludes `source_file`)
+- Added unique constraint on `(billing_document, billing_item)`
+- Enabled upsert mode for overlapping file uploads
+
+---
 
 ### Alembic Setup
 
@@ -1060,4 +1304,4 @@ See [TROUBLESHOOTING.md](./TROUBLESHOOTING.md#database-issues) for database-spec
 
 ---
 
-**Last Updated:** December 30, 2025
+**Last Updated:** January 13, 2026

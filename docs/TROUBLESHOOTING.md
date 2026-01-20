@@ -1,5 +1,7 @@
 # Troubleshooting Guide
 
+**Last Updated:** January 13, 2026 | **Version:** v1.0+ | **Coverage:** Backend, Frontend, Database, ETL, Docker
+
 Common issues and solutions for the Alkana Dashboard.
 
 ## Table of Contents
@@ -922,3 +924,7 @@ Expected performance metrics:
 | ETL load time | <5 minutes | >30 minutes |
 | Memory usage | <70% | >90% |
 | CPU usage | <50% | >80% sustained |
+
+---
+
+**Last Updated:** January 13, 2026

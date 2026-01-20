@@ -1,5 +1,7 @@
 # Deployment Guide
 
+**Last Updated:** January 13, 2026 | **Version:** v1.0+ | **Docker Compose:** Recommended
+
 This guide covers deploying the Alkana Dashboard to production environments.
 
 ## Table of Contents
@@ -626,4 +628,8 @@ Before going live:
 For deployment issues:
 1. Check [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)
 2. Review application logs
+
+---
+
+**Last Updated:** January 13, 2026
 3. Contact DevOps team: devops@yourcompany.com
