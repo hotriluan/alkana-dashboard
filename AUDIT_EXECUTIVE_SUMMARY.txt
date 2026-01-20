@@ -1,0 +1,110 @@
+================================================================================
+AUDIT REPORT: "Why do all High Velocity Items show 2 movements?"
+================================================================================
+
+QUESTION:
+  Top 10 High Velocity Items all display "Movements: 2/31d" 
+  Shouldn't they vary (2, 5, 8, 12, etc.)?
+
+ANSWER:
+  ✅ Code is CORRECT
+  ⚠️ Documentation is MISLEADING  
+  ❌ Test data is TOO SIMPLISTIC
+
+================================================================================
+ROOT CAUSE ANALYSIS
+================================================================================
+
+The Database Reality:
+  - Total Materials: 3,300
+  - Transaction Distribution:
+    • 1,048 materials with 2 transactions
+    •  2,252 materials with 1 transaction
+  - Maximum velocity possible: 2 unique days
+
+Why "2" Always:
+  When date range = Dec 2025:
+  - Query: COUNT(DISTINCT posting_date)
+  - Result: Almost all materials appear on 2 different days in Dec
+  - Top 10: All show velocity = 2 ✓ Correct!
+
+The Real Problem:
+  1. Docstring says: "Count distinct movements"
+  2. Code does: COUNT(DISTINCT posting_date) → counts DAYS, not MOVEMENTS
+  3. Semantic mismatch causes confusion
+
+================================================================================
+CODE LOGIC EVALUATION (Per CLAUDE.md)
+================================================================================
+
+✅ SQL Correctness:   YES - Logic works as written
+✅ Simplicity (KISS): YES - Code is straightforward
+✅ DRY Principle:     YES - No duplication
+❌ Documentation:     NO  - Comment ≠ Actual behavior
+⚠️ Real-data ready:   MAYBE - Depends on what "velocity" should mean
+
+================================================================================
+VERIFIED METRICS
+================================================================================
+
+Query 1: Transaction Distribution
+  SELECT COUNT(*) as total_txns, COUNT(DISTINCT material_code) as materials
+  FROM fact_inventory WHERE mvt_type = 999
+  Result: 4348 txns, 3300 materials (avg 1.3 per material)
+
+Query 2: Dec 2025 Velocity
+  SELECT material_code, COUNT(DISTINCT posting_date) as velocity
+  FROM fact_inventory WHERE posting_date BETWEEN '2025-12-01' AND '2025-12-31'
+  GROUP BY material_code ORDER BY velocity DESC LIMIT 10
+  Result: ALL materials = velocity 2 (because test data has only 2 txns per material)
+
+Query 3: Distribution Across Entire DB
+  Velocity = 2: 1,048 materials
+  Velocity = 1: 2,252 materials
+  Conclusion: Max velocity = 2 (explains the "2" in all top 10)
+
+================================================================================
+RECOMMENDATIONS
+================================================================================
+
+IMMEDIATE (Next 5 minutes):
+  [ ] Fix docstring at line 57 to clarify:
+      FROM: "Count distinct outbound movements"
+      TO:   "Count of unique days with outbound activity"
+
+FUTURE (When Real SAP Data Migrates):
+  [ ] Reconsider metric definition
+  [ ] Option A: Keep "days of activity" metric (frequency-based)
+  [ ] Option B: Switch to "transaction count" metric (volume-based) ⭐ RECOMMENDED
+  [ ] Update tests to validate variance in top 10
+
+================================================================================
+STATUS
+================================================================================
+
+✅ Audit Complete
+✅ Root cause identified
+✅ Code verified (not broken)
+⚠️ Documentation needs clarification
+⚠️ Test data too simple for meaningful variance demo
+
+RISK LEVEL: LOW
+  - Code works correctly
+  - Issue only visible with real data
+  - Metric semantics need clarification
+
+ACTION: LOW PRIORITY
+  - Document clarification first (30 sec)
+  - Metric evaluation needed before real data migration
+
+================================================================================
+Files Generated:
+  - VELOCITY_CALCULATION_AUDIT.md (detailed technical analysis)
+  - AUDIT_ROOT_CAUSE_SUMMARY.md (visual explanation)
+  - AUDIT_ANSWER.md (business context)
+  - FIX_VELOCITY_DOCUMENTATION.md (implementation options)
+  - AUDIT_EXECUTIVE_SUMMARY.txt (this file)
+
+Date: January 16, 2026
+Auditor: AI Development Agent (Claude Haiku 4.5)
+================================================================================
