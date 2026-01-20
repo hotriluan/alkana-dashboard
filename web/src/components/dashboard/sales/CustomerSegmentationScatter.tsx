@@ -8,6 +8,7 @@ import React, { useState } from 'react';
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { SEMANTIC_COLORS, RECHARTS_DEFAULTS, TOOLTIP_STYLES } from '../../../constants/chartColors';
 import { Spinner } from '../../common/Spinner';
+import { formatCurrencyCompact, formatCurrencyFull, formatInteger } from '../../../utils/formatters';
 
 interface CustomerSegment {
   customer_name: string;
@@ -60,13 +61,13 @@ const CustomerSegmentationScatter: React.FC<CustomerSegmentationScatterProps> = 
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-white rounded shadow p-2 border border-slate-200">
+        <div className="bg-white rounded shadow p-2 border border-slate-200 z-50">
           <p className="text-sm font-semibold">{data.customer_name}</p>
           <p className="text-xs">
-            <span className="font-medium">Frequency:</span> {data.order_frequency} orders
+            <span className="font-medium">Frequency:</span> {formatInteger(data.order_frequency)} orders
           </p>
           <p className="text-xs">
-            <span className="font-medium">Revenue:</span> ${data.total_revenue.toFixed(0)}
+            <span className="font-medium">Revenue:</span> {formatCurrencyFull(data.total_revenue)}
           </p>
         </div>
       );
@@ -78,14 +79,16 @@ const CustomerSegmentationScatter: React.FC<CustomerSegmentationScatterProps> = 
     <div className="bg-white rounded-lg shadow p-4">
       <h3 className="text-lg font-semibold mb-4">Customer Segmentation</h3>
       <ResponsiveContainer width="100%" height={height}>
-        <ScatterChart margin={RECHARTS_DEFAULTS.margin}>
+        <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 80 }}>
           <CartesianGrid strokeDasharray="3 3" stroke={SEMANTIC_COLORS.SLATE} />
           <XAxis 
             dataKey="order_frequency" 
+            tickFormatter={(value: number) => formatInteger(value)}
             label={{ value: 'Order Frequency', position: 'insideBottomRight', offset: -5 }}
           />
           <YAxis 
             dataKey="total_revenue" 
+            tickFormatter={(value: number) => formatCurrencyCompact(value)}
             label={{ value: 'Total Revenue ($)', angle: -90, position: 'insideLeft' }}
           />
           <Tooltip content={<CustomTooltip />} {...TOOLTIP_STYLES} />
