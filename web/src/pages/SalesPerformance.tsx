@@ -8,7 +8,9 @@ import { DataTable } from '../components/common/DataTable';
 import { DateRangePicker } from '../components/common/DateRangePicker';
 import MonthlySalesChart from '../components/dashboard/sales/monthly-sales-chart';
 import CustomerSegmentationScatter from '../components/dashboard/sales/CustomerSegmentationScatter';
+import { getDivisionName } from '../constants/chartColors';
 import api from '../services/api';
+import { formatCurrencyCompact, formatCurrencyFull } from '../utils/formatters';
 
 interface SalesKPIs {
   total_sales: number;
@@ -85,15 +87,8 @@ const SalesPerformance = () => {
     setEndDate(newEndDate);
   };
 
-  const formatCurrency = (value: number) => {
-    const billions = value / 1_000_000_000;
-    if (billions >= 1) return `${billions.toFixed(1)}B`;
-    const millions = value / 1_000_000;
-    if (millions >= 1) return `${millions.toFixed(0)}M`;
-    const thousands = value / 1_000;
-    if (thousands >= 1) return `${thousands.toFixed(0)}K`;
-    return value.toLocaleString('vi-VN', { maximumFractionDigits: 0 });
-  };
+  // Deprecated local formatter replaced by standardized utilities
+  const formatCurrency = (value: number) => formatCurrencyFull(value);
 
   const formatNumber = (value: number) => {
     return value.toLocaleString('vi-VN', { maximumFractionDigits: 0 });
@@ -108,8 +103,14 @@ const SalesPerformance = () => {
     {
       key: 'division_code' as keyof SalesRecord,
       header: 'Division',
-      width: '100px',
+      width: '140px',
       sortable: true,
+      render: (value: string | number) => (
+        <span className="font-medium">
+          {getDivisionName(value)}
+          <span className="text-xs text-gray-400 ml-1">({value})</span>
+        </span>
+      ),
     },
     {
       key: 'sales_amount' as keyof SalesRecord,
@@ -117,7 +118,7 @@ const SalesPerformance = () => {
       align: 'right' as const,
       width: '140px',
       sortable: true,
-      render: (value: number) => formatCurrency(value),
+      render: (value: number) => formatCurrencyFull(value),
     },
     {
       key: 'sales_qty' as keyof SalesRecord,
@@ -141,7 +142,7 @@ const SalesPerformance = () => {
       align: 'right' as const,
       width: '140px',
       sortable: true,
-      render: (value: number) => formatCurrency(value),
+      render: (value: number) => formatCurrencyFull(value),
     },
   ];
 
@@ -149,8 +150,14 @@ const SalesPerformance = () => {
     {
       key: 'division_code' as keyof DivisionSales,
       header: 'Division',
-      width: '120px',
+      width: '140px',
       sortable: true,
+      render: (value: string | number) => (
+        <span className="font-medium">
+          {getDivisionName(value)}
+          <span className="text-xs text-gray-400 ml-1">({value})</span>
+        </span>
+      ),
     },
     {
       key: 'customer_count' as keyof DivisionSales,
@@ -174,7 +181,7 @@ const SalesPerformance = () => {
       align: 'right' as const,
       width: '140px',
       sortable: true,
-      render: (value: number) => formatCurrency(value),
+      render: (value: number) => formatCurrencyFull(value),
     },
     {
       key: 'avg_order_value' as keyof DivisionSales,
@@ -182,7 +189,7 @@ const SalesPerformance = () => {
       align: 'right' as const,
       width: '140px',
       sortable: true,
-      render: (value: number) => formatCurrency(value),
+      render: (value: number) => formatCurrencyFull(value),
     },
   ];
 
@@ -205,7 +212,7 @@ const SalesPerformance = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
           title="Total Sales"
-          value={kpis ? formatCurrency(kpis.total_sales) : '0'}
+          value={kpis ? formatCurrencyFull(kpis.total_sales) : '0'}
           icon={<DollarSign className="w-6 h-6" />}
           loading={kpisLoading}
         />
@@ -223,7 +230,7 @@ const SalesPerformance = () => {
         />
         <KPICard
           title="Avg Order Value"
-          value={kpis ? formatCurrency(kpis.avg_order_value) : '0'}
+          value={kpis ? formatCurrencyFull(kpis.avg_order_value) : '0'}
           icon={<TrendingUp className="w-6 h-6" />}
           loading={kpisLoading}
         />
@@ -257,17 +264,16 @@ const SalesPerformance = () => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis 
                   dataKey="division_code" 
+                  tickFormatter={(value) => getDivisionName(value)}
                   style={{ fontSize: '12px' }}
                 />
                 <YAxis 
-                  tickFormatter={(value) => {
-                    const billions = value / 1_000_000_000;
-                    return billions >= 1 ? `${billions.toFixed(1)}B` : `${(value / 1_000_000).toFixed(0)}M`;
-                  }}
+                  tickFormatter={(value: number) => formatCurrencyCompact(value)}
                   style={{ fontSize: '12px' }}
                 />
                 <Tooltip 
-                  formatter={(value) => formatCurrency(Number(value))}
+                  formatter={(value) => formatCurrencyFull(Number(value))}
+                  labelFormatter={(value) => `Division: ${getDivisionName(value)}`}
                   contentStyle={{ fontSize: '12px' }}
                 />
                 <Legend wrapperStyle={{ fontSize: '12px' }} />
@@ -290,10 +296,7 @@ const SalesPerformance = () => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis 
                   type="number" 
-                  tickFormatter={(value) => {
-                    const billions = value / 1_000_000_000;
-                    return billions >= 1 ? `${billions.toFixed(1)}B` : `${(value / 1_000_000).toFixed(0)}M`;
-                  }}
+                  tickFormatter={(value: number) => formatCurrencyCompact(value)}
                   style={{ fontSize: '11px' }}
                 />
                 <YAxis 
@@ -304,7 +307,7 @@ const SalesPerformance = () => {
                   tickFormatter={(value) => value.length > 25 ? value.substring(0, 25) + '...' : value}
                 />
                 <Tooltip 
-                  formatter={(value) => formatCurrency(Number(value))}
+                  formatter={(value) => formatCurrencyFull(Number(value))}
                   contentStyle={{ fontSize: '11px' }}
                 />
                 <Bar dataKey="sales_amount" fill="#10b981" name="Revenue" radius={[0, 4, 4, 0]} />

@@ -10,6 +10,7 @@ import { DateRangePicker } from '../components/common/DateRangePicker';
 import type { ARCollectionTotal, ARCustomerDetail } from '../types';
 
 import { getFirstDayOfMonth, getToday } from '../utils/dateHelpers';
+import { formatCurrencyCompact, formatCurrencyFull } from '../utils/formatters';
 
 const ArAging = () => {
   const today = getToday();
@@ -55,13 +56,7 @@ const ArAging = () => {
     setSelectedSnapshot(e.target.value);
   };
 
-  const formatBillion = (value: number) => {
-    const billions = value / 1_000_000_000;
-    if (billions >= 1) return `${billions.toFixed(1)}B`;
-    const millions = value / 1_000_000;
-    if (millions >= 1) return `${millions.toFixed(0)}M`;
-    return value.toLocaleString('vi-VN', { maximumFractionDigits: 0 });
-  };
+  const formatBillion = (value: number) => formatCurrencyCompact(value);
   const highRiskCount = customers?.filter(c => c.risk_level === 'HIGH').length || 0;
 
   const bucketColors = ['#10b981', '#22c55e', '#84cc16', '#eab308', '#f97316', '#ef4444', '#dc2626'];
@@ -143,8 +138,8 @@ const ArAging = () => {
             <BarChart data={buckets} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
               <XAxis dataKey="bucket" tick={{ fill: '#64748b', fontSize: 12 }} angle={-15} textAnchor="end" height={80} />
-              <YAxis tick={{ fill: '#64748b', fontSize: 12 }} tickFormatter={(v) => `${(v / 1_000_000_000).toFixed(1)}B`} />
-              <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px' }} />
+              <YAxis tick={{ fill: '#64748b', fontSize: 12 }} tickFormatter={(v: number) => formatCurrencyCompact(v)} />
+              <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px' }} formatter={(v) => formatCurrencyFull(Number(v))} />
               <Legend />
               <Bar dataKey="target_amount" name="Outstanding Amount" radius={[8, 8, 0, 0]}>
                 {buckets.map((_entry, index) => <Cell key={`cell-${index}`} fill={bucketColors[index % bucketColors.length]} />)}

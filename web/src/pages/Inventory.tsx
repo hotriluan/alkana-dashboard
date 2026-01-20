@@ -19,6 +19,7 @@ const Inventory = () => {
   const firstDayOfMonth = getFirstDayOfMonth();
   const [startDate, setStartDate] = useState(firstDayOfMonth);
   const [endDate, setEndDate] = useState(today);
+  const [category, setCategory] = useState<string>('ALL_CORE');
 
   const { data: kpis, isLoading: kpisLoading } = useQuery({ queryKey: ['inventory-kpis', startDate, endDate], queryFn: async () => (await api.get<InventoryKPI>('/api/v1/dashboards/inventory/summary', { params: { start_date: startDate, end_date: endDate } })).data });
   const { data: items, isLoading: itemsLoading } = useQuery({ queryKey: ['inventory-items', startDate, endDate], queryFn: async () => (await api.get<InventoryItem[]>('/api/v1/dashboards/inventory/items?limit=100', { params: { start_date: startDate, end_date: endDate } })).data });
@@ -26,9 +27,9 @@ const Inventory = () => {
 
   // NEW: Top Movers and Dead Stock Analysis
   const { data: topMoversData, isLoading: topMoversLoading } = useQuery({
-    queryKey: ['inventory-top-movers', startDate, endDate],
+    queryKey: ['inventory-top-movers', startDate, endDate, category],
     queryFn: async () => (await api.get('/api/v1/dashboards/inventory/top-movers-and-dead-stock', {
-      params: { start_date: startDate, end_date: endDate, limit: 10 }
+      params: { start_date: startDate, end_date: endDate, limit: 10, category }
     })).data
   });
 
@@ -93,6 +94,8 @@ const Inventory = () => {
             deadStock={topMoversData?.dead_stock || []} 
             loading={topMoversLoading} 
             dateRange={{ from: new Date(startDate), to: new Date(endDate) }}
+            selectedCategory={category}
+            onCategoryChange={setCategory}
           />
         </div>
 

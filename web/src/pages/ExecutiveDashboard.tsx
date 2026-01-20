@@ -8,6 +8,8 @@ import { DataTable } from '../components/common/DataTable';
 import { DateRangePicker } from '../components/common/DateRangePicker';
 import api from '../services/api';
 import { getFirstDayOfMonth, getToday } from '../utils/dateHelpers';
+import { formatCurrencyCompact, formatCurrencyFull } from '../utils/formatters';
+import { getDivisionName } from '../constants/chartColors';
 
 interface ExecutiveKPIs {
   total_revenue: number;
@@ -93,7 +95,7 @@ const ExecutiveDashboard = () => {
       header: 'Revenue',
       align: 'right' as const,
       sortable: true,
-      render: (value: number) => formatCurrency(value),
+      render: (value: number) => formatCurrencyFull(value),
     },
     {
       key: 'order_count' as keyof TopCustomer,
@@ -121,7 +123,7 @@ const ExecutiveDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
           title="Total Revenue"
-          value={kpis ? formatCurrency(kpis.total_revenue) : '0'}
+          value={kpis ? formatCurrencyFull(kpis.total_revenue) : '0'}
           icon={<DollarSign className="h-6 w-6" />}
           loading={kpisLoading}
         />
@@ -155,13 +157,13 @@ const ExecutiveDashboard = () => {
         />
         <KPICard
           title="Total AR"
-          value={kpis ? formatCurrency(kpis.total_ar) : '0'}
+          value={kpis ? formatCurrencyFull(kpis.total_ar) : '0'}
           icon={<DollarSign className="h-6 w-6" />}
           loading={kpisLoading}
         />
         <KPICard
           title="Overdue AR"
-          value={kpis ? formatCurrency(kpis.overdue_ar) : '0'}
+          value={kpis ? formatCurrencyFull(kpis.overdue_ar) : '0'}
           icon={<AlertCircle className="h-6 w-6" />}
           loading={kpisLoading}
         />
@@ -186,16 +188,18 @@ const ExecutiveDashboard = () => {
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={revenueByDivision || []}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="division_code" style={{ fontSize: '12px' }} />
+                <XAxis 
+                  dataKey="division_code" 
+                  tickFormatter={(code: string) => getDivisionName(code)} 
+                  style={{ fontSize: '12px' }} 
+                />
                 <YAxis 
-                  tickFormatter={(value) => {
-                    const billions = value / 1_000_000_000;
-                    return billions >= 1 ? `${billions.toFixed(1)}B` : `${(value / 1_000_000).toFixed(0)}M`;
-                  }}
+                  tickFormatter={(value: number) => formatCurrencyCompact(value)}
                   style={{ fontSize: '12px' }}
                 />
                 <Tooltip 
-                  formatter={(value) => formatCurrency(Number(value))}
+                  formatter={(value) => formatCurrencyFull(Number(value))}
+                  labelFormatter={(label: string) => getDivisionName(label)}
                   contentStyle={{ fontSize: '12px' }}
                 />
                 <Legend wrapperStyle={{ fontSize: '12px' }} />
@@ -223,9 +227,7 @@ const ExecutiveDashboard = () => {
                   cy="50%"
                   outerRadius={100}
                   label={(entry: any) => {
-                    const billions = entry.revenue / 1_000_000_000;
-                    const formatted = billions >= 1 ? `${billions.toFixed(1)}B` : `${(entry.revenue / 1_000_000).toFixed(0)}M`;
-                    return `${entry.division_code}: ${formatted}`;
+                    return `${getDivisionName(entry.division_code)}: ${formatCurrencyCompact(entry.revenue)}`;
                   }}
                   labelLine={{ stroke: '#666', strokeWidth: 1 }}
                 >
@@ -234,7 +236,8 @@ const ExecutiveDashboard = () => {
                   ))}
                 </Pie>
                 <Tooltip 
-                  formatter={(value) => formatCurrency(Number(value))}
+                  formatter={(value) => formatCurrencyFull(Number(value))}
+                  labelFormatter={(label: string) => getDivisionName(label)}
                   contentStyle={{ fontSize: '12px' }}
                 />
               </PieChart>
