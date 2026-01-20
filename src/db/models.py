@@ -172,7 +172,8 @@ class RawZrsd004(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     
     # Key delivery columns
-    actual_gi_date = Column(DateTime)
+    delivery_date = Column(DateTime)  # Planned delivery date
+    actual_gi_date = Column(DateTime)  # Actual goods issue date
     delivery = Column(String(50))
     line_item = Column(Integer)
     so_reference = Column(String(50))
@@ -494,7 +495,8 @@ class FactDelivery(Base):
     __tablename__ = "fact_delivery"
     
     id = Column(Integer, primary_key=True)
-    actual_gi_date = Column(Date, index=True)
+    delivery_date = Column(Date, index=True)  # Planned delivery date
+    actual_gi_date = Column(Date, index=True)  # Actual goods issue date
     delivery = Column(String(50), nullable=False)
     line_item = Column(Integer, nullable=False)
     so_reference = Column(String(50), index=True)

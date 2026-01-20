@@ -166,3 +166,53 @@ async def get_orders_by_status(
         }
         for r in results
     ]
+
+
+# ========== NEW VISUAL INTELLIGENCE ENDPOINTS ==========
+
+@router.get("/funnel")
+async def get_production_funnel(
+    start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
+    end_date: Optional[str] = Query(None, description="End date (YYYY-MM-DD)"),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Production order funnel by status
+    
+    Query Params:
+        - start_date: Start of analysis period (defaults to first day of current month)
+        - end_date: End of analysis period (defaults to today)
+    
+    Returns: Stages (Created/Released/In Progress/Completed) with counts
+    """
+    from src.core.production_analytics import ProductionAnalytics
+    from datetime import datetime
+    
+    analytics = ProductionAnalytics(db)
+    
+    # Parse date strings to date objects
+    start = datetime.fromisoformat(start_date).date() if start_date else None
+    end = datetime.fromisoformat(end_date).date() if end_date else None
+    
+    result = analytics.get_production_funnel(start_date=start, end_date=end)
+    
+    return [item.dict() for item in result]
+
+
+@router.get("/top-orders")
+async def get_top_orders(
+    limit: int = Query(10, ge=5, le=20, description="Number of top orders"),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Get top orders by quantity for Gantt chart
+    Returns: Order details with release/finish dates and delay status
+    """
+    from src.core.production_analytics import ProductionAnalytics
+    
+    analytics = ProductionAnalytics(db)
+    result = analytics.get_top_orders(limit=limit)
+    
+    return [item.dict() for item in result]

@@ -146,3 +146,78 @@ async def get_inventory_by_plant(
         }
         for r in results
     ]
+
+
+# ========== NEW VISUAL INTELLIGENCE ENDPOINTS ==========
+
+@router.get("/abc-analysis")
+async def get_abc_analysis(
+    start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
+    end_date: Optional[str] = Query(None, description="End date (YYYY-MM-DD)"),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Get ABC velocity analysis for inventory optimization
+    
+    Query Params:
+        - start_date: Start of analysis period (defaults to 90 days ago)
+        - end_date: End of analysis period (defaults to today)
+    
+    Returns: List of materials with stock_kg, velocity_score, abc_class
+    """
+    from src.core.inventory_analytics import InventoryAnalytics
+    from datetime import datetime
+    
+    analytics = InventoryAnalytics(db)
+    
+    # Parse date strings to date objects
+    start = datetime.fromisoformat(start_date).date() if start_date else None
+    end = datetime.fromisoformat(end_date).date() if end_date else None
+    
+    result = analytics.get_abc_analysis(start_date=start, end_date=end)
+    
+    return [item.dict() for item in result]
+
+
+@router.get("/top-movers-and-dead-stock")
+async def get_top_movers_and_dead_stock(
+    start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
+    end_date: Optional[str] = Query(None, description="End date (YYYY-MM-DD)"),
+    limit: int = Query(10, ge=5, le=20, description="Number of items per list"),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Get actionable inventory insights: Top Movers vs Dead Stock.
+    
+    Query Params:
+        - start_date: Start of analysis period (defaults to 90 days ago)
+        - end_date: End of analysis period (defaults to today)
+        - limit: Number of items per list (default 10)
+    
+    Returns: 
+        {
+            "top_movers": [items with highest velocity],
+            "dead_stock": [items with high stock but zero velocity]
+        }
+    """
+    from src.core.inventory_analytics import InventoryAnalytics
+    from datetime import datetime
+    
+    analytics = InventoryAnalytics(db)
+    
+    # Parse date strings to date objects
+    start = datetime.fromisoformat(start_date).date() if start_date else None
+    end = datetime.fromisoformat(end_date).date() if end_date else None
+    
+    top_movers, dead_stock = analytics.get_top_movers_and_dead_stock(
+        start_date=start,
+        end_date=end,
+        limit=limit
+    )
+    
+    return {
+        "top_movers": [item.dict() for item in top_movers],
+        "dead_stock": [item.dict() for item in dead_stock]
+    }

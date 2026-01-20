@@ -14,7 +14,7 @@ from typing import Dict, List, Optional
 from datetime import datetime, timedelta
 import hashlib
 import json
-from sqlalchemy import func
+from sqlalchemy import func, text
 
 from sqlalchemy.orm import Session
 
@@ -314,36 +314,52 @@ class Transformer:
         print(f"  ✓ Transformed {count} production orders")
     
     def transform_mb51(self):
-        """Transform raw_mb51 to fact_inventory (AGGREGATED by Material+Plant)"""
-        print("Transforming mb51 to fact_inventory (aggregated)...")
+        """Transform raw_mb51 to fact_inventory (INDIVIDUAL transactions with REAL movement types)"""
+        print("Transforming mb51 to fact_inventory (individual transactions)...")
         
+        # STEP 1: AUTO-POPULATE dim_material FIRST (Material Master Discovery)
+        print("  [1/2] Populating dim_material from unique materials...")
+        populate_sql = text("""
+            INSERT INTO dim_material (material_code, material_description)
+            SELECT DISTINCT 
+                col_4_material, 
+                MAX(col_5_material_desc) 
+            FROM raw_mb51 
+            WHERE col_4_material IS NOT NULL 
+            GROUP BY col_4_material
+            ON CONFLICT (material_code) 
+            DO UPDATE SET material_description = EXCLUDED.material_description;
+        """)
+        result = self.db.execute(populate_sql)
+        self.db.commit()
+        print(f"    ✓ Populated/updated {result.rowcount} materials in dim_material")
+        
+        # STEP 2: Transform individual transactions (NO AGGREGATION)
+        print("  [2/2] Creating individual fact_inventory transactions...")
         raw_df = self.load_raw_to_df(RawMb51)
         if raw_df.empty:
-            print("  ⚠ No data in raw_mb51")
+            print("    ⚠ No data in raw_mb51")
             return
-
-        # Remove previously generated aggregated rows (mvt_type=999) to prevent unique constraint collisions
-        # Constraint: idx_fact_inventory_unique (material_code, plant_code, posting_date)
-        deleted = self.db.query(FactInventory).filter(FactInventory.mvt_type == 999).delete(synchronize_session=False)
-        if deleted:
-            print(f"  🔄 Cleared {deleted} existing aggregated inventory rows (mvt_type=999)")
         
-        # Filter valid movement types
-        raw_df = raw_df[raw_df['col_1_mvt_type'].notna()].copy()
+        # Filter only valid rows (has material and mvt_type)
+        raw_df = raw_df[
+            (raw_df['col_4_material'].notna()) & 
+            (raw_df['col_1_mvt_type'].notna())
+        ].copy()
         
-        # Add stock impact
+        # Add stock impact for each transaction
         raw_df['stock_impact'] = raw_df['col_1_mvt_type'].apply(
             lambda x: get_stock_impact(x) if pd.notna(x) else 0
         )
         
-        # Convert to KG
+        # Convert qty to KG for each transaction
         def convert_to_kg(row):
             material = row.get('col_4_material')
             uom = row.get('col_8_uom')
             qty = row.get('col_7_qty')
             
             if pd.isna(qty):
-                return 0.0  # Return 0 instead of None for aggregation
+                return 0.0
             
             # If already in KG, return as-is
             if uom == 'KG':
@@ -360,69 +376,79 @@ class Transformer:
         
         raw_df['qty_kg'] = raw_df.apply(convert_to_kg, axis=1)
         
-        # AGGREGATE by Material + Plant
-        agg_df = raw_df.groupby(['col_4_material', 'col_2_plant'], dropna=False).agg({
-            'col_0_posting_date': 'max',
-            'col_5_material_desc': 'first',
-            'col_7_qty': 'sum',
-            'qty_kg': 'sum',
-            'stock_impact': 'sum',
-            'id': 'first'
-        }).reset_index()
-        
+        # Create INDIVIDUAL fact records (preserve real mvt_types: 601, 101, 261, etc.)
         count = 0
         skipped = 0
-        for _, row in agg_df.iterrows():
+        for _, row in raw_df.iterrows():
             material = safe_convert(row['col_4_material'])
-            plant = safe_convert(row['col_2_plant'])
+            mvt_type = safe_convert(row['col_1_mvt_type'])
             
-            # Skip if no material or plant
-            if material is None or plant is None:
+            # Skip if no material or mvt_type
+            if material is None or mvt_type is None:
                 skipped += 1
                 continue
             
-            # Use safe_convert for ALL values
+            # Convert all fields
             posting_date = safe_convert(row['col_0_posting_date'])
+            plant = safe_convert(row['col_2_plant'])
+            sloc = safe_convert(row['col_3_sloc'])
             material_desc = safe_convert(row['col_5_material_desc'])
+            batch = safe_convert(row['col_6_batch'])
             qty = safe_convert(row['col_7_qty'])
+            uom = safe_convert(row['col_8_uom'])
             qty_kg = safe_convert(row['qty_kg'])
+            cost_center = safe_convert(row['col_9_cost_center'])
+            gl_account = safe_convert(row['col_10_gl_account'])
+            material_doc = safe_convert(row['col_11_material_doc'])
+            reference = safe_convert(row['col_12_reference'])
+            outbound_delivery = safe_convert(row['col_13_outbound_delivery'])
+            purchase_order = safe_convert(row['col_15_purchase_order'])
             stock_impact = safe_convert(row['stock_impact'])
             raw_id = safe_convert(row['id'])
             
-            # Compute hash
+            # Compute unique hash for this transaction
             hash_data = {
                 'material': material,
-                'plant': plant,
-                'net_stock': stock_impact if stock_impact is not None else 0
+                'mvt_type': mvt_type,
+                'posting_date': str(posting_date) if posting_date else None,
+                'batch': batch,
+                'material_doc': material_doc
             }
             row_hash = compute_row_hash(hash_data)
             
+            # Create fact record with REAL movement type (not 999!)
             fact = FactInventory(
                 posting_date=posting_date,
-                mvt_type=999,  # Special code for aggregated records
+                mvt_type=mvt_type,  # PRESERVE REAL mvt_type (601, 101, 261, etc.)
                 plant_code=plant,
-                sloc_code=None,
+                sloc_code=sloc,
                 material_code=material,
                 material_description=material_desc,
-                batch=None,
+                batch=batch,
                 qty=qty,
-                uom='KG',
+                uom=uom,
                 qty_kg=qty_kg,
-                cost_center=None,
-                gl_account=None,
-                material_document=None,
-                reference=None,
-                outbound_delivery=None,
-                purchase_order=None,
+                cost_center=cost_center,
+                gl_account=gl_account,
+                material_document=material_doc,
+                reference=reference,
+                outbound_delivery=outbound_delivery,
+                purchase_order=purchase_order,
                 stock_impact=stock_impact,
                 row_hash=row_hash,
                 raw_id=raw_id
             )
             self.db.add(fact)
             count += 1
+            
+            # Commit in batches for large datasets
+            if count % 5000 == 0:
+                self.db.commit()
+                print(f"    ... {count} transactions processed")
         
         self.db.commit()
-        print(f"  ✓ Transformed {count} aggregated inventory records (from {len(raw_df)} movements, skipped {skipped})")
+        print(f"  ✓ Transformed {count} individual inventory transactions (skipped {skipped} invalid rows)")
+        print(f"    Movement types preserved: 601, 101, 261, etc. (NO aggregation, NO mvt_type=999)")
 
     
     def transform_zrmm024(self):
@@ -597,6 +623,7 @@ class Transformer:
                     continue
                 
                 # Update existing record
+                existing.delivery_date = clean_value(row.get('delivery_date'))
                 existing.actual_gi_date = clean_value(row.get('actual_gi_date'))
                 existing.so_reference = clean_value(row.get('so_reference'))
                 existing.shipping_point = clean_value(row.get('shipping_point'))
@@ -625,6 +652,7 @@ class Transformer:
             else:
                 # Insert new record
                 fact = FactDelivery(
+                    delivery_date=clean_value(row.get('delivery_date')),
                     actual_gi_date=clean_value(row.get('actual_gi_date')),
                     delivery=clean_value(delivery_number),
                     line_item=clean_value(row.get('line_item')),

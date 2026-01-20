@@ -114,7 +114,7 @@ class BatchTrace(BaseModel):
 # Endpoints
 # ============================================================================
 
-@router.get("/summary", response_model=LeadTimeKPIs)
+@router.get("/leadtime/summary", response_model=LeadTimeKPIs)
 def get_leadtime_summary(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
@@ -165,7 +165,7 @@ def get_leadtime_summary(
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 
-@router.get("/breakdown", response_model=List[LeadTimeBreakdown])
+@router.get("/leadtime/breakdown", response_model=List[LeadTimeBreakdown])
 def get_leadtime_breakdown(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
@@ -212,7 +212,7 @@ def get_leadtime_breakdown(
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 
-@router.get("/orders", response_model=List[LeadTimeDetail])
+@router.get("/leadtime/orders", response_model=List[LeadTimeDetail])
 def get_leadtime_orders(
     limit: int = Query(100, le=1000, description="Maximum number of orders to return"),
     status_filter: Optional[str] = Query(None, description="Filter by status: ON_TIME, DELAYED, CRITICAL"),
@@ -282,7 +282,7 @@ def get_leadtime_orders(
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 
-@router.get("/by-channel", response_model=List[ChannelLeadTime])
+@router.get("/leadtime/by-channel", response_model=List[ChannelLeadTime])
 def get_leadtime_by_channel(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
@@ -348,7 +348,7 @@ def get_leadtime_by_channel(
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 
-@router.get("/trace/{batch}", response_model=BatchTrace)
+@router.get("/leadtime/trace/{batch}", response_model=BatchTrace)
 def trace_batch(
     batch: str,
     db: Session = Depends(get_db),
@@ -459,3 +459,42 @@ def trace_batch(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+
+# ========== NEW VISUAL INTELLIGENCE ENDPOINTS ==========
+
+@router.get("/leadtime/stage-breakdown")
+async def get_stage_breakdown(
+    limit: int = Query(20, ge=10, le=50, description="Number of recent orders"),
+    start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
+    end_date: Optional[str] = Query(None, description="End date (YYYY-MM-DD)"),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Lead time breakdown by stage for recent delivered orders
+    Returns: Prep/Production/Delivery time breakdown per order
+    """
+    from src.core.leadtime_analytics import LeadTimeAnalytics
+    
+    analytics = LeadTimeAnalytics(db)
+    result = analytics.get_stage_breakdown(order_limit=limit)
+    
+    return [item.dict() for item in result]
+
+
+@router.get("/leadtime/histogram")
+async def get_leadtime_histogram(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Lead time distribution histogram
+    Returns: Bins of lead time distribution
+    """
+    from src.core.leadtime_analytics import LeadTimeAnalytics
+    
+    analytics = LeadTimeAnalytics(db)
+    result = analytics.get_leadtime_histogram()
+    
+    return [item.dict() for item in result]

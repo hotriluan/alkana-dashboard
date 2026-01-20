@@ -602,6 +602,7 @@ class Zrsd004Loader(BaseLoader):
                 line_item = safe_int(row.get('Line Item'))
                 
                 record_data = {
+                    'delivery_date': safe_datetime(row.get('Delivery Date')),
                     'actual_gi_date': safe_datetime(row.get('Actual GI Date')),
                     'delivery': delivery,
                     'line_item': line_item,

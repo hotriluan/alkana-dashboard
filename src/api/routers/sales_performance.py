@@ -37,6 +37,14 @@ class SalesKPIs(BaseModel):
     total_orders: int
 
 
+class MonthlySalesData(BaseModel):
+    """Monthly sales trend data"""
+    month_num: int
+    month_name: str
+    revenue: float
+    orders: int
+
+
 # ========== Helper ==========
 
 def build_date_filter(start_date: Optional[str], end_date: Optional[str]) -> tuple[str, dict]:
@@ -206,3 +214,86 @@ async def get_top_customers(
         order_count=int(r[4] or 0),
         avg_order_value=float(r[5] or 0)
     ) for r in results]
+
+
+@router.get("/trend", response_model=list[MonthlySalesData])
+async def get_monthly_sales_trend(
+    year: int = Query(2026, ge=2024, le=2030, description="Year for trend analysis"),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Get monthly sales trend for specified year"""
+    params = {"year": year}
+    
+    results = db.execute(text("""
+        SELECT 
+            EXTRACT(MONTH FROM billing_date)::int as month_num,
+            TRIM(TO_CHAR(billing_date, 'Month')) as month_name,
+            SUM(net_value) as total_revenue,
+            COUNT(DISTINCT billing_document) as order_count
+        FROM fact_billing
+        WHERE EXTRACT(YEAR FROM billing_date) = :year
+        GROUP BY EXTRACT(MONTH FROM billing_date), TO_CHAR(billing_date, 'Month')
+        ORDER BY month_num ASC
+    """), params).fetchall()
+    
+    # Handle empty results gracefully
+    if not results:
+        return []
+    
+    return [MonthlySalesData(
+        month_num=int(r[0]),
+        month_name=r[1],
+        revenue=float(r[2] or 0),
+        orders=int(r[3] or 0)
+    ) for r in results]
+
+
+# ========== NEW VISUAL INTELLIGENCE ENDPOINTS ==========
+
+@router.get("/segmentation")
+async def get_customer_segmentation(
+    start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
+    end_date: Optional[str] = Query(None, description="End date (YYYY-MM-DD)"),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Customer segmentation by order frequency and revenue
+    
+    Query Params:
+        - start_date: Start of analysis period (defaults to first day of current month)
+        - end_date: End of analysis period (defaults to today)
+    
+    Returns: List of customers for scatter plot (VIP vs Casual)
+    """
+    from src.core.sales_analytics import SalesAnalytics
+    from datetime import datetime
+    
+    analytics = SalesAnalytics(db)
+    
+    # Parse date strings to date objects
+    start = datetime.fromisoformat(start_date).date() if start_date else None
+    end = datetime.fromisoformat(end_date).date() if end_date else None
+    
+    result = analytics.get_customer_segmentation(start_date=start, end_date=end)
+    
+    return [item.dict() for item in result]
+
+
+@router.get("/churn-risk")
+async def get_churn_risk(
+    limit: int = Query(5, ge=1, le=20, description="Number of at-risk customers"),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Identify customers at churn risk
+    Logic: High revenue last month + zero orders this month
+    """
+    from src.core.sales_analytics import SalesAnalytics
+    
+    analytics = SalesAnalytics(db)
+    result = analytics.get_churn_risk(limit=limit)
+    
+    return [item.dict() for item in result]
