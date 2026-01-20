@@ -54,6 +54,11 @@ const DEFAULT_CONFIG = {
     packageManager: 'auto',
     framework: 'auto'
   },
+  skills: {
+    research: {
+      useGemini: true  // Toggle Gemini CLI usage in research skill
+    }
+  },
   assertions: []
 };
 
@@ -285,11 +290,15 @@ function resolvePlanPath(sessionId, config) {
       case 'session': {
         const state = readSessionState(sessionId);
         if (state?.activePlan) {
-          // Only use session state if CWD matches session origin (monorepo support)
-          if (state.sessionOrigin && state.sessionOrigin !== process.cwd()) {
-            break;  // Fall through to branch
+          // Issue #335: Handle both absolute and relative paths
+          // - Absolute paths (from updated set-active-plan.cjs): use as-is
+          // - Relative paths (legacy): resolve using sessionOrigin if available
+          let resolvedPath = state.activePlan;
+          if (!path.isAbsolute(resolvedPath) && state.sessionOrigin) {
+            // Resolve relative path using session origin directory
+            resolvedPath = path.join(state.sessionOrigin, resolvedPath);
           }
-          return { path: state.activePlan, resolvedBy: 'session' };
+          return { path: resolvedPath, resolvedBy: 'session' };
         }
         break;
       }
@@ -483,6 +492,8 @@ function loadConfig(options = {}) {
     // -1 = disabled (no injection, saves tokens)
     // 0-5 = inject corresponding level guidelines
     result.codingLevel = merged.codingLevel ?? -1;
+    // Skills configuration
+    result.skills = merged.skills || DEFAULT_CONFIG.skills;
 
     return sanitizeConfig(result, projectRoot);
   } catch (e) {
@@ -498,7 +509,8 @@ function getDefaultConfig(includeProject = true, includeAssertions = true, inclu
     plan: { ...DEFAULT_CONFIG.plan },
     paths: { ...DEFAULT_CONFIG.paths },
     docs: { ...DEFAULT_CONFIG.docs },
-    codingLevel: -1  // Default: disabled (no injection, saves tokens)
+    codingLevel: -1,  // Default: disabled (no injection, saves tokens)
+    skills: { ...DEFAULT_CONFIG.skills }
   };
   if (includeLocale) {
     result.locale = { ...DEFAULT_CONFIG.locale };
@@ -553,8 +565,9 @@ function getReportsPath(planPath, resolvedBy, planConfig, pathsConfig, baseDir =
 
   let reportPath;
   // Only use plan-specific reports path if explicitly active (session state)
-  if (planPath && resolvedBy === 'session') {
-    const normalizedPlanPath = normalizePath(planPath) || planPath;
+  // Issue #327: Validate normalized path to prevent whitespace-only paths creating invalid directories
+  const normalizedPlanPath = planPath && resolvedBy === 'session' ? normalizePath(planPath) : null;
+  if (normalizedPlanPath) {
     reportPath = `${normalizedPlanPath}/${reportsDir}`;
   } else {
     // Default path for no plan or suggested (branch-matched) plans

@@ -10,6 +10,8 @@ FROM_BRANCH: $2 (defaults to current branch)
 
 ## Workflow
 
+Use `git-manager` subagent to execute the PR workflow:
+
 ### Step 1: Ensure remote is synced
 ```bash
 git fetch origin
@@ -32,7 +34,7 @@ git diff origin/{TO_BRANCH}...origin/{FROM_BRANCH}
 - `git diff --cached` (staged local changes)
 - `git status` (local working tree state)
 
-**IMPORTANT:** Merge `main` (or default branch) into $2 branch and resolve any conflicts.
+**IMPORTANT:** Merge $1 branch (or default branch) into $2 branch and resolve any conflicts.
 
 ### Step 3: Generate PR content from remote diff
 Based on the REMOTE diff analysis:
@@ -45,6 +47,6 @@ gh pr create --base {TO_BRANCH} --head {FROM_BRANCH} --title "..." --body "..."
 ```
 
 ## Notes
-- If `gh` command is not available, instruct the user to install and authorize GitHub CLI first.
+- If `gh` unavailable, instruct user to install GitHub CLI first.
 - If local has unpushed commits, push first before analyzing diff.
 - PR content must reflect REMOTE state since PRs are based on remote branches.

@@ -36,6 +36,21 @@
             "command": "node \"%CLAUDE_PROJECT_DIR%\"/.claude/hooks/dev-rules-reminder.cjs"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"%CLAUDE_PROJECT_DIR%\"/.claude/hooks/dev-rules-reminder.cjs",
+            "_origin": "engineer"
+          },
+          {
+            "type": "command",
+            "command": "node \"%CLAUDE_PROJECT_DIR%\"/.claude/hooks/usage-context-awareness.cjs",
+            "timeout": 30,
+            "_origin": "engineer"
+          }
+        ]
       }
     ],
     "PreToolUse": [
@@ -71,6 +86,28 @@
           {
             "type": "command",
             "command": "node \"%CLAUDE_PROJECT_DIR%\"/.claude/hooks/session-end.cjs"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"%CLAUDE_PROJECT_DIR%\"/.claude/hooks/post-edit-simplify-reminder.cjs",
+            "_origin": "engineer"
+          }
+        ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"%CLAUDE_PROJECT_DIR%\"/.claude/hooks/usage-context-awareness.cjs",
+            "_origin": "engineer"
           }
         ]
       }

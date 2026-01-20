@@ -1,6 +1,6 @@
 ---
 name: planning
-description: Use when you need to plan technical solutions that are scalable, secure, and maintainable.
+description: Plan implementations, design architectures, create technical roadmaps with detailed phases. Use for feature planning, system design, solution architecture, implementation strategy, phase documentation.
 license: MIT
 ---
 
@@ -58,7 +58,12 @@ Load: `references/output-standards.md`
 - Provide multiple options with trade-offs when appropriate
 - Fully respect the `./docs/development-rules.md` file.
 
+### Important
+DO NOT create plans or reports in USER directory.
+ALWAYS create plans or reports in CURRENT WORKING PROJECT DIRECTORY.
+
 **Plan Directory Structure**
+IN CURRENT WORKING PROJECT DIRECTORY:
 ```
 plans/
 └── {date}-plan-name/
@@ -100,6 +105,10 @@ All agents writing reports MUST:
 1. Check `## Naming` section injected by hooks for the computed naming pattern
 2. Active plans use plan-specific reports path
 3. Suggested plans use default reports path (not plan folder)
+
+### Important
+DO NOT create plans or reports in USER directory.
+ALWAYS create plans or reports in CURRENT WORKING PROJECT DIRECTORY.
 
 **Important:** Suggested plans do NOT get plan-specific reports - this prevents pollution of old plan folders.
 
