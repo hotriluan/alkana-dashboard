@@ -1,7 +1,7 @@
 // AR Aging Dashboard - Summary AR Collection matching user's Excel screenshot
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 import { DollarSign, TrendingUp, AlertCircle, Calendar } from 'lucide-react';
 import { arAgingAPI } from '../services/api';
 import { KPICard } from '../components/common/KPICard';
@@ -63,16 +63,6 @@ const ArAging = () => {
     return value.toLocaleString('vi-VN', { maximumFractionDigits: 0 });
   };
   const highRiskCount = customers?.filter(c => c.risk_level === 'HIGH').length || 0;
-
-  // Mock trend data
-  const trendData = [
-    { month: 'Jan', target: 45.2, realization: 38.5 },
-    { month: 'Feb', target: 48.1, realization: 40.2 },
-    { month: 'Mar', target: 46.8, realization: 39.8 },
-    { month: 'Apr', target: 49.3, realization: 41.5 },
-    { month: 'May', target: 47.6, realization: 40.1 },
-    { month: 'Jun', target: 50.2, realization: 42.8 },
-  ];
 
   const bucketColors = ['#10b981', '#22c55e', '#84cc16', '#eab308', '#f97316', '#ef4444', '#dc2626'];
 
@@ -145,21 +135,6 @@ const ArAging = () => {
           <KPICard title="Total Realization" value={formatBillion(summary.total_realization)} subtitle="Actual Collection" icon={<TrendingUp className="w-6 h-6" />} />
           <KPICard title="Collection Rate" value={`${summary.collection_rate_pct}%`} subtitle="Performance" icon={<BarChart className="w-6 h-6" />} />
           <KPICard title="High Risk" value={highRiskCount} subtitle="Customers" icon={<AlertCircle className="w-6 h-6" />} />
-        </div>
-
-        <div className="card">
-          <h2 className="text-xl font-semibold text-slate-900 mb-4">Collection Trend</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={trendData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="month" tick={{ fill: '#64748b', fontSize: 12 }} />
-              <YAxis tick={{ fill: '#64748b', fontSize: 12 }} tickFormatter={(v) => `${v}B`} />
-              <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px' }} />
-              <Legend />
-              <Line type="monotone" dataKey="target" stroke="#3b82f6" strokeWidth={2} name="Target" dot={{ r: 4 }} />
-              <Line type="monotone" dataKey="realization" stroke="#10b981" strokeWidth={2} name="Realization" dot={{ r: 4 }} />
-            </LineChart>
-          </ResponsiveContainer>
         </div>
 
         <div className="card">

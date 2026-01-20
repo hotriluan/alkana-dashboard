@@ -15,8 +15,6 @@ import {
   Line,
   BarChart,
   Bar,
-  ScatterChart,
-  Scatter,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -34,7 +32,6 @@ import {
   useYieldTrend,
   // useYieldDistribution, // Unused for now
   useYieldPareto,
-  useYieldQuality,
   useAvailablePeriods,
   useCategoryPerformance,
 } from '@/hooks/useYieldV3';
@@ -73,7 +70,6 @@ export default function YieldV3Dashboard() {
     periodEnd
   );
   const { data: pareto, isLoading: paretoLoading } = useYieldPareto(periodStart, periodEnd);
-  const { data: quality, isLoading: qualityLoading } = useYieldQuality(periodStart, periodEnd);
 
   // Auto-select latest period when data loads
   useState(() => {
@@ -230,34 +226,6 @@ export default function YieldV3Dashboard() {
           {/* Insight Summary */}
           <ChartCard title="AI-Powered Insights" loading={categoryPerfLoading}>
             <InsightSummary data={categoryPerf || []} />
-          </ChartCard>
-
-          {/* SG Variance Scatter */}
-          <ChartCard title="SG Variance vs Loss %" loading={qualityLoading}>
-            <ResponsiveContainer width="100%" height={300}>
-              <ScatterChart>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="sg_variance"
-                  name="SG Variance"
-                  tick={{ fontSize: 12 }}
-                  label={{ value: 'SG Variance', position: 'insideBottom', offset: -5 }}
-                />
-                <YAxis
-                  dataKey="loss_pct"
-                  name="Loss %"
-                  tick={{ fontSize: 12 }}
-                  label={{ value: 'Loss %', angle: -90, position: 'insideLeft' }}
-                />
-                <Tooltip cursor={{ strokeDasharray: '3 3' }} />
-                <Scatter
-                  name="Orders"
-                  data={quality || []}
-                  fill={COLORS.purple}
-                  opacity={0.6}
-                />
-              </ScatterChart>
-            </ResponsiveContainer>
           </ChartCard>
         </div>
       )}

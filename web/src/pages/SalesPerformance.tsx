@@ -6,6 +6,8 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { KPICard } from '../components/common/KPICard';
 import { DataTable } from '../components/common/DataTable';
 import { DateRangePicker } from '../components/common/DateRangePicker';
+import MonthlySalesChart from '../components/dashboard/sales/monthly-sales-chart';
+import CustomerSegmentationScatter from '../components/dashboard/sales/CustomerSegmentationScatter';
 import api from '../services/api';
 
 interface SalesKPIs {
@@ -68,6 +70,14 @@ const SalesPerformance = () => {
       });
       return response.data;
     },
+  });
+
+  // NEW: Customer Segmentation for Visual Intelligence
+  const { data: segmentationData, isLoading: segmentationLoading } = useQuery({
+    queryKey: ['customer-segmentation', startDate, endDate],
+    queryFn: async () => (await api.get('/api/v1/dashboards/sales/segmentation', {
+      params: { start_date: startDate, end_date: endDate }
+    })).data
   });
 
   const handleDateChange = (newStartDate: string, newEndDate: string) => {
@@ -219,6 +229,19 @@ const SalesPerformance = () => {
         />
       </div>
 
+      {/* Zone 1: Monthly Sales Trend Chart */}
+      <MonthlySalesChart initialYear={2026} />
+
+      {/* ========== ZONE 1: NEW VISUAL INTELLIGENCE ========== */}
+      <div className="mb-8">
+        <CustomerSegmentationScatter 
+          data={segmentationData || []} 
+          loading={segmentationLoading} 
+          dateRange={{ from: new Date(startDate), to: new Date(endDate) }}
+        />
+      </div>
+
+      {/* ========== ZONE 2: EXISTING CHARTS & TABLES ========== */}
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Sales by Division Chart */}

@@ -7,6 +7,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { KPICard } from '../components/common/KPICard';
 import { DataTable } from '../components/common/DataTable';
 import { DateRangePicker } from '../components/common/DateRangePicker';
+import LeadTimeBreakdownChart from '../components/dashboard/leadtime/LeadTimeBreakdownChart';
 import api from '../services/api';
 
 
@@ -61,6 +62,14 @@ interface ChannelLeadTime {
     // Total
     total_orders: number;
     avg_total_leadtime: number | null;
+}
+
+interface StageBreakdown {
+    order_number: string;
+    prep_days: number;
+    production_days: number;
+    delivery_days: number;
+    total_days: number;
 }
 
 // Update Interface
@@ -129,6 +138,15 @@ const LeadTimeDashboard = () => {
         queryKey: ['leadtime-by-channel', startDate, endDate],
         queryFn: async () => {
             const response = await api.get<ChannelLeadTime[]>(`/api/v1/leadtime/by-channel?start_date=${startDate}&end_date=${endDate}`);
+            return response.data;
+        },
+    });
+
+    // New: Stage breakdown per order
+    const { data: stageBreakdown, isLoading: stageBreakdownLoading } = useQuery({
+        queryKey: ['leadtime-stage-breakdown', startDate, endDate],
+        queryFn: async () => {
+            const response = await api.get<StageBreakdown[]>(`/api/v1/leadtime/stage-breakdown?limit=20&start_date=${startDate}&end_date=${endDate}`);
             return response.data;
         },
     });
@@ -370,6 +388,13 @@ const LeadTimeDashboard = () => {
                     )}
                 </div>
             </div>
+
+            {/* Stage Breakdown (Last 20 Orders) */}
+            <LeadTimeBreakdownChart 
+                data={stageBreakdown || []} 
+                loading={stageBreakdownLoading} 
+                dateRange={{ from: new Date(startDate), to: new Date(endDate) }}
+            />
 
             {/* Order Details Table */}
             <div className="bg-white rounded-lg shadow">

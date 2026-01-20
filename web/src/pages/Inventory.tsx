@@ -6,6 +6,7 @@ import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, L
 import { KPICard } from '../components/common/KPICard';
 import { DataTable } from '../components/common/DataTable';
 import { DateRangePicker } from '../components/common/DateRangePicker';
+import InventoryTopMovers from '../components/dashboard/inventory/InventoryTopMovers';
 import api from '../services/api';
 import { getFirstDayOfMonth, getToday } from '../utils/dateHelpers';
 
@@ -22,6 +23,14 @@ const Inventory = () => {
   const { data: kpis, isLoading: kpisLoading } = useQuery({ queryKey: ['inventory-kpis', startDate, endDate], queryFn: async () => (await api.get<InventoryKPI>('/api/v1/dashboards/inventory/summary', { params: { start_date: startDate, end_date: endDate } })).data });
   const { data: items, isLoading: itemsLoading } = useQuery({ queryKey: ['inventory-items', startDate, endDate], queryFn: async () => (await api.get<InventoryItem[]>('/api/v1/dashboards/inventory/items?limit=100', { params: { start_date: startDate, end_date: endDate } })).data });
   const { data: byPlant, isLoading: plantsLoading } = useQuery({ queryKey: ['inventory-by-plant', startDate, endDate], queryFn: async () => (await api.get<PlantInventory[]>('/api/v1/dashboards/inventory/by-plant', { params: { start_date: startDate, end_date: endDate } })).data });
+
+  // NEW: Top Movers and Dead Stock Analysis
+  const { data: topMoversData, isLoading: topMoversLoading } = useQuery({
+    queryKey: ['inventory-top-movers', startDate, endDate],
+    queryFn: async () => (await api.get('/api/v1/dashboards/inventory/top-movers-and-dead-stock', {
+      params: { start_date: startDate, end_date: endDate, limit: 10 }
+    })).data
+  });
 
   const handleDateChange = (newStartDate: string, newEndDate: string) => { setStartDate(newStartDate); setEndDate(newEndDate); };
   const fmt = (v: number) => {
@@ -77,6 +86,17 @@ const Inventory = () => {
           <KPICard title="Total Weight" value={fmtKg(kpis.total_qty_kg)} subtitle="All Inventory" icon={<Weight className="w-6 h-6" />} />
         </div>
 
+        {/* ========== ZONE 1: NEW VISUAL INTELLIGENCE ========== */}
+        <div className="mb-8">
+          <InventoryTopMovers 
+            topMovers={topMoversData?.top_movers || []} 
+            deadStock={topMoversData?.dead_stock || []} 
+            loading={topMoversLoading} 
+            dateRange={{ from: new Date(startDate), to: new Date(endDate) }}
+          />
+        </div>
+
+        {/* ========== ZONE 2: EXISTING CHARTS & TABLES ========== */}
         <div className="card">
           <h2 className="text-xl font-semibold text-slate-900 mb-4">Stock Level Trend</h2>
           <ResponsiveContainer width="100%" height={300}>

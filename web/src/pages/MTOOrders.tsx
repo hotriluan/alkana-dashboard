@@ -6,6 +6,8 @@ import { BarChart, Bar, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tool
 import { KPICard } from '../components/common/KPICard';
 import { DataTable } from '../components/common/DataTable';
 import { DateRangePicker } from '../components/common/DateRangePicker';
+import ProductionFunnel from '../components/dashboard/production/ProductionFunnel';
+import TopOrdersGantt from '../components/dashboard/production/TopOrdersGantt';
 import api from '../services/api';
 
 interface MTOKPIs { total_orders: number; completed_orders: number; partial_orders: number; pending_orders: number; completion_rate: number; }
@@ -21,6 +23,18 @@ const MTOOrders = () => {
 
   const { data: kpis, isLoading: kpisLoading } = useQuery({ queryKey: ['mto-kpis', startDate, endDate], queryFn: async () => (await api.get<MTOKPIs>('/api/v1/dashboards/mto-orders/summary', { params: { start_date: startDate, end_date: endDate } })).data });
   const { data: orders, isLoading: ordersLoading } = useQuery({ queryKey: ['mto-orders', startDate, endDate], queryFn: async () => (await api.get<MTOOrder[]>('/api/v1/dashboards/mto-orders/orders?limit=100', { params: { start_date: startDate, end_date: endDate } })).data });
+
+  // NEW: Production Funnel and Top Orders for Visual Intelligence
+  const { data: funnelData, isLoading: funnelLoading } = useQuery({
+    queryKey: ['production-funnel', startDate, endDate],
+    queryFn: async () => (await api.get('/api/v1/dashboards/mto-orders/funnel', {
+      params: { start_date: startDate, end_date: endDate }
+    })).data
+  });
+  const { data: topOrdersData, isLoading: topOrdersLoading } = useQuery({
+    queryKey: ['top-orders'],
+    queryFn: async () => (await api.get('/api/v1/dashboards/mto-orders/top-orders?limit=10')).data
+  });
 
   const handleDateChange = (newStartDate: string, newEndDate: string) => { setStartDate(newStartDate); setEndDate(newEndDate); };
   const fmt = (v: number) => v.toLocaleString('vi-VN', { maximumFractionDigits: 0 });
@@ -73,6 +87,17 @@ const MTOOrders = () => {
           <KPICard title="Pending" value={fmt(kpis.pending_orders)} subtitle="Not Started" icon={<AlertCircle className="w-6 h-6" />} />
         </div>
 
+        {/* ========== ZONE 1: NEW VISUAL INTELLIGENCE ========== */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <ProductionFunnel 
+            data={funnelData || []} 
+            loading={funnelLoading} 
+            dateRange={{ from: new Date(startDate), to: new Date(endDate) }}
+          />
+          <TopOrdersGantt data={topOrdersData || []} loading={topOrdersLoading} />
+        </div>
+
+        {/* ========== ZONE 2: EXISTING CHARTS & TABLES ========== */}
         <div className="card">
           <h2 className="text-xl font-semibold text-slate-900 mb-4">Order Status Distribution</h2>
           <ResponsiveContainer width="100%" height={300}>
