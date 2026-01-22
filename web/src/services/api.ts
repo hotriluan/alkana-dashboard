@@ -3,7 +3,8 @@ import axios from 'axios';
 import type { ARCollectionSummary, ARAgingBucket, ARCustomerDetail, User, LoginRequest, LoginResponse } from '../types';
 import type { UploadResponse, UploadStatus, UploadHistoryItem } from '../types/upload';
 
-export const API_BASE_URL = 'http://localhost:8000';
+// Use relative URL so it works in both dev and production
+export const API_BASE_URL = import.meta.env.VITE_API_URL || window.location.origin;
 
 // Axios instance with default config
 const api = axios.create({
