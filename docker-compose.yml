@@ -3,21 +3,82 @@ version: '3.8'
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: alkana_postgres
+    container_name: alkana-postgres
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: alkana_dashboard
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+      POSTGRES_DB: ${DB_NAME:-alkana_dashboard}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
+    networks:
+      - alkana-network
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: alkana-backend
+    environment:
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-password}@postgres:5432/${DB_NAME:-alkana_dashboard}
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=${DB_NAME:-alkana_dashboard}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-password}
+      - DEMODATA_PATH=/app/demodata
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - DEBUG=${DEBUG:-false}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./demodata:/app/demodata
+      - backend_logs:/app/logs
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    networks:
+      - alkana-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/api/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: alkana-frontend
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+      - "443:443"
+    restart: unless-stopped
+    networks:
+      - alkana-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+networks:
+  alkana-network:
+    driver: bridge
 
 volumes:
   postgres_data:
+    driver: local
+  backend_logs:
     driver: local
