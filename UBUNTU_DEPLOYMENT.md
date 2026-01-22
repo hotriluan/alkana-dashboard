@@ -64,12 +64,15 @@ cd /opt/alkana-dashboard/demodata
 
 ```bash
 # Trên máy DEVELOPMENT (Windows):
-# 1. Export database
+# 1. Export database với PowerShell
 cd c:\dev\alkana-dashboard
-bash export-database.sh
+.\export-database.ps1
 
 # 2. Transfer file backup lên server Ubuntu
+# Sử dụng SCP (nếu có OpenSSH):
 scp database-exports/alkana_db_*.sql.gz user@your-server-ip:/tmp/
+
+# Hoặc sử dụng WinSCP / FileZilla để upload file lên server:/tmp/
 
 # Trên máy PRODUCTION (Ubuntu):
 # 3. Import database
