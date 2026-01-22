@@ -56,8 +56,9 @@ const DataUpload = () => {
         formData.append('year', year.toString());
       }
       
-      // Use absolute URL with localhost backend
-      const fullEndpoint = `http://localhost:8000${endpoint}`;
+      // Use relative URL so it works in both dev and production
+      const baseUrl = window.location.origin;
+      const fullEndpoint = `${baseUrl}${endpoint}`;
       console.log('🚀 Uploading to:', fullEndpoint, { month, year });
       
       const response = await fetch(fullEndpoint, {
