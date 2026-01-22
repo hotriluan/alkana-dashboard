@@ -49,6 +49,8 @@ Script sẽ tự động:
 
 ### Bước 3: Upload Dữ Liệu SAP
 
+**Tùy chọn A: Upload file Excel thủ công**
+
 ```bash
 # Copy file Excel vào server (từ máy local)
 scp /path/to/excel-files/*.xlsx user@your-server-ip:/opt/alkana-dashboard/demodata/
@@ -58,7 +60,30 @@ cd /opt/alkana-dashboard/demodata
 # Copy các file SAP Excel vào đây
 ```
 
+**Tùy chọn B: Import database từ máy development (Khuyến nghị)**
+
+```bash
+# Trên máy DEVELOPMENT (Windows):
+# 1. Export database
+cd c:\dev\alkana-dashboard
+bash export-database.sh
+
+# 2. Transfer file backup lên server Ubuntu
+scp database-exports/alkana_db_*.sql.gz user@your-server-ip:/tmp/
+
+# Trên máy PRODUCTION (Ubuntu):
+# 3. Import database
+cd /opt/alkana-dashboard
+sudo ./import-database.sh /tmp/alkana_db_*.sql.gz
+```
+
+> **Lưu ý:** Import database sẽ tự động backup dữ liệu hiện tại trước khi import.
+
 ### Bước 4: Load và Transform Dữ Liệu
+
+**Nếu đã import database (Tùy chọn B), bỏ qua bước này.**
+
+**Nếu upload file Excel (Tùy chọn A):**
 
 ```bash
 cd /opt/alkana-dashboard
