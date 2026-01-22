@@ -32,7 +32,7 @@ echo ""
 echo "3. Testing top-movers endpoint..."
 RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" \
   -H "Authorization: Bearer $TOKEN" \
-  "http://localhost:8000/api/v1/dashboards/inventory/top-movers-and-dead-stock?limit=3")
+  "http://localhost:8000/api/v1/dashboards/inventory/top-movers-and-dead-stock?limit=10")
 
 HTTP_CODE=$(echo "$RESPONSE" | grep HTTP_STATUS | cut -d: -f2)
 BODY=$(echo "$RESPONSE" | sed '/HTTP_STATUS/d')
