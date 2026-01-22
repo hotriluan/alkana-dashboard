@@ -194,20 +194,36 @@ async def get_ar_collection_summary(
 
 @router.get("/by-bucket", response_model=list[ARAgingBucket])
 async def get_ar_by_bucket(
+    snapshot_date: Optional[str] = Query(None),
     division: Optional[str] = Query(None),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
     """Get AR amounts grouped by aging bucket (7 buckets)"""
-    where = ""
-    params = {}
+    
+    # Default to latest snapshot if not provided
+    if not snapshot_date:
+        latest = db.execute(text("""
+            SELECT snapshot_date 
+            FROM fact_ar_aging 
+            ORDER BY snapshot_date DESC 
+            LIMIT 1
+        """)).scalar()
+        snapshot_date = latest.isoformat() if latest else None
+    
+    # Build WHERE clause with snapshot_date filter (CRITICAL: prevents data inflation)
+    where_clauses = ["snapshot_date = :snapshot_date"]
+    params = {"snapshot_date": snapshot_date}
+    
     if division:
-        where = """WHERE CASE dist_channel
+        where_clauses.append("""CASE dist_channel
             WHEN '11' THEN 'Industry'
             WHEN '13' THEN 'Retails'
             WHEN '15' THEN 'Project' ELSE 'Other'
-        END = :division"""
+        END = :division""")
         params["division"] = division
+    
+    where = "WHERE " + " AND ".join(where_clauses)
     
     r = db.execute(text(f"""
         SELECT 
@@ -218,7 +234,8 @@ async def get_ar_by_bucket(
             SUM(COALESCE(realization_1_30, 0)), SUM(COALESCE(realization_31_60, 0)),
             SUM(COALESCE(realization_61_90, 0)), SUM(COALESCE(realization_91_120, 0)),
             SUM(COALESCE(realization_121_180, 0)), SUM(COALESCE(realization_over_180, 0))
-        FROM fact_ar_aging {where}
+        FROM fact_ar_aging
+        {where}
     """), params).fetchone()
     
     if not r:
@@ -239,6 +256,7 @@ async def get_ar_by_bucket(
 
 @router.get("/customers", response_model=list[ARAgingDetail])
 async def get_ar_by_customer(
+    snapshot_date: Optional[str] = Query(None, description="Snapshot date (YYYY-MM-DD). If not provided, uses latest."),
     division: Optional[str] = Query(None),
     risk_level: Optional[str] = Query(None),
     salesman: Optional[str] = Query(None),
@@ -246,21 +264,70 @@ async def get_ar_by_customer(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
-    """Get AR aging details per customer with risk levels"""
+    """Get AR aging details per customer with risk levels for specific snapshot"""
+    # Default to latest snapshot if not provided
+    if not snapshot_date:
+        latest = db.execute(text("""
+            SELECT snapshot_date 
+            FROM fact_ar_aging 
+            ORDER BY snapshot_date DESC 
+            LIMIT 1
+        """)).scalar()
+        snapshot_date = latest.isoformat() if latest else None
+    
+    # Query fact_ar_aging directly with snapshot filter (prevents duplicates across snapshots)
     results = db.execute(text("""
-        SELECT division, salesman_name, customer_name, total_target,
-               total_realization, collection_rate_pct, not_due, target_1_30,
-               target_31_60, target_61_90, target_91_120, target_121_180,
-               target_over_180, risk_level
-        FROM view_ar_aging_detail
-        WHERE (:division IS NULL OR division = :division)
-          AND (:risk IS NULL OR risk_level = :risk)
+        SELECT 
+            CASE dist_channel
+                WHEN '11' THEN 'Industry'
+                WHEN '13' THEN 'Retails'
+                WHEN '15' THEN 'Project'
+                ELSE 'Other'
+            END as division,
+            salesman_name,
+            customer_name,
+            total_target,
+            total_realization,
+            CASE 
+                WHEN total_target > 0 
+                THEN ROUND((total_realization / total_target * 100)::numeric, 0)
+                ELSE 0 
+            END as collection_rate_pct,
+            COALESCE(realization_not_due, 0) as not_due,
+            COALESCE(target_1_30, 0) as target_1_30,
+            COALESCE(target_31_60, 0) as target_31_60,
+            COALESCE(target_61_90, 0) as target_61_90,
+            COALESCE(target_91_120, 0) as target_91_120,
+            COALESCE(target_121_180, 0) as target_121_180,
+            COALESCE(target_over_180, 0) as target_over_180,
+            CASE 
+                WHEN COALESCE(target_over_180, 0) > 0 THEN 'HIGH'
+                WHEN COALESCE(target_91_120, 0) + COALESCE(target_121_180, 0) > 0 THEN 'MEDIUM'
+                ELSE 'LOW'
+            END as risk_level
+        FROM fact_ar_aging
+        WHERE snapshot_date = :snapshot_date
+          AND (total_target > 0 OR total_realization > 0)
+          AND (:division IS NULL OR CASE dist_channel
+                WHEN '11' THEN 'Industry'
+                WHEN '13' THEN 'Retails'
+                WHEN '15' THEN 'Project'
+                ELSE 'Other'
+              END = :division)
+          AND (:risk IS NULL OR CASE 
+                WHEN COALESCE(target_over_180, 0) > 0 THEN 'HIGH'
+                WHEN COALESCE(target_91_120, 0) + COALESCE(target_121_180, 0) > 0 THEN 'MEDIUM'
+                ELSE 'LOW'
+              END = :risk)
           AND (:salesman IS NULL OR salesman_name ILIKE '%' || :salesman || '%')
         ORDER BY total_target DESC
         LIMIT :limit
     """), {
-        "division": division, "risk": risk_level,
-        "salesman": salesman, "limit": limit
+        "snapshot_date": snapshot_date,
+        "division": division, 
+        "risk": risk_level,
+        "salesman": salesman, 
+        "limit": limit
     }).fetchall()
     
     return [ARAgingDetail(

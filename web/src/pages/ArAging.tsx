@@ -6,17 +6,11 @@ import { DollarSign, TrendingUp, AlertCircle, Calendar } from 'lucide-react';
 import { arAgingAPI } from '../services/api';
 import { KPICard } from '../components/common/KPICard';
 import { DataTable } from '../components/common/DataTable';
-import { DateRangePicker } from '../components/common/DateRangePicker';
 import type { ARCollectionTotal, ARCustomerDetail } from '../types';
 
-import { getFirstDayOfMonth, getToday } from '../utils/dateHelpers';
 import { formatCurrencyCompact, formatCurrencyFull } from '../utils/formatters';
 
 const ArAging = () => {
-  const today = getToday();
-  const firstDayOfMonth = getFirstDayOfMonth();
-  const [startDate, setStartDate] = useState(firstDayOfMonth);
-  const [endDate, setEndDate] = useState(today);
   const [selectedSnapshot, setSelectedSnapshot] = useState<string | null>(null);
 
   // Fetch available snapshot dates
@@ -39,18 +33,13 @@ const ArAging = () => {
 
   const { data: buckets, isLoading: bucketsLoading, error: bucketsError } = useQuery({
     queryKey: ['ar-buckets', selectedSnapshot],
-    queryFn: arAgingAPI.getByBucket,
+    queryFn: () => arAgingAPI.getByBucket(selectedSnapshot || undefined),
   });
 
   const { data: customers, isLoading: customersLoading, error: customersError } = useQuery({
     queryKey: ['ar-customers', selectedSnapshot],
-    queryFn: () => arAgingAPI.getCustomers(undefined, 50),
+    queryFn: () => arAgingAPI.getCustomers(selectedSnapshot || undefined, undefined, 50),
   });
-
-  const handleDateChange = (newStartDate: string, newEndDate: string) => {
-    setStartDate(newStartDate);
-    setEndDate(newEndDate);
-  };
 
   const handleSnapshotChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedSnapshot(e.target.value);
@@ -121,7 +110,6 @@ const ArAging = () => {
                 )}
               </select>
             </div>
-            <DateRangePicker startDate={startDate} endDate={endDate} onDateChange={handleDateChange} />
           </div>
         </div>
 

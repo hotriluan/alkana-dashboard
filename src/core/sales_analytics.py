@@ -31,6 +31,66 @@ class SalesAnalytics:
     def __init__(self, db: Session):
         self.db = db
     
+    def get_customer_segmentation_with_classification(
+        self,
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None
+    ) -> List[dict]:
+        """
+        Segment customers by order frequency and revenue WITH classification label
+        
+        Args:
+            start_date: Start of analysis period (defaults to first day of current month)
+            end_date: End of analysis period (defaults to today)
+        
+        Returns:
+            List of customers with frequency, revenue AND segment_class (VIP/LOYAL/HIGH_VALUE/CASUAL)
+        """
+        # Get base segmentation
+        segments = self.get_customer_segmentation(start_date, end_date)
+        
+        if not segments:
+            return []
+        
+        # Calculate thresholds from data
+        revenues = sorted([s.total_revenue for s in segments])
+        frequencies = sorted([s.order_frequency for s in segments])
+        
+        median_rev = revenues[len(revenues) // 2]
+        median_freq = frequencies[len(frequencies) // 2]
+        
+        # Segment color mapping
+        segment_colors = {
+            'VIP': '#3B82F6',
+            'LOYAL': '#F59E0B',
+            'HIGH_VALUE': '#10B981',
+            'CASUAL': '#94A3B8'
+        }
+        
+        # Classify each customer
+        result = []
+        for seg in segments:
+            if seg.order_frequency >= median_freq and seg.total_revenue >= median_rev:
+                classification = 'VIP'
+            elif seg.order_frequency >= median_freq and seg.total_revenue < median_rev:
+                classification = 'LOYAL'
+            elif seg.order_frequency < median_freq and seg.total_revenue >= median_rev:
+                classification = 'HIGH_VALUE'
+            else:
+                classification = 'CASUAL'
+            
+            result.append({
+                'customer_name': seg.customer_name,
+                'order_frequency': seg.order_frequency,
+                'total_revenue': seg.total_revenue,
+                'segment_class': classification,
+                'segment_color': segment_colors[classification],
+                'revenue_threshold': median_rev,
+                'frequency_threshold': median_freq
+            })
+        
+        return result
+    
     def get_customer_segmentation(
         self,
         start_date: Optional[date] = None,
@@ -52,9 +112,10 @@ class SalesAnalytics:
         if start_date is None:
             start_date = end_date.replace(day=1)
         
+        # Fixed: Count unique sales orders (so_number), not billing documents
         query = self.db.query(
             FactBilling.customer_name,
-            func.count(func.distinct(FactBilling.billing_document)).label('order_count'),
+            func.count(func.distinct(FactBilling.so_number)).label('order_count'),
             func.sum(FactBilling.net_value).label('total_revenue')
         )
         

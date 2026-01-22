@@ -87,9 +87,6 @@ const SalesPerformance = () => {
     setEndDate(newEndDate);
   };
 
-  // Deprecated local formatter replaced by standardized utilities
-  const formatCurrency = (value: number) => formatCurrencyFull(value);
-
   const formatNumber = (value: number) => {
     return value.toLocaleString('vi-VN', { maximumFractionDigits: 0 });
   };

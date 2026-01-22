@@ -1,7 +1,7 @@
 // Executive Dashboard - High-level KPIs and business overview
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { TrendingUp, Users, Package, DollarSign, ShoppingCart, CheckCircle, AlertCircle } from 'lucide-react';
+import { TrendingUp, Users, Package, DollarSign, ShoppingCart, Factory, AlertCircle } from 'lucide-react';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { KPICard } from '../components/common/KPICard';
 import { DataTable } from '../components/common/DataTable';
@@ -74,10 +74,6 @@ const ExecutiveDashboard = () => {
     },
   });
 
-  const formatCurrency = (value: number) => {
-    return value.toLocaleString('vi-VN', { maximumFractionDigits: 0 });
-  };
-
   const formatNumber = (value: number) => {
     return value.toLocaleString('vi-VN', { maximumFractionDigits: 0 });
   };
@@ -140,9 +136,10 @@ const ExecutiveDashboard = () => {
           loading={kpisLoading}
         />
         <KPICard
-          title="Completion Rate"
+          title="Production Completion"
           value={kpis ? `${kpis.completion_rate}%` : '0%'}
-          icon={<CheckCircle className="h-6 w-6" />}
+          subtitle="Percentage of production orders marked as Delivered (DLV) or Technically Completed (TECO)."
+          icon={<Factory className="h-6 w-6" />}
           loading={kpisLoading}
         />
       </div>

@@ -74,13 +74,14 @@ export const arAgingAPI = {
     return response.data;
   },
 
-  getByBucket: async (): Promise<ARAgingBucket[]> => {
-    const response = await api.get<ARAgingBucket[]>('/api/v1/dashboards/ar-aging/by-bucket');
+  getByBucket: async (snapshotDate?: string): Promise<ARAgingBucket[]> => {
+    const params = snapshotDate ? { snapshot_date: snapshotDate } : {};
+    const response = await api.get<ARAgingBucket[]>('/api/v1/dashboards/ar-aging/by-bucket', { params });
     return response.data;
   },
 
-  getCustomers: async (riskLevel?: string, limit: number = 50): Promise<ARCustomerDetail[]> => {
-    const params = { risk_level: riskLevel, limit };
+  getCustomers: async (snapshotDate?: string, riskLevel?: string, limit: number = 50): Promise<ARCustomerDetail[]> => {
+    const params = { snapshot_date: snapshotDate, risk_level: riskLevel, limit };
     const response = await api.get<ARCustomerDetail[]>('/api/v1/dashboards/ar-aging/customers', { params });
     return response.data;
   },

@@ -66,6 +66,9 @@ interface ChannelLeadTime {
 
 interface StageBreakdown {
     order_number: string;
+    material_code: string;
+    material_description: string;
+    batch: string;
     prep_days: number;
     production_days: number;
     delivery_days: number;

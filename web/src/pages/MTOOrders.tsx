@@ -36,6 +36,14 @@ const MTOOrders = () => {
     queryFn: async () => (await api.get('/api/v1/dashboards/mto-orders/top-orders?limit=10')).data
   });
 
+  // NEW: Dynamic Completion Trend
+  const { data: trendData, isLoading: trendLoading } = useQuery({
+    queryKey: ['completion-trend', startDate, endDate],
+    queryFn: async () => (await api.get('/api/v1/dashboards/mto-orders/completion-trend', {
+      params: { start_date: startDate, end_date: endDate }
+    })).data
+  });
+
   const handleDateChange = (newStartDate: string, newEndDate: string) => { setStartDate(newStartDate); setEndDate(newEndDate); };
   const fmt = (v: number) => v.toLocaleString('vi-VN', { maximumFractionDigits: 0 });
 
@@ -43,12 +51,6 @@ const MTOOrders = () => {
     { status: 'COMPLETE', count: kpis?.completed_orders || 0, fill: '#10b981' },
     { status: 'PARTIAL', count: kpis?.partial_orders || 0, fill: '#f59e0b' },
     { status: 'PENDING', count: kpis?.pending_orders || 0, fill: '#3b82f6' },
-  ];
-
-  const trendData = [
-    { month: 'Jan', completed: 85, pending: 15 }, { month: 'Feb', completed: 88, pending: 12 },
-    { month: 'Mar', completed: 82, pending: 18 }, { month: 'Apr', completed: 90, pending: 10 },
-    { month: 'May', completed: 87, pending: 13 }, { month: 'Jun', completed: 92, pending: 8 },
   ];
 
   const orderColumns = [
@@ -116,17 +118,31 @@ const MTOOrders = () => {
 
         <div className="card">
           <h2 className="text-xl font-semibold text-slate-900 mb-4">Completion Rate Trend</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={trendData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="month" tick={{ fill: '#64748b', fontSize: 12 }} />
-              <YAxis tick={{ fill: '#64748b', fontSize: 12 }} tickFormatter={(v) => `${v}%`} />
-              <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px' }} />
-              <Legend />
-              <Line type="monotone" dataKey="completed" stroke="#10b981" strokeWidth={2} name="Completed %" dot={{ r: 4 }} />
-              <Line type="monotone" dataKey="pending" stroke="#f59e0b" strokeWidth={2} name="Pending %" dot={{ r: 4 }} />
-            </LineChart>
-          </ResponsiveContainer>
+          {trendLoading ? (
+            <div className="flex items-center justify-center h-[300px]">
+              <div className="text-slate-600">Loading trend data...</div>
+            </div>
+          ) : trendData && trendData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={trendData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis dataKey="period" tick={{ fill: '#64748b', fontSize: 12 }} />
+                <YAxis tick={{ fill: '#64748b', fontSize: 12 }} tickFormatter={(v) => `${v}%`} />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px' }}
+                  formatter={(value: number, name: string) => [`${value}%`, name === 'completed' ? 'Completed' : 'Pending']}
+                  labelFormatter={(label) => `Period: ${label}`}
+                />
+                <Legend />
+                <Line type="monotone" dataKey="completed" stroke="#10b981" strokeWidth={2} name="Completed %" dot={{ r: 4 }} />
+                <Line type="monotone" dataKey="pending" stroke="#f59e0b" strokeWidth={2} name="Pending %" dot={{ r: 4 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-[300px]">
+              <div className="text-slate-500">No trend data available for selected period</div>
+            </div>
+          )}
         </div>
 
         <div>

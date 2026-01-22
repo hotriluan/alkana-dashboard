@@ -7,6 +7,139 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### [Fixed] 2026-01-20
+
+**MTO COMPLETION TREND CHART - DYNAMIC TIME RANGE**
+- Fixed hardcoded "Jan - Jun" labels in MTO Orders Dashboard completion trend chart
+- Chart now dynamically reflects selected date range from Global Date Picker
+- X-Axis auto-formats: Monthly (>90 days) or Weekly (≤90 days)
+- Fills missing periods with 0% to maintain visual context
+
+**Backend Changes:**
+
+**File:** `src/api/routers/mto_orders.py`
+- Added `/completion-trend` endpoint (lines 222-331)
+- Accepts `start_date` and `end_date` query parameters
+- Monthly aggregation: Uses `DATE_TRUNC('month')` for ranges > 90 days
+- Weekly aggregation: Uses `DATE_TRUNC('week')` for ranges ≤ 90 days
+- Returns: `period`, `completed`, `pending`, `total_orders`
+- Generates all periods in range (even if no data) to avoid gaps
+
+**Frontend Changes:**
+
+**File:** `web/src/pages/MTOOrders.tsx`
+- Removed hardcoded `trendData` array (lines 48-53 deleted)
+- Added dynamic query hook (lines 40-45):
+  ```tsx
+  const { data: trendData, isLoading: trendLoading } = useQuery({
+    queryKey: ['completion-trend', startDate, endDate],
+    queryFn: async () => (await api.get('/api/v1/dashboards/mto-orders/completion-trend', {
+      params: { start_date: startDate, end_date: endDate }
+    })).data
+  });
+  ```
+- Updated chart component (lines 119-140):
+  - Changed XAxis `dataKey` from `"month"` → `"period"`
+  - Added loading state: "Loading trend data..."
+  - Added empty state: "No trend data available for selected period"
+  - Enhanced tooltip with period labels
+
+**Verification:**
+✅ Full year (2025-01-01 to 2025-12-31): Shows Jan-Dec (12 months)  
+✅ Quarter (2025-10-01 to 2025-12-31): Shows Oct-Dec (3 months)  
+✅ Current month: Shows weekly format (DD/MM)  
+✅ Future dates handled gracefully (shows 0% for no data)  
+✅ Chart updates dynamically on date range change  
+
+**Testing:**
+- Created `test_mto_trend.py` for API endpoint validation
+- Created `BROWSER_TESTING_MTO_TREND.md` for QA checklist
+- Created `MTO_TREND_FIX_SUMMARY.md` for implementation documentation
+
+---
+
+### [Enhanced] 2026-01-20
+
+**CUSTOMER SEGMENTATION SCATTER PLOT - UX IMPROVEMENTS**
+- Fixed X-Axis to use numeric linear scale (no longer inferred as categorical)
+- Added interactive segment filter tabs (VIP, Loyal, High-Value, Casual, All)
+- X-Axis now properly sorted left-to-right (0, 5, 10, 15... orders)
+- Filter tabs show segment count and are color-coded for visual clarity
+- Quadrant info box dynamically updates based on selected filter
+
+**Implementation Details:**
+
+**File:** `web/src/components/dashboard/sales/CustomerSegmentationScatter.tsx`
+
+Changes:
+- Line 30: Added `FilterType` union type for filter state
+- Line 38: Added `filter` state with `setFilter` hook
+- Lines 97-107: Added `getFilteredData()` function to filter datasets by segment
+- Lines 175-227: Added filter tab UI above scatter plot with conditional styling
+- Lines 215: Updated XAxis with `type="number"` (explicit numeric scale)
+- Lines 229-278: Wrapped each Scatter in conditional rendering based on filter
+- Lines 301-324: Updated quadrant info to show filtered segment counts
+
+**Benefits:**
+✅ X-Axis now displays correctly sorted frequency values  
+✅ Users can focus on specific customer segments  
+✅ Visual feedback shows which segment is filtered  
+✅ Segment counts update dynamically  
+✅ No breaking changes - fully backward compatible  
+
+### [Fixed] 2026-01-20
+
+**CUSTOMER SEGMENTATION COLOR-CODING FIXED**
+- Fixed issue where all customers displayed as VIP (Blue) in scatter plot
+- Root cause: Component calculated thresholds correctly but rendered all points with single color
+- Solution: Separated rendering into 4 color-coded Scatter components by segment
+
+#### Frontend Changes
+
+**File:** `web/src/components/dashboard/sales/CustomerSegmentationScatter.tsx`
+- Added segment classification logic (lines 36-68)
+- Render 4 separate Scatter components with distinct colors:
+  - VIP (High Freq + High Revenue): Blue (#3B82F6)
+  - LOYAL (High Freq + Low Revenue): Amber (#F59E0B)
+  - HIGH_VALUE (Low Freq + High Revenue): Green (#10B981)
+  - CASUAL (Low Freq + Low Revenue): Slate (#94A3B8)
+- Enhanced tooltip to show segment classification (line 87)
+- Updated quadrant info boxes with segment counts (lines 190-213)
+
+#### Backend Enhancement
+
+**File:** `src/core/sales_analytics.py`
+- Added new method: `get_customer_segmentation_with_classification()` (lines 31-84)
+- Returns customer segmentation with segment_class, segment_color, and thresholds
+- Enables future API enhancements and mobile app integration
+- No breaking changes to existing methods
+
+#### Verification
+
+**Dataset:** 2025-01-01 to 2026-01-20 (216 customers)
+- VIP: 87 customers (40.3%) - 🔵 Blue
+- LOYAL: 21 customers (9.7%) - 🟡 Amber
+- HIGH_VALUE: 21 customers (9.7%) - 🟢 Green
+- CASUAL: 87 customers (40.3%) - ⚪ Slate
+
+**Thresholds (Median-based):**
+- Revenue Threshold: $97,502,286
+- Frequency Threshold: 7 orders
+
+**Testing Status:** ✅ All verification tests passed
+
+#### Documentation
+
+- `CUSTOMER_SEGMENTATION_AUDIT_REPORT.md` - Detailed investigation
+- `CUSTOMER_SEGMENTATION_FIX_SUMMARY.md` - Implementation details
+- `SEGMENTATION_FIX_EXECUTIVE_SUMMARY.txt` - Executive summary
+- `SEGMENTATION_FIX_VISUALIZATION.md` - Visual diagrams
+- `DEPLOYMENT_QA_CHECKLIST.md` - QA testing checklist
+- `audit_segmentation_logic.py` - Diagnostic script
+- `verify_segmentation_fix.py` - Verification script
+
+---
+
 ### [Removed] 2026-01-13
 
 **VARIANCE ANALYSIS V2 MODULE REMOVED**

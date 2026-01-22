@@ -91,21 +91,18 @@ async def get_executive_summary(
         {date_filter}
     """)).fetchone()
     
-    # Production metrics
-    prod_date_filter = ""
+    # Sales Order metrics (fixed: was counting production orders)
+    sales_date_filter = ""
     if start_date and end_date:
-        prod_date_filter = f"WHERE actual_finish_date BETWEEN '{start_date}' AND '{end_date}'"
+        sales_date_filter = f"WHERE order_date BETWEEN '{start_date}' AND '{end_date}'"
     
-    production_result = db.execute(text(f"""
+    sales_order_result = db.execute(text(f"""
         SELECT 
             COUNT(*) as total_orders,
-            COUNT(CASE WHEN system_status LIKE '%DLV%' OR system_status LIKE '%TECO%' THEN 1 END) as completed_orders,
-            COALESCE(AVG(CASE 
-                WHEN order_qty > 0 THEN (delivered_qty / order_qty * 100) 
-                ELSE 0 
-            END), 0) as avg_yield
-        FROM fact_production
-        {prod_date_filter}
+            COUNT(CASE WHEN invoice_count > 0 THEN 1 END) as completed_orders,
+            COALESCE(AVG(invoice_count), 0) as avg_invoices_per_order
+        FROM view_sales_orders
+        {sales_date_filter}
     """)).fetchone()
     
     # Inventory metrics
@@ -131,8 +128,8 @@ async def get_executive_summary(
         )
     """)).fetchone()
     
-    total_orders = int(production_result[0] or 0)
-    completed_orders = int(production_result[1] or 0)
+    total_orders = int(sales_order_result[0] or 0)
+    completed_orders = int(sales_order_result[1] or 0)
     completion_rate = (completed_orders / total_orders * 100) if total_orders > 0 else 0
     
     total_ar = float(ar_result[0] or 0)
@@ -173,7 +170,7 @@ async def get_revenue_by_division(
             COALESCE(dist_channel, 'N/A') as division_code,
             SUM(net_value) as revenue,
             COUNT(DISTINCT COALESCE(customer_name, 'Unknown')) as customer_count,
-            COUNT(DISTINCT billing_document) as order_count
+            COUNT(DISTINCT so_number) as order_count
         FROM fact_billing
         {date_filter}
         GROUP BY dist_channel
@@ -209,7 +206,7 @@ async def get_top_customers(
         SELECT 
             COALESCE(customer_name, 'Unknown') as customer_name,
             SUM(net_value) as revenue,
-            COUNT(DISTINCT billing_document) as order_count
+            COUNT(DISTINCT so_number) as order_count
         FROM fact_billing
         WHERE customer_name IS NOT NULL {date_filter}
         GROUP BY customer_name

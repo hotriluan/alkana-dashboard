@@ -216,3 +216,115 @@ async def get_top_orders(
     result = analytics.get_top_orders(limit=limit)
     
     return [item.dict() for item in result]
+
+
+@router.get("/completion-trend")
+async def get_completion_trend(
+    start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
+    end_date: Optional[str] = Query(None, description="End date (YYYY-MM-DD)"),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Get completion rate trend by month/week based on date range
+    
+    Returns time-series data with completion and pending percentages for the selected period.
+    Aggregates by month if range > 3 months, otherwise by week.
+    """
+    from datetime import datetime, timedelta
+    from dateutil.relativedelta import relativedelta
+    
+    # Default to current month if no range provided
+    if not start_date or not end_date:
+        today = datetime.now().date()
+        start = today.replace(day=1)
+        end = today
+    else:
+        start = datetime.fromisoformat(start_date).date()
+        end = datetime.fromisoformat(end_date).date()
+    
+    # Determine granularity: monthly for >90 days, weekly otherwise
+    days_diff = (end - start).days
+    group_by_month = days_diff > 90
+    
+    if group_by_month:
+        # Monthly aggregation
+        results = db.execute(text("""
+            WITH monthly_stats AS (
+                SELECT 
+                    DATE_TRUNC('month', release_date)::date as period,
+                    COUNT(*) as total,
+                    COUNT(*) FILTER (WHERE status = 'COMPLETE') as completed
+                FROM view_mto_orders
+                WHERE release_date BETWEEN :start_date AND :end_date
+                GROUP BY DATE_TRUNC('month', release_date)
+            )
+            SELECT 
+                period,
+                total,
+                completed,
+                ROUND((completed::numeric / NULLIF(total, 0) * 100), 1) as completion_rate,
+                ROUND(((total - completed)::numeric / NULLIF(total, 0) * 100), 1) as pending_rate
+            FROM monthly_stats
+            ORDER BY period
+        """), {"start_date": start, "end_date": end}).fetchall()
+        
+        # Generate all months in range even if no data
+        result_dict = {r[0]: r for r in results}
+        trend_data = []
+        current = start.replace(day=1)
+        while current <= end:
+            month_str = current.strftime("%b")  # "Jan", "Feb", etc.
+            if current in result_dict:
+                r = result_dict[current]
+                trend_data.append({
+                    "period": month_str,
+                    "completed": float(r[3] or 0),
+                    "pending": float(r[4] or 0),
+                    "total_orders": int(r[1] or 0)
+                })
+            else:
+                # No data for this month - show 0
+                trend_data.append({
+                    "period": month_str,
+                    "completed": 0,
+                    "pending": 0,
+                    "total_orders": 0
+                })
+            current = (current + relativedelta(months=1))
+    
+    else:
+        # Weekly aggregation
+        results = db.execute(text("""
+            WITH weekly_stats AS (
+                SELECT 
+                    DATE_TRUNC('week', release_date)::date as period,
+                    COUNT(*) as total,
+                    COUNT(*) FILTER (WHERE status = 'COMPLETE') as completed
+                FROM view_mto_orders
+                WHERE release_date BETWEEN :start_date AND :end_date
+                GROUP BY DATE_TRUNC('week', release_date)
+            )
+            SELECT 
+                period,
+                total,
+                completed,
+                ROUND((completed::numeric / NULLIF(total, 0) * 100), 1) as completion_rate,
+                ROUND(((total - completed)::numeric / NULLIF(total, 0) * 100), 1) as pending_rate
+            FROM weekly_stats
+            ORDER BY period
+        """), {"start_date": start, "end_date": end}).fetchall()
+        
+        # Format weeks as "DD/MM"
+        trend_data = []
+        for r in results:
+            week_start = r[0]
+            period_str = week_start.strftime("%d/%m")
+            trend_data.append({
+                "period": period_str,
+                "completed": float(r[3] or 0),
+                "pending": float(r[4] or 0),
+                "total_orders": int(r[1] or 0)
+            })
+    
+    return trend_data

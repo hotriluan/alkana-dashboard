@@ -69,14 +69,16 @@ async def get_sales_summary(
     """Get sales performance summary KPIs with date filtering"""
     where_sql, params = build_date_filter(start_date, end_date)
     
+    # Fixed: Count unique sales orders (so_number), not billing documents
     query = f"""
         SELECT 
             COALESCE(SUM(net_value), 0) as total_sales,
             COUNT(DISTINCT customer_name) as total_customers,
             COALESCE(AVG(net_value), 0) as avg_order,
-            COUNT(DISTINCT billing_document) as total_orders
+            COUNT(DISTINCT so_number) as total_orders
         FROM fact_billing
         {where_sql}
+            AND so_number IS NOT NULL
     """
     
     result = db.execute(text(query), params).fetchone()
@@ -113,13 +115,14 @@ async def get_sales_by_customer(
     
     where_sql = "WHERE " + " AND ".join(where_clauses) if where_clauses else ""
     
+    # Fixed: Count unique sales orders, not invoices
     results = db.execute(text(f"""
         SELECT 
             customer_name,
             COALESCE(dist_channel, '') as division_code,
             SUM(net_value) as sales_amount,
             SUM(billing_qty) as sales_qty,
-            COUNT(DISTINCT billing_document) as order_count,
+            COUNT(DISTINCT so_number) as order_count,
             AVG(net_value) as avg_order_value
         FROM fact_billing
         {where_sql}
@@ -148,12 +151,13 @@ async def get_sales_by_division(
     """Get sales aggregated by division with date filtering"""
     where_sql, params = build_date_filter(start_date, end_date)
     
+    # Fixed: Count unique sales orders, not invoices
     results = db.execute(text(f"""
         SELECT 
             COALESCE(dist_channel, 'Unknown') as division_code,
             COUNT(DISTINCT customer_name) as customer_count,
             SUM(net_value) as total_sales,
-            COUNT(DISTINCT billing_document) as total_orders,
+            COUNT(DISTINCT so_number) as total_orders,
             AVG(net_value) as avg_order_value
         FROM fact_billing
         {where_sql}
@@ -191,13 +195,14 @@ async def get_top_customers(
     else:
         where_sql = "WHERE net_value > 0"
     
+    # Fixed: Count unique sales orders, not invoices
     results = db.execute(text(f"""
         SELECT 
             customer_name,
             COALESCE(dist_channel, '') as division_code,
             SUM(net_value) as sales_amount,
             SUM(billing_qty) as sales_qty,
-            COUNT(DISTINCT billing_document) as order_count,
+            COUNT(DISTINCT so_number) as order_count,
             AVG(net_value) as avg_order_value
         FROM fact_billing
         {where_sql}
@@ -225,12 +230,13 @@ async def get_monthly_sales_trend(
     """Get monthly sales trend for specified year"""
     params = {"year": year}
     
+    # Fixed: Count unique sales orders, not invoices
     results = db.execute(text("""
         SELECT 
             EXTRACT(MONTH FROM billing_date)::int as month_num,
             TRIM(TO_CHAR(billing_date, 'Month')) as month_name,
             SUM(net_value) as total_revenue,
-            COUNT(DISTINCT billing_document) as order_count
+            COUNT(DISTINCT so_number) as order_count
         FROM fact_billing
         WHERE EXTRACT(YEAR FROM billing_date) = :year
         GROUP BY EXTRACT(MONTH FROM billing_date), TO_CHAR(billing_date, 'Month')

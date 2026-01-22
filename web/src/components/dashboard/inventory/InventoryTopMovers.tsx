@@ -6,8 +6,8 @@
  * Features: Material type filtering and semantic coloring
  */
 import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
-import { SEMANTIC_COLORS, RECHARTS_DEFAULTS, TOOLTIP_STYLES } from '../../../constants/chartColors';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { SEMANTIC_COLORS, TOOLTIP_STYLES } from '../../../constants/chartColors';
 import { Spinner } from '../../common/Spinner';
 
 interface TopMover {

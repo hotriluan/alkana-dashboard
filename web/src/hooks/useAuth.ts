@@ -30,8 +30,10 @@ export const useAuth = () => {
       localStorage.setItem('access_token', response.access_token);
       return response;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['user'] });
+    onSuccess: async () => {
+      // Wait for user data to be fetched before navigation
+      await queryClient.invalidateQueries({ queryKey: ['user'] });
+      await queryClient.refetchQueries({ queryKey: ['user'] });
     },
   });
 
