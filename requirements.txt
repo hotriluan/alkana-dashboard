@@ -22,6 +22,7 @@ pydantic==2.5.3
 python-multipart==0.0.6  # File upload support
 aiofiles==23.2.1  # Async file operations
 python-magic==0.4.27  # MIME type detection
+bcrypt==4.1.2  # Password hashing for authentication
 
 # Testing
 pytest==7.4.4
