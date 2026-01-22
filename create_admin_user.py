@@ -11,7 +11,7 @@ from pathlib import Path
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from src.db.connection import get_db_session
+from src.db.connection import SessionLocal
 from src.db.auth_models import User, Role
 import bcrypt
 
@@ -26,7 +26,8 @@ def hash_password(password: str) -> str:
 
 def create_admin_user():
     """Create default admin user if not exists."""
-    with get_db_session() as db:
+    db = SessionLocal()
+    try:
         # Check if admin exists
         admin = db.query(User).filter(User.username == "admin").first()
         
@@ -67,6 +68,8 @@ def create_admin_user():
         print("  Password: admin123")
         print("  Email: admin@alkana.com")
         print("\n⚠️  Please change password after first login!")
+    finally:
+        db.close()
 
 
 if __name__ == "__main__":
