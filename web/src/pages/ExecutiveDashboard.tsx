@@ -196,7 +196,7 @@ const ExecutiveDashboard = () => {
                 />
                 <Tooltip 
                   formatter={(value) => formatCurrencyFull(Number(value))}
-                  labelFormatter={(label: string) => getDivisionName(label)}
+                  labelFormatter={(label) => getDivisionName(String(label || ''))}
                   contentStyle={{ fontSize: '12px' }}
                 />
                 <Legend wrapperStyle={{ fontSize: '12px' }} />
@@ -234,7 +234,7 @@ const ExecutiveDashboard = () => {
                 </Pie>
                 <Tooltip 
                   formatter={(value) => formatCurrencyFull(Number(value))}
-                  labelFormatter={(label: string) => getDivisionName(label)}
+                  labelFormatter={(label) => getDivisionName(String(label || ''))}
                   contentStyle={{ fontSize: '12px' }}
                 />
               </PieChart>

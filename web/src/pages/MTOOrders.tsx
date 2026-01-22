@@ -130,7 +130,7 @@ const MTOOrders = () => {
                 <YAxis tick={{ fill: '#64748b', fontSize: 12 }} tickFormatter={(v) => `${v}%`} />
                 <Tooltip 
                   contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px' }}
-                  formatter={(value: number, name: string) => [`${value}%`, name === 'completed' ? 'Completed' : 'Pending']}
+                  formatter={(value) => `${value || 0}%`}
                   labelFormatter={(label) => `Period: ${label}`}
                 />
                 <Legend />
