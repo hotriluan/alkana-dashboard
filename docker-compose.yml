@@ -62,8 +62,8 @@ services:
     depends_on:
       - backend
     ports:
-      - "8080:80"
-      - "8443:443"
+      - "80:80"
+      - "3:443"
     restart: unless-stopped
     networks:
       - alkana-network
