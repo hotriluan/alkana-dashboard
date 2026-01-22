@@ -36,9 +36,13 @@ const Inventory = () => {
   // NEW: Top Movers and Dead Stock Analysis
   const { data: topMoversData, isLoading: topMoversLoading } = useQuery({
     queryKey: ['inventory-top-movers', startDate, endDate, category],
-    queryFn: async () => (await api.get('/api/v1/dashboards/inventory/top-movers-and-dead-stock', {
-      params: { start_date: startDate, end_date: endDate, limit: 10, category }
-    })).data
+    queryFn: async () => {
+      const response = await api.get('/api/v1/dashboards/inventory/top-movers-and-dead-stock', {
+        params: { start_date: startDate, end_date: endDate, limit: 10, category }
+      });
+      console.log('🔍 Top Movers API Response:', response.data);
+      return response.data;
+    }
   });
 
   const handleDateChange = (newStartDate: string, newEndDate: string) => { setStartDate(newStartDate); setEndDate(newEndDate); };
