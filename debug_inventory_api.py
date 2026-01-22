@@ -35,7 +35,7 @@ def debug_inventory_data():
         for i, item in enumerate(top_movers[:5], 1):
             print(f"  {i}. {item.material_code[:30]:30s} | "
                   f"Velocity: {item.velocity_score:3d} | "
-                  f"Stock: {item.stock_kg:10,.0f} kg")
+                  f"Type: {item.material_type}")
         
         print(f"\n🔴 Dead Stock: {len(dead_stock)} items")
         for i, item in enumerate(dead_stock[:5], 1):
