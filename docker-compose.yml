@@ -8,8 +8,8 @@ services:
       POSTGRES_USER: ${DB_USER:-postgres}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
       POSTGRES_DB: ${DB_NAME:-alkana_dashboard}
-    ports:
-      - "5432:5432"
+    # Port not exposed externally for security
+    # Only accessible via internal network
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
