@@ -23,6 +23,7 @@ python-multipart==0.0.6  # File upload support
 aiofiles==23.2.1  # Async file operations
 python-magic==0.4.27  # MIME type detection
 bcrypt==4.1.2  # Password hashing for authentication
+python-jose==3.3.0  # JWT token authentication
 
 # Testing
 pytest==7.4.4
