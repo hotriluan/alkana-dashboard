@@ -4,72 +4,11 @@
  * - Left: Top 10 High Velocity Items (actively moving)
  * - Right: Top 10 Dead Stock Risks (high stock, no movement)
  * Features: Material type filtering and semantic coloring
- * 
- * Uses custom useContainerWidth hook instead of ResponsiveContainer
- * to fix width calculation issues in CSS grid layouts at various zoom levels.
  */
-import React, { useRef, useState, useEffect } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell } from 'recharts';
+import React from 'react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell, ResponsiveContainer } from 'recharts';
 import { SEMANTIC_COLORS, TOOLTIP_STYLES } from '../../../constants/chartColors';
 import { Spinner } from '../../common/Spinner';
-
-// Custom hook to measure container width - bypasses ResponsiveContainer issues
-const useContainerWidth = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [width, setWidth] = useState(0);
-
-  useEffect(() => {
-    const updateWidth = () => {
-      if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        if (rect.width > 0) {
-          setWidth(rect.width);
-        }
-      }
-    };
-
-    // Initial measurement after DOM paint
-    updateWidth();
-    
-    // Use requestAnimationFrame for reliable timing after render
-    const rafId = requestAnimationFrame(() => {
-      updateWidth();
-    });
-    
-    // Use ResizeObserver for responsive updates
-    let resizeObserver: ResizeObserver | null = null;
-    if (containerRef.current) {
-      resizeObserver = new ResizeObserver((entries) => {
-        for (const entry of entries) {
-          const contentRect = entry.contentRect;
-          if (contentRect.width > 0) {
-            setWidth(contentRect.width);
-          }
-        }
-      });
-      resizeObserver.observe(containerRef.current);
-    }
-    
-    // Also listen to window resize as fallback
-    window.addEventListener('resize', updateWidth);
-    
-    // Multiple delayed measurements to handle CSS layout timing
-    const timeoutId1 = setTimeout(updateWidth, 50);
-    const timeoutId2 = setTimeout(updateWidth, 200);
-    const timeoutId3 = setTimeout(updateWidth, 500);
-    
-    return () => {
-      cancelAnimationFrame(rafId);
-      resizeObserver?.disconnect();
-      window.removeEventListener('resize', updateWidth);
-      clearTimeout(timeoutId1);
-      clearTimeout(timeoutId2);
-      clearTimeout(timeoutId3);
-    };
-  }, []);
-
-  return { containerRef, width };
-};
 
 interface TopMover {
   material_code: string;
@@ -123,10 +62,6 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
   selectedCategory,
   onCategoryChange,
 }) => {
-  // Use custom hook for chart container width measurement
-  const { containerRef: topMoversRef, width: topMoversWidth } = useContainerWidth();
-  const { containerRef: deadStockRef, width: deadStockWidth } = useContainerWidth();
-
   // Calculate number of days in date range
   const getDayCount = () => {
     if (!dateRange) return 90; // Fallback to 90 if not provided
@@ -242,11 +177,9 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
           </div>
           
           {topMovers && topMovers.length > 0 ? (
-            <div ref={topMoversRef} style={{ width: '100%', minHeight: 350, overflow: 'hidden' }}>
-              {topMoversWidth > 0 ? (
+            <div style={{ position: 'relative', width: '100%', height: 350 }}>
+              <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                  width={Math.max(topMoversWidth - 8, 300)}
-                  height={350}
                   data={topMovers}
                   layout="vertical"
                   margin={{ top: 5, right: 30, left: 200, bottom: 5 }}
@@ -270,11 +203,7 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
                     ))}
                   </Bar>
                 </BarChart>
-              ) : (
-                <div className="flex items-center justify-center h-80">
-                  <Spinner />
-                </div>
-              )}
+              </ResponsiveContainer>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-96 bg-slate-50 rounded text-slate-500 p-6">
@@ -296,11 +225,9 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
           </div>
 
           {deadStock && deadStock.length > 0 ? (
-            <div ref={deadStockRef} style={{ width: '100%', minHeight: 350, overflow: 'hidden' }}>
-              {deadStockWidth > 0 ? (
+            <div style={{ position: 'relative', width: '100%', height: 350 }}>
+              <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                  width={Math.max(deadStockWidth - 8, 300)}
-                  height={350}
                   data={deadStock}
                   layout="vertical"
                   margin={{ top: 5, right: 30, left: 200, bottom: 5 }}
@@ -324,11 +251,7 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
                     ))}
                   </Bar>
                 </BarChart>
-              ) : (
-                <div className="flex items-center justify-center h-80">
-                  <Spinner />
-                </div>
-              )}
+              </ResponsiveContainer>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-96 bg-slate-50 rounded text-slate-500 p-6">
