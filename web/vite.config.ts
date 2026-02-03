@@ -14,8 +14,9 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
         ws: false,
-        timeout: 120000, // 2 minutes for large file uploads
-        proxyTimeout: 120000,
+        followRedirects: true, // Handle FastAPI 307 redirects for trailing slashes
+        timeout: 300000, // 5 minutes for large file uploads
+        proxyTimeout: 300000,
         // Keep path as-is (e.g., /api/v1/auth/login)
         configure: (proxy, _options) => {
           proxy.on('error', (err, _req, _res) => {

@@ -59,7 +59,17 @@ const DEFAULT_CONFIG = {
       useGemini: true  // Toggle Gemini CLI usage in research skill
     }
   },
-  assertions: []
+  assertions: [],
+  statusline: 'full',
+  hooks: {
+    'session-init': true,
+    'subagent-init': true,
+    'dev-rules-reminder': true,
+    'usage-context-awareness': true,
+    'scout-block': true,
+    'privacy-block': true,
+    'post-edit-simplify-reminder': true
+  }
 };
 
 /**
@@ -494,6 +504,10 @@ function loadConfig(options = {}) {
     result.codingLevel = merged.codingLevel ?? -1;
     // Skills configuration
     result.skills = merged.skills || DEFAULT_CONFIG.skills;
+    // Hooks configuration
+    result.hooks = merged.hooks || DEFAULT_CONFIG.hooks;
+    // Statusline mode
+    result.statusline = merged.statusline || 'full';
 
     return sanitizeConfig(result, projectRoot);
   } catch (e) {
@@ -510,7 +524,8 @@ function getDefaultConfig(includeProject = true, includeAssertions = true, inclu
     paths: { ...DEFAULT_CONFIG.paths },
     docs: { ...DEFAULT_CONFIG.docs },
     codingLevel: -1,  // Default: disabled (no injection, saves tokens)
-    skills: { ...DEFAULT_CONFIG.skills }
+    skills: { ...DEFAULT_CONFIG.skills },
+    statusline: 'full'
   };
   if (includeLocale) {
     result.locale = { ...DEFAULT_CONFIG.locale };
@@ -736,6 +751,36 @@ function getGitRoot(cwd = null) {
   return execSafe('git rev-parse --show-toplevel', { cwd: cwd || undefined });
 }
 
+/**
+ * Extract task list ID from plan resolution for Claude Code Tasks coordination
+ * Only returns ID for session-resolved plans (explicitly active, not branch-suggested)
+ *
+ * Cross-platform: path.basename() handles both Unix/Windows separators
+ *
+ * @param {{ path: string|null, resolvedBy: 'session'|'branch'|null }} resolved - Plan resolution result
+ * @returns {string|null} Task list ID (plan directory name) or null
+ */
+function extractTaskListId(resolved) {
+  if (!resolved || resolved.resolvedBy !== 'session' || !resolved.path) {
+    return null;
+  }
+  return path.basename(resolved.path);
+}
+
+/**
+ * Check if a hook is enabled in config
+ * Returns true if hook is not defined (default enabled)
+ *
+ * @param {string} hookName - Hook name (script basename without .cjs)
+ * @returns {boolean} Whether hook is enabled
+ */
+function isHookEnabled(hookName) {
+  const config = loadConfig({ includeProject: false, includeAssertions: false, includeLocale: false });
+  const hooks = config.hooks || {};
+  // Return true if undefined (default enabled), otherwise return the boolean value
+  return hooks[hookName] !== false;
+}
+
 module.exports = {
   CONFIG_PATH,
   LOCAL_CONFIG_PATH,
@@ -765,5 +810,7 @@ module.exports = {
   validateNamingPattern,
   resolveNamingPattern,
   getGitBranch,
-  getGitRoot
+  getGitRoot,
+  extractTaskListId,
+  isHookEnabled
 };

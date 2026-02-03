@@ -48,7 +48,8 @@
       "installedSettings": {
         "hooks": [
           "node $HOME/.claude/hooks/usage-context-awareness.cjs",
-          "node $HOME/.claude/hooks/post-edit-simplify-reminder.cjs"
+          "node $HOME/.claude/hooks/post-edit-simplify-reminder.cjs",
+          "node $HOME/.claude/hooks/descriptive-name.cjs"
         ],
         "mcpServers": []
       }

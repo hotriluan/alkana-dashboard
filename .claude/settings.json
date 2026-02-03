@@ -41,11 +41,6 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"%CLAUDE_PROJECT_DIR%\"/.claude/hooks/dev-rules-reminder.cjs",
-            "_origin": "engineer"
-          },
-          {
-            "type": "command",
             "command": "node \"%CLAUDE_PROJECT_DIR%\"/.claude/hooks/usage-context-awareness.cjs",
             "timeout": 30,
             "_origin": "engineer"
@@ -64,6 +59,16 @@
           {
             "type": "command",
             "command": "node \"%CLAUDE_PROJECT_DIR%\"/.claude/hooks/privacy-block.cjs"
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"%CLAUDE_PROJECT_DIR%\"/.claude/hooks/descriptive-name.cjs",
+            "_origin": "engineer"
           }
         ]
       }

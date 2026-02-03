@@ -138,7 +138,7 @@ def format_period(d: date) -> str:
 # API Endpoints
 # ============================================================================
 
-@router.post("/upload", response_model=UploadResponse)
+@router.post("/upload/", response_model=UploadResponse)
 async def upload_yield_data(
     file: UploadFile = File(..., description="Excel file (zrpp062.xlsx format)"),
     month: int = Form(..., ge=1, le=12, description="Month (1-12)"),
@@ -238,7 +238,7 @@ async def upload_yield_data(
             pass
 
 
-@router.post("/upload-master-data", response_model=UploadResponse)
+@router.post("/upload-master-data/", response_model=UploadResponse)
 async def upload_master_data(
     file: UploadFile = File(..., description="Excel file (zrsd006.xlsx format with PH hierarchy)"),
     db: Session = Depends(get_db),
