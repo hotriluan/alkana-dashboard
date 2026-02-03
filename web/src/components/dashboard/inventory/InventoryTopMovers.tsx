@@ -178,7 +178,8 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
           </div>
           
           {topMovers && topMovers.length > 0 ? (
-            <ResponsiveContainer width="100%" height={350}>
+            <div style={{ display: 'flex', flex: 1, minHeight: 350 }}>
+              <ResponsiveContainer width="100%" height={350}>
               <BarChart
                   data={topMovers}
                   layout="vertical"
@@ -204,6 +205,7 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
+            </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-96 bg-slate-50 rounded text-slate-500 p-6">
               <div className="text-4xl mb-3">📦</div>
@@ -224,7 +226,8 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
           </div>
 
           {deadStock && deadStock.length > 0 ? (
-            <ResponsiveContainer width="100%" height={350}>
+            <div style={{ display: 'flex', flex: 1, minHeight: 350 }}>
+              <ResponsiveContainer width="100%" height={350}>
               <BarChart
                   data={deadStock}
                   layout="vertical"
@@ -250,6 +253,7 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
+            </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-96 bg-slate-50 rounded text-slate-500 p-6">
               <div className="text-4xl mb-3">✅</div>
