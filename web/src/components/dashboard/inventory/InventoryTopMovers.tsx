@@ -171,14 +171,15 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left: Top Movers */}
-        <div className="border border-slate-200 rounded-lg p-4 bg-gradient-to-br from-green-50 to-slate-50">
+        <div className="border border-slate-200 rounded-lg p-4 bg-gradient-to-br from-green-50 to-slate-50" style={{ minWidth: 0 }}>
           <div className="mb-4">
             <h3 className="text-lg font-semibold text-green-900">🟢 Top 10 High Velocity Items</h3>
             <p className="text-xs text-slate-600 mt-1">Most actively moving materials</p>
           </div>
           
           {topMovers && topMovers.length > 0 ? (
-            <ResponsiveContainer width="100%" height={350}>
+            <div style={{ width: '100%', height: 350 }}>
+              <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={topMovers}
                 layout="vertical"
@@ -205,21 +206,27 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex items-center justify-center h-96 bg-slate-50 rounded text-slate-400">
-              No high velocity items
+            <div className="flex flex-col items-center justify-center h-96 bg-slate-50 rounded text-slate-500 p-6">
+              <div className="text-4xl mb-3">📦</div>
+              <div className="text-sm font-medium mb-2">No high velocity items</div>
+              <div className="text-xs text-center text-slate-400 max-w-md">
+                No materials with outbound movements found in this period.
+                {selectedCategory !== 'ALL_CORE' && <div className="mt-1">Try changing the category filter or date range.</div>}
+              </div>
             </div>
           )}
         </div>
 
         {/* Right: Dead Stock */}
-        <div className="border border-slate-200 rounded-lg p-4 bg-gradient-to-br from-red-50 to-slate-50">
+        <div className="border border-slate-200 rounded-lg p-4 bg-gradient-to-br from-red-50 to-slate-50" style={{ minWidth: 0 }}>
           <div className="mb-4">
             <h3 className="text-lg font-semibold text-red-900">🔴 Top 10 Dead Stock Risks</h3>
             <p className="text-xs text-slate-600 mt-1">High stock, zero movement (inventory waste)</p>
           </div>
 
           {deadStock && deadStock.length > 0 ? (
-            <ResponsiveContainer width="100%" height={350}>
+            <div style={{ width: '100%', height: 350 }}>
+              <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={deadStock}
                 layout="vertical"
@@ -245,9 +252,14 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
+            </div>
           ) : (
-            <div className="flex items-center justify-center h-96 bg-slate-50 rounded text-slate-400">
-              No dead stock items
+            <div className="flex flex-col items-center justify-center h-96 bg-slate-50 rounded text-slate-500 p-6">
+              <div className="text-4xl mb-3">✅</div>
+              <div className="text-sm font-medium mb-2">No dead stock found</div>
+              <div className="text-xs text-center text-slate-400 max-w-md">
+                Great! No materials with high stock and zero movement detected.
+              </div>
             </div>
           )}
         </div>

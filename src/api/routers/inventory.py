@@ -6,7 +6,7 @@ Calculates throughput, net change, and activity metrics instead of stock balance
 Follows CLAUDE.md: KISS, DRY, file <200 lines.
 """
 from typing import Optional
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from pydantic import BaseModel
@@ -289,21 +289,54 @@ async def get_top_movers_and_dead_stock(
     """
     from src.core.inventory_analytics import InventoryAnalytics
     from datetime import datetime
+    import logging
     
-    analytics = InventoryAnalytics(db)
+    logger = logging.getLogger(__name__)
     
-    # Parse date strings to date objects
-    start = datetime.fromisoformat(start_date).date() if start_date else None
-    end = datetime.fromisoformat(end_date).date() if end_date else None
-    
-    top_movers, dead_stock = analytics.get_top_movers_and_dead_stock(
-        start_date=start,
-        end_date=end,
-        limit=limit,
-        category=category
-    )
-    
-    return {
-        "top_movers": [item.dict() for item in top_movers],
-        "dead_stock": [item.dict() for item in dead_stock]
-    }
+    try:
+        analytics = InventoryAnalytics(db)
+        
+        # Parse date strings to date objects
+        start = datetime.fromisoformat(start_date).date() if start_date else None
+        end = datetime.fromisoformat(end_date).date() if end_date else None
+        
+        # Log query parameters for debugging
+        logger.info(f"Top Movers Query: start={start}, end={end}, limit={limit}, category={category}")
+        
+        # Check if database has data
+        total_records = db.execute(text("SELECT COUNT(*) FROM fact_inventory")).scalar()
+        if total_records == 0:
+            logger.warning("No data in fact_inventory table")
+            return {
+                "top_movers": [],
+                "dead_stock": [],
+                "warning": "No inventory data available. Please upload data first."
+            }
+        
+        top_movers, dead_stock = analytics.get_top_movers_and_dead_stock(
+            start_date=start,
+            end_date=end,
+            limit=limit,
+            category=category
+        )
+        
+        # Log results for debugging
+        logger.info(f"Results: {len(top_movers)} top movers, {len(dead_stock)} dead stock items")
+        
+        if len(top_movers) == 0 and len(dead_stock) == 0:
+            logger.warning(f"No results found for date range {start} to {end}")
+            # Check if movement types exist
+            mvt_check = db.execute(text("""
+                SELECT DISTINCT mvt_type FROM fact_inventory 
+                WHERE mvt_type IN (999, 601, 261)
+            """)).fetchall()
+            if not mvt_check:
+                logger.warning("No outbound movement types (999/601/261) found in database")
+        
+        return {
+            "top_movers": [item.dict() for item in top_movers],
+            "dead_stock": [item.dict() for item in dead_stock]
+        }
+    except Exception as e:
+        logger.error(f"Error in top_movers_and_dead_stock: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
