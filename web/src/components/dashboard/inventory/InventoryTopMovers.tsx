@@ -239,16 +239,16 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left: Top Movers */}
-        <div className="border border-slate-200 rounded-lg p-4 bg-gradient-to-br from-green-50 to-slate-50" style={{ minWidth: 0 }}>
+        <div className="border border-slate-200 rounded-lg p-4 bg-gradient-to-br from-green-50 to-slate-50" style={{ minWidth: 0, overflow: 'hidden' }}>
           <div className="mb-4">
             <h3 className="text-lg font-semibold text-green-900">🟢 Top 10 High Velocity Items</h3>
             <p className="text-xs text-slate-600 mt-1">Most actively moving materials</p>
           </div>
           
           {topMovers && topMovers.length > 0 ? (
-            <div ref={topMoversRef} style={{ width: '100%', minHeight: 350 }}>
+            <div ref={topMoversRef} style={{ width: '100%', minHeight: 350, overflow: 'hidden' }}>
               <BarChart
-                width={chartWidth1}
+                width={Math.max(chartWidth1 - 8, 300)}
                 height={350}
                 data={topMovers}
                 layout="vertical"
@@ -287,16 +287,16 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
         </div>
 
         {/* Right: Dead Stock */}
-        <div className="border border-slate-200 rounded-lg p-4 bg-gradient-to-br from-red-50 to-slate-50" style={{ minWidth: 0 }}>
+        <div className="border border-slate-200 rounded-lg p-4 bg-gradient-to-br from-red-50 to-slate-50" style={{ minWidth: 0, overflow: 'hidden' }}>
           <div className="mb-4">
             <h3 className="text-lg font-semibold text-red-900">🔴 Top 10 Dead Stock Risks</h3>
             <p className="text-xs text-slate-600 mt-1">High stock, zero movement (inventory waste)</p>
           </div>
 
           {deadStock && deadStock.length > 0 ? (
-            <div ref={deadStockRef} style={{ width: '100%', minHeight: 350 }}>
+            <div ref={deadStockRef} style={{ width: '100%', minHeight: 350, overflow: 'hidden' }}>
               <BarChart
-                width={chartWidth2}
+                width={Math.max(chartWidth2 - 8, 300)}
                 height={350}
                 data={deadStock}
                 layout="vertical"
