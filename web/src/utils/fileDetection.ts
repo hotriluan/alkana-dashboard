@@ -20,63 +20,63 @@ export const DETECTION_RULES: DetectionRule[] = [
     signature: ['MRP controller', 'Product Group 1', 'Product Group 2', 'Process Order', 'Batch'],
     label: 'Production Yield Result',
     requiresPeriod: true,  // ⚠️ SIGNAL: Needs Month/Year Input
-    endpoint: '/api/v3/yield/upload'
+    endpoint: '/api/v3/yield/upload/'
   },
   {
     type: 'ZRSD006',
     signature: ['Material Code', 'PH 1', 'PH 2', 'PH 3'],  // Updated: Use Material Code instead of Product hierarchy
     label: 'Product Hierarchy Master',
     requiresPeriod: false,
-    endpoint: '/api/v3/yield/upload-master-data'
+    endpoint: '/api/v3/yield/upload-master-data/'
   },
   {
     type: 'COOISPI',
     signature: ['Plant', 'Sales Order', 'Order', 'Material Number'],  // Updated: Actual columns
     label: 'Production Orders',
     requiresPeriod: false,
-    endpoint: '/api/v1/upload'
+    endpoint: '/api/v1/upload/'
   },
   {
     type: 'MB51',
     signature: ['Posting Date', 'Movement Type', 'Material Document', 'Qty in Un. of Entry', 'Storage Location'],
     label: 'Material Movements',
     requiresPeriod: false,
-    endpoint: '/api/v1/upload'
+    endpoint: '/api/v1/upload/'
   },
   {
     type: 'ZRMM024',
     signature: ['Purch. Order', 'Item', 'Purch. Date', 'Suppl. Plant', 'Dest. Plant'],  // Updated: Use unique purchasing columns
     label: 'MRP Controller',
     requiresPeriod: false,
-    endpoint: '/api/v1/upload'
+    endpoint: '/api/v1/upload/'
   },
   {
     type: 'ZRSD002',
     signature: ['Billing Document', 'Net Value', 'Billing Date', 'Material'],  // Updated: Use actual column names
     label: 'Sales Orders',
     requiresPeriod: false,
-    endpoint: '/api/v1/upload'
+    endpoint: '/api/v1/upload/'
   },
   {
     type: 'ZRSD004',
     signature: ['Delivery Date', 'Actual GI Date', 'Delivery', 'SO Reference'],
     label: 'Delivery',
     requiresPeriod: false,
-    endpoint: '/api/v1/upload'
+    endpoint: '/api/v1/upload/'
   },
   {
     type: 'ZRFI005',
     signature: ['Company Code', 'Profit Center', 'Customer Code', 'Target 1-30 Days'],
     label: 'AR Aging Report',
     requiresPeriod: false,
-    endpoint: '/api/v1/upload'
+    endpoint: '/api/v1/upload/'
   },
   {
     type: 'TARGET',
     signature: ['Salesman Name', 'Semester', 'Year', 'Target'],  // Updated: Actual columns
     label: 'Sales Targets',
     requiresPeriod: false,
-    endpoint: '/api/v1/upload'
+    endpoint: '/api/v1/upload/'
   },
 ];
 

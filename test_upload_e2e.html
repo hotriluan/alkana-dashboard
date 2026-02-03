@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Upload Test</title>
+</head>
+<body>
+  <h1>Upload Test</h1>
+  <form id="uploadForm">
+    <input type="file" id="fileInput" accept=".xlsx" />
+    <button type="submit">Upload</button>
+  </form>
+  <pre id="result"></pre>
+
+  <script>
+    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const file = document.getElementById('fileInput').files[0];
+      if (!file) {
+        document.getElementById('result').textContent = 'No file selected';
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        // Test direct to backend
+        console.log('Uploading to http://localhost:8000/api/v1/upload/');
+        const resp = await fetch('http://localhost:8000/api/v1/upload/', {
+          method: 'POST',
+          body: formData,
+        });
+        
+        console.log('Response status:', resp.status);
+        const data = await resp.json();
+        console.log('Response:', data);
+        
+        document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        console.error('Error:', err);
+        document.getElementById('result').textContent = 'Error: ' + err.message;
+      }
+    });
+  </script>
+</body>
+</html>

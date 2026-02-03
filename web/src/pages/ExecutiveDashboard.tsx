@@ -1,5 +1,5 @@
 // Executive Dashboard - High-level KPIs and business overview
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { TrendingUp, Users, Package, DollarSign, ShoppingCart, Factory, AlertCircle } from 'lucide-react';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -7,7 +7,7 @@ import { KPICard } from '../components/common/KPICard';
 import { DataTable } from '../components/common/DataTable';
 import { DateRangePicker } from '../components/common/DateRangePicker';
 import api from '../services/api';
-import { getFirstDayOfMonth, getToday } from '../utils/dateHelpers';
+import { getFirstDayOfMonth, getToday, getSmartDateRange } from '../utils/dateHelpers';
 import { formatCurrencyCompact, formatCurrencyFull } from '../utils/formatters';
 import { getDivisionName } from '../constants/chartColors';
 
@@ -44,6 +44,22 @@ const ExecutiveDashboard = () => {
   const firstDayOfMonth = getFirstDayOfMonth();
   const [startDate, setStartDate] = useState(firstDayOfMonth);
   const [endDate, setEndDate] = useState(today);
+
+  // Initialize with smart date range on mount
+  useEffect(() => {
+    const initializeSmartDate = async () => {
+      try {
+        const smartRange = await getSmartDateRange();
+        setStartDate(smartRange.startDate);
+        setEndDate(smartRange.endDate);
+      } catch (error) {
+        console.error('Failed to initialize smart date range:', error);
+        // Keep default values if smart range fails
+      }
+    };
+
+    initializeSmartDate();
+  }, []);
 
   const handleDateChange = (newStartDate: string, newEndDate: string) => {
     setStartDate(newStartDate);

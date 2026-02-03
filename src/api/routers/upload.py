@@ -22,7 +22,7 @@ from src.api.deps import get_db
 from src.db.models import UploadHistory
 from src.core.upload_service import (
     save_upload_file,
-    process_file,
+    process_file_sync,
     compute_file_hash,
     validate_file_structure
 )
@@ -192,8 +192,17 @@ async def upload_file(
         db.commit()
         db.refresh(upload)
         
-        # Schedule background processing
-        background_tasks.add_task(process_file, upload.id, file_path, db)
+        # Schedule background processing (use sync wrapper for background tasks)
+        def process_async_wrapper():
+            """Wrapper to handle processing in sync background task"""
+            try:
+                process_file_sync(upload.id, file_path)
+            except Exception as e:
+                print(f"❌ Background processing error: {e}")
+                import traceback
+                traceback.print_exc()
+        
+        background_tasks.add_task(process_async_wrapper)
         
         return UploadResponse(
             upload_id=upload.id,

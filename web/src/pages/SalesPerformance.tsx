@@ -1,5 +1,5 @@
 // Sales Performance Dashboard - Customer and division sales tracking
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { DollarSign, Users, ShoppingCart, TrendingUp } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -36,13 +36,21 @@ interface DivisionSales {
   avg_order_value: number;
 }
 
-import { getFirstDayOfMonth, getToday } from '../utils/dateHelpers';
+import { getFirstDayOfMonth, getToday, getSmartDateRange } from '../utils/dateHelpers';
 
 const SalesPerformance = () => {
   const today = getToday();
   const firstDayOfMonth = getFirstDayOfMonth();
   const [startDate, setStartDate] = useState(firstDayOfMonth);
   const [endDate, setEndDate] = useState(today);
+
+  // Initialize with smart date range
+  useEffect(() => {
+    getSmartDateRange().then(range => {
+      setStartDate(range.startDate);
+      setEndDate(range.endDate);
+    }).catch(console.error);
+  }, []);
 
   const { data: kpis, isLoading: kpisLoading } = useQuery({
     queryKey: ['sales-kpis', startDate, endDate],

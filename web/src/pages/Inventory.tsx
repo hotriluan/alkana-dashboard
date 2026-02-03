@@ -1,5 +1,5 @@
 // Inventory Dashboard - Current stock levels and movements
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Package, Factory, Layers, Weight } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -8,7 +8,7 @@ import { DataTable } from '../components/common/DataTable';
 import { DateRangePicker } from '../components/common/DateRangePicker';
 import InventoryTopMovers from '../components/dashboard/inventory/InventoryTopMovers';
 import api from '../services/api';
-import { getFirstDayOfMonth, getToday } from '../utils/dateHelpers';
+import { getFirstDayOfMonth, getToday, getSmartDateRange } from '../utils/dateHelpers';
 
 interface InventoryKPI { total_items: number; total_materials: number; total_plants: number; total_qty_kg: number; }
 interface InventoryItem { plant_code: string; material_code: string; material_description: string; current_qty: number; current_qty_kg: number; uom: string; last_movement: string; }
@@ -20,6 +20,14 @@ const Inventory = () => {
   const [startDate, setStartDate] = useState(firstDayOfMonth);
   const [endDate, setEndDate] = useState(today);
   const [category, setCategory] = useState<string>('ALL_CORE');
+
+  // Initialize with smart date range
+  useEffect(() => {
+    getSmartDateRange().then(range => {
+      setStartDate(range.startDate);
+      setEndDate(range.endDate);
+    }).catch(console.error);
+  }, []);
 
   const { data: kpis, isLoading: kpisLoading } = useQuery({ queryKey: ['inventory-kpis', startDate, endDate], queryFn: async () => (await api.get<InventoryKPI>('/api/v1/dashboards/inventory/summary', { params: { start_date: startDate, end_date: endDate } })).data });
   const { data: items, isLoading: itemsLoading } = useQuery({ queryKey: ['inventory-items', startDate, endDate], queryFn: async () => (await api.get<InventoryItem[]>('/api/v1/dashboards/inventory/items?limit=100', { params: { start_date: startDate, end_date: endDate } })).data });

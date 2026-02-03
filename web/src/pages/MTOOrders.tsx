@@ -1,5 +1,5 @@
 // MTO Orders Dashboard - Make-to-Order production tracking
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { FileText, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import { BarChart, Bar, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -13,13 +13,21 @@ import api from '../services/api';
 interface MTOKPIs { total_orders: number; completed_orders: number; partial_orders: number; pending_orders: number; completion_rate: number; }
 interface MTOOrder { plant_code: string; sales_order: string; order_number: string; material_code: string; material_description: string; order_qty: number; delivered_qty: number; uom: string; status: string; release_date: string | null; actual_finish_date: string | null; }
 
-import { getFirstDayOfMonth, getToday } from '../utils/dateHelpers';
+import { getFirstDayOfMonth, getToday, getSmartDateRange } from '../utils/dateHelpers';
 
 const MTOOrders = () => {
   const today = getToday();
   const firstDayOfMonth = getFirstDayOfMonth();
   const [startDate, setStartDate] = useState(firstDayOfMonth);
   const [endDate, setEndDate] = useState(today);
+
+  // Initialize with smart date range
+  useEffect(() => {
+    getSmartDateRange().then(range => {
+      setStartDate(range.startDate);
+      setEndDate(range.endDate);
+    }).catch(console.error);
+  }, []);
 
   const { data: kpis, isLoading: kpisLoading } = useQuery({ queryKey: ['mto-kpis', startDate, endDate], queryFn: async () => (await api.get<MTOKPIs>('/api/v1/dashboards/mto-orders/summary', { params: { start_date: startDate, end_date: endDate } })).data });
   const { data: orders, isLoading: ordersLoading } = useQuery({ queryKey: ['mto-orders', startDate, endDate], queryFn: async () => (await api.get<MTOOrder[]>('/api/v1/dashboards/mto-orders/orders?limit=100', { params: { start_date: startDate, end_date: endDate } })).data });

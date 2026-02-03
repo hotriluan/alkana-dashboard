@@ -67,6 +67,16 @@ class ProductionTrend(BaseModel):
     yield_pct: float
 
 
+class LatestDataDate(BaseModel):
+    """Latest available data date for smart date range fallback"""
+    latest_billing_date: str | None
+    latest_inventory_date: str | None
+    latest_production_date: str | None
+    recommended_start_date: str
+    recommended_end_date: str
+    has_current_month_data: bool
+
+
 # ========== Endpoints ==========
 
 @router.get("/summary", response_model=ExecutiveKPIs)
@@ -187,6 +197,81 @@ async def get_revenue_by_division(
         )
         for row in result
     ]
+
+
+@router.get("/latest-data-date", response_model=LatestDataDate)
+async def get_latest_data_date(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Get latest available data dates for smart date range fallback
+    
+    Returns the most recent dates from key fact tables and recommends
+    a date range if current month has no data.
+    """
+    from datetime import datetime, date
+    
+    # Get latest billing date
+    billing_result = db.execute(text("""
+        SELECT MAX(DATE(billing_date)) as latest_date
+        FROM fact_billing
+    """)).fetchone()
+    latest_billing = billing_result[0] if billing_result and billing_result[0] else None
+    
+    # Get latest inventory date
+    inventory_result = db.execute(text("""
+        SELECT MAX(DATE(posting_date)) as latest_date
+        FROM fact_inventory
+    """)).fetchone()
+    latest_inventory = inventory_result[0] if inventory_result and inventory_result[0] else None
+    
+    # Get latest production date (try multiple possible columns)
+    try:
+        production_result = db.execute(text("""
+            SELECT MAX(DATE(production_date)) as latest_date
+            FROM fact_production
+        """)).fetchone()
+        latest_production = production_result[0] if production_result and production_result[0] else None
+    except:
+        # Fallback if production_date column doesn't exist
+        latest_production = None
+    
+    # Determine the latest overall date
+    dates = [d for d in [latest_billing, latest_inventory, latest_production] if d]
+    latest_date = max(dates) if dates else None
+    
+    # Check if current month has data
+    today = date.today()
+    current_month_start = date(today.year, today.month, 1)
+    
+    has_current_month_data = False
+    if latest_date and latest_date >= current_month_start:
+        has_current_month_data = True
+    
+    # Recommend date range
+    if has_current_month_data:
+        # Use current month
+        recommended_start = current_month_start.strftime('%Y-%m-%d')
+        recommended_end = today.strftime('%Y-%m-%d')
+    elif latest_date:
+        # Use the month of latest data
+        latest_month_start = date(latest_date.year, latest_date.month, 1)
+        recommended_start = latest_month_start.strftime('%Y-%m-%d')
+        recommended_end = latest_date.strftime('%Y-%m-%d')
+    else:
+        # Fallback to current month even if no data
+        recommended_start = current_month_start.strftime('%Y-%m-%d')
+        recommended_end = today.strftime('%Y-%m-%d')
+    
+    return LatestDataDate(
+        latest_billing_date=latest_billing.strftime('%Y-%m-%d') if latest_billing else None,
+        latest_inventory_date=latest_inventory.strftime('%Y-%m-%d') if latest_inventory else None,
+        latest_production_date=latest_production.strftime('%Y-%m-%d') if latest_production else None,
+        recommended_start_date=recommended_start,
+        recommended_end_date=recommended_end,
+        has_current_month_data=has_current_month_data
+    )
 
 
 @router.get("/top-customers", response_model=list[TopCustomer])

@@ -156,6 +156,134 @@ async def save_upload_file(upload_file, destination: Path) -> int:
     return len(content)
 
 
+def process_file_sync(upload_id: int, file_path: Path) -> Dict:
+    """
+    Process uploaded file with appropriate loader (SYNC wrapper for background tasks)
+    
+    This function creates its own DB session since it runs in background
+    after the request context ends.
+    
+    Returns:
+        Processing statistics
+    """
+    from src.db.connection import SessionLocal
+    
+    db = SessionLocal()
+    try:
+        upload = db.query(UploadHistory).filter_by(id=upload_id).first()
+        if not upload:
+            raise ValueError(f"Upload {upload_id} not found")
+        
+        print(f"\n🔄 Processing upload {upload_id}...")
+        
+        # Update status to processing
+        upload.status = 'processing'
+        db.commit()
+        
+        # Validate file
+        validation = validate_file_structure(file_path)
+        if not validation['valid']:
+            raise ValueError(validation['error'])
+        
+        file_type = validation['file_type']
+        upload.file_type = file_type
+        
+        # Get snapshot_date from upload record (if provided by user)
+        snapshot_date = upload.snapshot_date or date.today()
+        
+        # Use upsert mode for all loaders (UPDATE existing, INSERT new, SKIP unchanged)
+        mode = 'upsert'
+        db.commit()
+        
+        print(f"  📄 File type: {file_type}")
+        print(f"  🔧 Processing mode: {mode}")
+        
+        # Get appropriate loader (REUSE existing loaders)
+        if file_type == 'ZRFI005':
+            # AR special handling: pass snapshot_date to loader
+            loader = Zrfi005Loader(db, mode=mode, file_path=file_path)
+            stats = loader.load(snapshot_date=snapshot_date)
+        else:
+            # Standard loaders with upsert mode
+            loader = get_loader_for_type(file_type.lower(), file_path, db, mode=mode)
+            stats = loader.load()
+        
+        # Transform raw data to fact tables for dashboard
+        print(f"  🔄 Transforming {file_type} to fact tables...")
+        transformer = Transformer(db)
+        
+        # Transform only the relevant table based on file type
+        if file_type == 'COOISPI':
+            transformer.transform_cooispi()
+            # COOISPI impacts production chains, lead time, and alerts
+            transformer.build_production_chains()
+            transformer.calculate_p02_p01_yields()
+            transformer.transform_lead_time()  # Calculate transit days for P01 batches
+            transformer.detect_alerts()
+        elif file_type == 'MB51':
+            transformer.transform_mb51()
+            # MB51 impacts production chains, lead time, and alerts
+            transformer.build_production_chains()
+            transformer.calculate_p02_p01_yields()
+            transformer.transform_lead_time()
+            transformer.detect_alerts()
+        elif file_type == 'ZRMM024':
+            transformer.transform_zrmm024()
+            # ZRMM024 impacts lead time (purchase time)
+            transformer.transform_lead_time()
+        elif file_type == 'ZRSD002':
+            transformer.transform_zrsd002()
+            transformer.build_uom_conversion()  # Update UOM conversion from billing data
+            # ZRSD002 impacts lead time (sales order data)
+            transformer.transform_lead_time()
+        elif file_type == 'ZRSD004':
+            transformer.transform_zrsd004()
+        elif file_type == 'ZRSD006':
+            # ZRSD006 is used by lead time for channel lookup
+            transformer.transform_lead_time()
+        elif file_type == 'ZRFI005':
+            # Pass snapshot_date to transformer to ensure correct data is aggregated
+            transformer.transform_zrfi005(target_date=snapshot_date.isoformat() if snapshot_date else None)
+        elif file_type == 'TARGET':
+            transformer.transform_target()
+        
+        print(f"  ✓ Transform completed")
+        
+        # Update statistics
+        upload.status = 'completed'
+        upload.rows_loaded = stats.get('loaded', 0)
+        upload.rows_updated = stats.get('updated', 0)
+        upload.rows_skipped = stats.get('skipped', 0)
+        # errors is returned as a list; store the count in the integer column
+        error_list = stats.get('errors', []) or []
+        upload.rows_failed = len(error_list)
+        upload.processed_at = datetime.utcnow()
+        db.commit()
+        
+        print(f"✅ Upload {upload_id} completed: {stats}")
+        return stats
+    
+    except Exception as e:
+        # Rollback on error
+        print(f"❌ Upload {upload_id} failed: {e}")
+        import traceback
+        traceback.print_exc()
+        
+        try:
+            db.rollback()
+            upload = db.query(UploadHistory).filter_by(id=upload_id).first()
+            if upload:
+                upload.status = 'failed'
+                upload.error_message = str(e)[:500]  # Truncate long errors
+                upload.processed_at = datetime.utcnow()
+                db.commit()
+        except:
+            pass
+        raise
+    finally:
+        db.close()
+
+
 async def process_file(upload_id: int, file_path: Path, db: Session) -> Dict:
     """
     Process uploaded file with appropriate loader
@@ -265,6 +393,15 @@ async def process_file(upload_id: int, file_path: Path, db: Session) -> Dict:
         upload.processed_at = datetime.utcnow()
         db.commit()
         raise
+
+
+# DEPRECATED: Kept for reference - use process_file_sync instead for background tasks
+# async def process_file_old(upload_id: int, file_path: Path, db: Session) -> Dict:
+#     """
+#     DEPRECATED - Do not use. Background tasks need sync functions with their own DB session.
+#     Use process_file_sync instead.
+#     """
+#     pass
 
 
 def cleanup_old_uploads(uploads_dir: Path, max_age_hours: int = 24):

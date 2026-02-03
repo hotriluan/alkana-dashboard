@@ -1,6 +1,6 @@
 // Lead Time Dashboard - MTO/MTS Lead-time Analysis
 // Reference: NEXT_STEPS.md Phase 6.1.4
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Clock, AlertTriangle, CheckCircle, Package, Truck, Search } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
@@ -9,6 +9,7 @@ import { DataTable } from '../components/common/DataTable';
 import { DateRangePicker } from '../components/common/DateRangePicker';
 import LeadTimeBreakdownChart from '../components/dashboard/leadtime/LeadTimeBreakdownChart';
 import api from '../services/api';
+import { getFirstDayOfMonth, getToday, getSmartDateRange } from '../utils/dateHelpers';
 
 
 interface LeadTimeKPIs {
@@ -97,15 +98,19 @@ interface BatchTrace {
 
 // ... (in component) ...
 
-
-
-import { getFirstDayOfMonth, getToday } from '../utils/dateHelpers';
-
 const LeadTimeDashboard = () => {
     const today = getToday();
     const firstDayOfMonth = getFirstDayOfMonth();
     const [startDate, setStartDate] = useState(firstDayOfMonth);
     const [endDate, setEndDate] = useState(today);
+
+    // Initialize with smart date range
+    useEffect(() => {
+        getSmartDateRange().then(range => {
+            setStartDate(range.startDate);
+            setEndDate(range.endDate);
+        }).catch(console.error);
+    }, []);
 
     const handleDateChange = (newStartDate: string, newEndDate: string) => {
         setStartDate(newStartDate);
