@@ -8,49 +8,65 @@
  * Uses custom useContainerWidth hook instead of ResponsiveContainer
  * to fix width calculation issues in CSS grid layouts at various zoom levels.
  */
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell } from 'recharts';
 import { SEMANTIC_COLORS, TOOLTIP_STYLES } from '../../../constants/chartColors';
 import { Spinner } from '../../common/Spinner';
 
 // Custom hook to measure container width - bypasses ResponsiveContainer issues
-const useContainerWidth = (defaultWidth = 400) => {
+const useContainerWidth = () => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [width, setWidth] = useState(defaultWidth);
-
-  const updateWidth = useCallback(() => {
-    if (containerRef.current) {
-      const newWidth = containerRef.current.getBoundingClientRect().width;
-      if (newWidth > 0) {
-        setWidth(newWidth);
-      }
-    }
-  }, []);
+  const [width, setWidth] = useState(0);
 
   useEffect(() => {
+    const updateWidth = () => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        if (rect.width > 0) {
+          setWidth(rect.width);
+        }
+      }
+    };
+
+    // Initial measurement after DOM paint
     updateWidth();
     
-    // Use ResizeObserver for responsive updates
-    const resizeObserver = new ResizeObserver(() => {
+    // Use requestAnimationFrame for reliable timing after render
+    const rafId = requestAnimationFrame(() => {
       updateWidth();
     });
     
+    // Use ResizeObserver for responsive updates
+    let resizeObserver: ResizeObserver | null = null;
     if (containerRef.current) {
+      resizeObserver = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          const contentRect = entry.contentRect;
+          if (contentRect.width > 0) {
+            setWidth(contentRect.width);
+          }
+        }
+      });
       resizeObserver.observe(containerRef.current);
     }
     
     // Also listen to window resize as fallback
     window.addEventListener('resize', updateWidth);
     
-    // Delayed measurement to handle CSS layout timing
-    const timeoutId = setTimeout(updateWidth, 100);
+    // Multiple delayed measurements to handle CSS layout timing
+    const timeoutId1 = setTimeout(updateWidth, 50);
+    const timeoutId2 = setTimeout(updateWidth, 200);
+    const timeoutId3 = setTimeout(updateWidth, 500);
     
     return () => {
-      resizeObserver.disconnect();
+      cancelAnimationFrame(rafId);
+      resizeObserver?.disconnect();
       window.removeEventListener('resize', updateWidth);
-      clearTimeout(timeoutId);
+      clearTimeout(timeoutId1);
+      clearTimeout(timeoutId2);
+      clearTimeout(timeoutId3);
     };
-  }, [updateWidth]);
+  }, []);
 
   return { containerRef, width };
 };
@@ -108,8 +124,12 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
   onCategoryChange,
 }) => {
   // Use custom hook for chart container width measurement
-  const { containerRef: topMoversRef, width: topMoversWidth } = useContainerWidth(400);
-  const { containerRef: deadStockRef, width: deadStockWidth } = useContainerWidth(400);
+  const { containerRef: topMoversRef, width: topMoversWidth } = useContainerWidth();
+  const { containerRef: deadStockRef, width: deadStockWidth } = useContainerWidth();
+
+  // Use measured width or fallback to a reasonable default for SSR/initial render
+  const chartWidth1 = topMoversWidth > 0 ? topMoversWidth : 500;
+  const chartWidth2 = deadStockWidth > 0 ? deadStockWidth : 500;
 
   // Calculate number of days in date range
   const getDayCount = () => {
@@ -228,7 +248,7 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
           {topMovers && topMovers.length > 0 ? (
             <div ref={topMoversRef} style={{ width: '100%', minHeight: 350 }}>
               <BarChart
-                width={topMoversWidth}
+                width={chartWidth1}
                 height={350}
                 data={topMovers}
                 layout="vertical"
@@ -276,7 +296,7 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
           {deadStock && deadStock.length > 0 ? (
             <div ref={deadStockRef} style={{ width: '100%', minHeight: 350 }}>
               <BarChart
-                width={deadStockWidth}
+                width={chartWidth2}
                 height={350}
                 data={deadStock}
                 layout="vertical"
