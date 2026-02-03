@@ -231,7 +231,7 @@ export function useMasterDataUpload() {
       const formData = new FormData();
       formData.append('file', file);
 
-      const res = await fetch(`${BASE_PATH}/upload-master-data`, {
+      const res = await fetch(`${BASE_PATH}/upload-master-data/`, {
         method: 'POST',
         body: formData,
       });
