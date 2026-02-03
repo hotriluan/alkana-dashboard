@@ -4,11 +4,56 @@
  * - Left: Top 10 High Velocity Items (actively moving)
  * - Right: Top 10 Dead Stock Risks (high stock, no movement)
  * Features: Material type filtering and semantic coloring
+ * 
+ * Uses custom useContainerWidth hook instead of ResponsiveContainer
+ * to fix width calculation issues in CSS grid layouts at various zoom levels.
  */
-import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell } from 'recharts';
 import { SEMANTIC_COLORS, TOOLTIP_STYLES } from '../../../constants/chartColors';
 import { Spinner } from '../../common/Spinner';
+
+// Custom hook to measure container width - bypasses ResponsiveContainer issues
+const useContainerWidth = (defaultWidth = 400) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(defaultWidth);
+
+  const updateWidth = useCallback(() => {
+    if (containerRef.current) {
+      const newWidth = containerRef.current.getBoundingClientRect().width;
+      if (newWidth > 0) {
+        setWidth(newWidth);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    updateWidth();
+    
+    // Use ResizeObserver for responsive updates
+    const resizeObserver = new ResizeObserver(() => {
+      updateWidth();
+    });
+    
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+    
+    // Also listen to window resize as fallback
+    window.addEventListener('resize', updateWidth);
+    
+    // Delayed measurement to handle CSS layout timing
+    const timeoutId = setTimeout(updateWidth, 100);
+    
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', updateWidth);
+      clearTimeout(timeoutId);
+    };
+  }, [updateWidth]);
+
+  return { containerRef, width };
+};
 
 interface TopMover {
   material_code: string;
@@ -62,6 +107,9 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
   selectedCategory,
   onCategoryChange,
 }) => {
+  // Use custom hook for chart container width measurement
+  const { containerRef: topMoversRef, width: topMoversWidth } = useContainerWidth(400);
+  const { containerRef: deadStockRef, width: deadStockWidth } = useContainerWidth(400);
 
   // Calculate number of days in date range
   const getDayCount = () => {
@@ -178,33 +226,33 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
           </div>
           
           {topMovers && topMovers.length > 0 ? (
-            <div style={{ display: 'flex', flex: 1, minHeight: 350 }}>
-              <ResponsiveContainer width="100%" height={350}>
+            <div ref={topMoversRef} style={{ width: '100%', minHeight: 350 }}>
               <BarChart
-                  data={topMovers}
-                  layout="vertical"
-                  margin={{ top: 5, right: 30, left: 200, bottom: 5 }}
+                width={topMoversWidth}
+                height={350}
+                data={topMovers}
+                layout="vertical"
+                margin={{ top: 5, right: 30, left: 200, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke={SEMANTIC_COLORS.SLATE} vertical={false} />
+                <XAxis type="number" tick={{ fill: '#64748b', fontSize: 11 }} />
+                <YAxis 
+                  dataKey={(item) => formatMaterial(item)} 
+                  type="category" 
+                  tick={{ fill: '#64748b', fontSize: 10 }}
+                  width={195}
+                />
+                <Tooltip content={<TopMoverTooltip />} {...TOOLTIP_STYLES} />
+                <Bar 
+                  dataKey="velocity_score" 
+                  radius={[0, 8, 8, 0]} 
+                  name={`Movements/${dayCount}d`}
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke={SEMANTIC_COLORS.SLATE} vertical={false} />
-                  <XAxis type="number" tick={{ fill: '#64748b', fontSize: 11 }} />
-                  <YAxis 
-                    dataKey={(item) => formatMaterial(item)} 
-                    type="category" 
-                    tick={{ fill: '#64748b', fontSize: 10 }}
-                    width={195}
-                  />
-                  <Tooltip content={<TopMoverTooltip />} {...TOOLTIP_STYLES} />
-                  <Bar 
-                    dataKey="velocity_score" 
-                    radius={[0, 8, 8, 0]} 
-                    name={`Movements/${dayCount}d`}
-                  >
-                    {topMovers.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={getMaterialColor(entry.material_type)} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+                  {topMovers.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={getMaterialColor(entry.material_type)} />
+                  ))}
+                </Bar>
+              </BarChart>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-96 bg-slate-50 rounded text-slate-500 p-6">
@@ -226,33 +274,33 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
           </div>
 
           {deadStock && deadStock.length > 0 ? (
-            <div style={{ display: 'flex', flex: 1, minHeight: 350 }}>
-              <ResponsiveContainer width="100%" height={350}>
+            <div ref={deadStockRef} style={{ width: '100%', minHeight: 350 }}>
               <BarChart
-                  data={deadStock}
-                  layout="vertical"
-                  margin={{ top: 5, right: 30, left: 200, bottom: 5 }}
+                width={deadStockWidth}
+                height={350}
+                data={deadStock}
+                layout="vertical"
+                margin={{ top: 5, right: 30, left: 200, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke={SEMANTIC_COLORS.SLATE} vertical={false} />
+                <XAxis type="number" tick={{ fill: '#64748b', fontSize: 11 }} />
+                <YAxis 
+                  dataKey={(item) => formatMaterial(item)} 
+                  type="category" 
+                  tick={{ fill: '#64748b', fontSize: 10 }}
+                  width={195}
+                />
+                <Tooltip content={<DeadStockTooltip />} {...TOOLTIP_STYLES} />
+                <Bar 
+                  dataKey="stock_kg" 
+                  radius={[0, 8, 8, 0]} 
+                  name="Stock (kg)"
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke={SEMANTIC_COLORS.SLATE} vertical={false} />
-                  <XAxis type="number" tick={{ fill: '#64748b', fontSize: 11 }} />
-                  <YAxis 
-                    dataKey={(item) => formatMaterial(item)} 
-                    type="category" 
-                    tick={{ fill: '#64748b', fontSize: 10 }}
-                    width={195}
-                  />
-                  <Tooltip content={<DeadStockTooltip />} {...TOOLTIP_STYLES} />
-                  <Bar 
-                    dataKey="stock_kg" 
-                    radius={[0, 8, 8, 0]} 
-                    name="Stock (kg)"
-                  >
-                    {deadStock.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={getMaterialColor(entry.material_type)} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+                  {deadStock.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={getMaterialColor(entry.material_type)} />
+                  ))}
+                </Bar>
+              </BarChart>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-96 bg-slate-50 rounded text-slate-500 p-6">
