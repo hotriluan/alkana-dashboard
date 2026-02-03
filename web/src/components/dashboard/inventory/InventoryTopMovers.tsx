@@ -127,10 +127,6 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
   const { containerRef: topMoversRef, width: topMoversWidth } = useContainerWidth();
   const { containerRef: deadStockRef, width: deadStockWidth } = useContainerWidth();
 
-  // Use measured width or fallback to a reasonable default for SSR/initial render
-  const chartWidth1 = topMoversWidth > 0 ? topMoversWidth : 500;
-  const chartWidth2 = deadStockWidth > 0 ? deadStockWidth : 500;
-
   // Calculate number of days in date range
   const getDayCount = () => {
     if (!dateRange) return 90; // Fallback to 90 if not provided
@@ -247,32 +243,38 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
           
           {topMovers && topMovers.length > 0 ? (
             <div ref={topMoversRef} style={{ width: '100%', minHeight: 350, overflow: 'hidden' }}>
-              <BarChart
-                width={Math.max(chartWidth1 - 8, 300)}
-                height={350}
-                data={topMovers}
-                layout="vertical"
-                margin={{ top: 5, right: 30, left: 200, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke={SEMANTIC_COLORS.SLATE} vertical={false} />
-                <XAxis type="number" tick={{ fill: '#64748b', fontSize: 11 }} />
-                <YAxis 
-                  dataKey={(item) => formatMaterial(item)} 
-                  type="category" 
-                  tick={{ fill: '#64748b', fontSize: 10 }}
-                  width={195}
-                />
-                <Tooltip content={<TopMoverTooltip />} {...TOOLTIP_STYLES} />
-                <Bar 
-                  dataKey="velocity_score" 
-                  radius={[0, 8, 8, 0]} 
-                  name={`Movements/${dayCount}d`}
+              {topMoversWidth > 0 ? (
+                <BarChart
+                  width={Math.max(topMoversWidth - 8, 300)}
+                  height={350}
+                  data={topMovers}
+                  layout="vertical"
+                  margin={{ top: 5, right: 30, left: 200, bottom: 5 }}
                 >
-                  {topMovers.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={getMaterialColor(entry.material_type)} />
-                  ))}
-                </Bar>
-              </BarChart>
+                  <CartesianGrid strokeDasharray="3 3" stroke={SEMANTIC_COLORS.SLATE} vertical={false} />
+                  <XAxis type="number" tick={{ fill: '#64748b', fontSize: 11 }} />
+                  <YAxis 
+                    dataKey={(item) => formatMaterial(item)} 
+                    type="category" 
+                    tick={{ fill: '#64748b', fontSize: 10 }}
+                    width={195}
+                  />
+                  <Tooltip content={<TopMoverTooltip />} {...TOOLTIP_STYLES} />
+                  <Bar 
+                    dataKey="velocity_score" 
+                    radius={[0, 8, 8, 0]} 
+                    name={`Movements/${dayCount}d`}
+                  >
+                    {topMovers.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={getMaterialColor(entry.material_type)} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              ) : (
+                <div className="flex items-center justify-center h-80">
+                  <Spinner />
+                </div>
+              )}
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-96 bg-slate-50 rounded text-slate-500 p-6">
@@ -295,32 +297,38 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
 
           {deadStock && deadStock.length > 0 ? (
             <div ref={deadStockRef} style={{ width: '100%', minHeight: 350, overflow: 'hidden' }}>
-              <BarChart
-                width={Math.max(chartWidth2 - 8, 300)}
-                height={350}
-                data={deadStock}
-                layout="vertical"
-                margin={{ top: 5, right: 30, left: 200, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke={SEMANTIC_COLORS.SLATE} vertical={false} />
-                <XAxis type="number" tick={{ fill: '#64748b', fontSize: 11 }} />
-                <YAxis 
-                  dataKey={(item) => formatMaterial(item)} 
-                  type="category" 
-                  tick={{ fill: '#64748b', fontSize: 10 }}
-                  width={195}
-                />
-                <Tooltip content={<DeadStockTooltip />} {...TOOLTIP_STYLES} />
-                <Bar 
-                  dataKey="stock_kg" 
-                  radius={[0, 8, 8, 0]} 
-                  name="Stock (kg)"
+              {deadStockWidth > 0 ? (
+                <BarChart
+                  width={Math.max(deadStockWidth - 8, 300)}
+                  height={350}
+                  data={deadStock}
+                  layout="vertical"
+                  margin={{ top: 5, right: 30, left: 200, bottom: 5 }}
                 >
-                  {deadStock.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={getMaterialColor(entry.material_type)} />
-                  ))}
-                </Bar>
-              </BarChart>
+                  <CartesianGrid strokeDasharray="3 3" stroke={SEMANTIC_COLORS.SLATE} vertical={false} />
+                  <XAxis type="number" tick={{ fill: '#64748b', fontSize: 11 }} />
+                  <YAxis 
+                    dataKey={(item) => formatMaterial(item)} 
+                    type="category" 
+                    tick={{ fill: '#64748b', fontSize: 10 }}
+                    width={195}
+                  />
+                  <Tooltip content={<DeadStockTooltip />} {...TOOLTIP_STYLES} />
+                  <Bar 
+                    dataKey="stock_kg" 
+                    radius={[0, 8, 8, 0]} 
+                    name="Stock (kg)"
+                  >
+                    {deadStock.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={getMaterialColor(entry.material_type)} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              ) : (
+                <div className="flex items-center justify-center h-80">
+                  <Spinner />
+                </div>
+              )}
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-96 bg-slate-50 rounded text-slate-500 p-6">
