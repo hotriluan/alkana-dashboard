@@ -180,31 +180,32 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
           {topMovers && topMovers.length > 0 ? (
             <div style={{ width: '100%', height: 350 }}>
               <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={topMovers}
-                layout="vertical"
-                margin={{ top: 5, right: 30, left: 200, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke={SEMANTIC_COLORS.SLATE} vertical={false} />
-                <XAxis type="number" tick={{ fill: '#64748b', fontSize: 11 }} />
-                <YAxis 
-                  dataKey={(item) => formatMaterial(item)} 
-                  type="category" 
-                  tick={{ fill: '#64748b', fontSize: 10 }}
-                  width={195}
-                />
-                <Tooltip content={<TopMoverTooltip />} {...TOOLTIP_STYLES} />
-                <Bar 
-                  dataKey="velocity_score" 
-                  radius={[0, 8, 8, 0]} 
-                  name={`Movements/${dayCount}d`}
+                <BarChart
+                  data={topMovers}
+                  layout="vertical"
+                  margin={{ top: 5, right: 30, left: 200, bottom: 5 }}
                 >
-                  {topMovers.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={getMaterialColor(entry.material_type)} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+                  <CartesianGrid strokeDasharray="3 3" stroke={SEMANTIC_COLORS.SLATE} vertical={false} />
+                  <XAxis type="number" tick={{ fill: '#64748b', fontSize: 11 }} />
+                  <YAxis 
+                    dataKey={(item) => formatMaterial(item)} 
+                    type="category" 
+                    tick={{ fill: '#64748b', fontSize: 10 }}
+                    width={195}
+                  />
+                  <Tooltip content={<TopMoverTooltip />} {...TOOLTIP_STYLES} />
+                  <Bar 
+                    dataKey="velocity_score" 
+                    radius={[0, 8, 8, 0]} 
+                    name={`Movements/${dayCount}d`}
+                  >
+                    {topMovers.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={getMaterialColor(entry.material_type)} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-96 bg-slate-50 rounded text-slate-500 p-6">
               <div className="text-4xl mb-3">📦</div>
@@ -227,31 +228,31 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
           {deadStock && deadStock.length > 0 ? (
             <div style={{ width: '100%', height: 350 }}>
               <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={deadStock}
-                layout="vertical"
-                margin={{ top: 5, right: 30, left: 200, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke={SEMANTIC_COLORS.SLATE} vertical={false} />
-                <XAxis type="number" tick={{ fill: '#64748b', fontSize: 11 }} />
-                <YAxis 
-                  dataKey={(item) => formatMaterial(item)} 
-                  type="category" 
-                  tick={{ fill: '#64748b', fontSize: 10 }}
-                  width={195}
-                />
-                <Tooltip content={<DeadStockTooltip />} {...TOOLTIP_STYLES} />
-                <Bar 
-                  dataKey="stock_kg" 
-                  radius={[0, 8, 8, 0]} 
-                  name="Stock (kg)"
+                <BarChart
+                  data={deadStock}
+                  layout="vertical"
+                  margin={{ top: 5, right: 30, left: 200, bottom: 5 }}
                 >
-                  {deadStock.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={getMaterialColor(entry.material_type)} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+                  <CartesianGrid strokeDasharray="3 3" stroke={SEMANTIC_COLORS.SLATE} vertical={false} />
+                  <XAxis type="number" tick={{ fill: '#64748b', fontSize: 11 }} />
+                  <YAxis 
+                    dataKey={(item) => formatMaterial(item)} 
+                    type="category" 
+                    tick={{ fill: '#64748b', fontSize: 10 }}
+                    width={195}
+                  />
+                  <Tooltip content={<DeadStockTooltip />} {...TOOLTIP_STYLES} />
+                  <Bar 
+                    dataKey="stock_kg" 
+                    radius={[0, 8, 8, 0]} 
+                    name="Stock (kg)"
+                  >
+                    {deadStock.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={getMaterialColor(entry.material_type)} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-96 bg-slate-50 rounded text-slate-500 p-6">
