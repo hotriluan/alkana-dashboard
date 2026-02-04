@@ -1,0 +1,313 @@
+
+> web@0.0.0 lint
+> eslint .
+
+
+C:\dev\alkana-dashboard\web\src\components\common\DataTable.tsx
+   9:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  22:52  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\dev\alkana-dashboard\web\src\components\common\DateRangePicker.tsx
+  22:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\dev\alkana-dashboard\web\src\components\common\DateRangePicker.tsx:22:5
+  20 |   // Sync local state with props when they change
+  21 |   useEffect(() => {
+> 22 |     setLocalStartDate(startDate);
+     |     ^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  23 |     setLocalEndDate(endDate);
+  24 |   }, [startDate, endDate]);
+  25 |  react-hooks/set-state-in-effect
+
+C:\dev\alkana-dashboard\web\src\components\dashboard\inventory\InventoryTopMovers.tsx
+  105:9   warning  The 'getMaterialColor' function makes the dependencies of useMemo Hook (at line 140) change on every render. To fix this, wrap the definition of 'getMaterialColor' in its own useCallback() Hook                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                react-hooks/exhaustive-deps
+  120:27  error    React Hook "useMemo" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        react-hooks/rules-of-hooks
+  143:28  error    React Hook "useMemo" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        react-hooks/rules-of-hooks
+  221:38  error    Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+C:\dev\alkana-dashboard\web\src\components\dashboard\inventory\InventoryTopMovers.tsx:221:38
+  219 |                     width={195}
+  220 |                   />
+> 221 |                   <Tooltip content={<TopMoverTooltip />} {...TOOLTIP_STYLES} />
+      |                                      ^^^^^^^^^^^^^^^ This component is created during render
+  222 |                   <Bar 
+  223 |                     dataKey="velocity_score" 
+  224 |                     radius={[0, 8, 8, 0]} 
+
+C:\dev\alkana-dashboard\web\src\components\dashboard\inventory\InventoryTopMovers.tsx:121:47
+  119 |   // Tooltip for Top Movers
+  120 |   const TopMoverTooltip = useMemo(() => {
+> 121 |     const Component: React.FC<TooltipProps> = ({ active, payload }) => {
+      |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 122 |     if (active && payload && payload.length) {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 123 |       const data = payload[0].payload;
+      ΓÇª
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 137 |     return null;
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 138 |     };
+      | ^^^^^^ The component is created during render here
+  139 |     return Component;
+  140 |   }, [dayCount, getMaterialColor]);
+  141 |  react-hooks/static-components
+  276:38  error    Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+C:\dev\alkana-dashboard\web\src\components\dashboard\inventory\InventoryTopMovers.tsx:276:38
+  274 |                     width={195}
+  275 |                   />
+> 276 |                   <Tooltip content={<DeadStockTooltip />} {...TOOLTIP_STYLES} />
+      |                                      ^^^^^^^^^^^^^^^^ This component is created during render
+  277 |                   <Bar 
+  278 |                     dataKey="stock_kg" 
+  279 |                     radius={[0, 8, 8, 0]} 
+
+C:\dev\alkana-dashboard\web\src\components\dashboard\inventory\InventoryTopMovers.tsx:144:47
+  142 |   // Tooltip for Dead Stock
+  143 |   const DeadStockTooltip = useMemo(() => {
+> 144 |     const Component: React.FC<TooltipProps> = ({ active, payload }) => {
+      |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 145 |     if (active && payload && payload.length) {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 146 |       const data = payload[0].payload;
+      ΓÇª
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 161 |     return null;
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 162 |     };
+      | ^^^^^^ The component is created during render here
+  163 |     return Component;
+  164 |   }, []);
+  165 |                               react-hooks/static-components
+
+C:\dev\alkana-dashboard\web\src\components\dashboard\inventory\InventoryTreemap.tsx
+   62:33  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      @typescript-eslint/no-explicit-any
+  136:30  error  Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+C:\dev\alkana-dashboard\web\src\components\dashboard\inventory\InventoryTreemap.tsx:136:30
+  134 |           isAnimationActive={true}
+  135 |         >
+> 136 |           <Tooltip content={<CustomTooltip />} />
+      |                              ^^^^^^^^^^^^^ This component is created during render
+  137 |         </Treemap>
+  138 |       </ResponsiveContainer>
+  139 |       <div className="flex gap-6 mt-4 text-sm">
+
+C:\dev\alkana-dashboard\web\src\components\dashboard\inventory\InventoryTreemap.tsx:62:40
+   60 |   }));
+   61 |
+>  62 |   const CustomTooltip: React.FC<any> = ({ active, payload }) => {
+      |                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  63 |     if (active && payload && payload.length) {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  64 |       const data = payload[0].payload;
+      ΓÇª
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 106 |     return null;
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 107 |   };
+      | ^^^^ The component is created during render here
+  108 |
+  109 |   if (loading) {
+  110 |     return (  react-hooks/static-components
+
+C:\dev\alkana-dashboard\web\src\components\dashboard\leadtime\LeadTimeBreakdownChart.tsx
+  55:33  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        @typescript-eslint/no-explicit-any
+  55:92  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        @typescript-eslint/no-explicit-any
+  58:53  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        @typescript-eslint/no-explicit-any
+  69:30  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        @typescript-eslint/no-explicit-any
+  97:30  error  Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+C:\dev\alkana-dashboard\web\src\components\dashboard\leadtime\LeadTimeBreakdownChart.tsx:97:30
+   95 |           <XAxis dataKey="order_number" angle={-45} textAnchor="end" height={80} />
+   96 |           <YAxis label={{ value: 'Days', angle: -90, position: 'insideLeft' }} />
+>  97 |           <Tooltip content={<CustomTooltip />} {...TOOLTIP_STYLES} />
+      |                              ^^^^^^^^^^^^^ This component is created during render
+   98 |           <Legend />
+   99 |           <Bar dataKey="prep_days" stackId="a" fill={COLORS_LEADTIME_STAGES.PREP} name="Prep" radius={[0, 0, 0, 0]} />
+  100 |           <Bar dataKey="production_days" stackId="a" fill={COLORS_LEADTIME_STAGES.PRODUCTION} name="Production" />
+
+C:\dev\alkana-dashboard\web\src\components\dashboard\leadtime\LeadTimeBreakdownChart.tsx:55:40
+  53 |   }
+  54 |
+> 55 |   const CustomTooltip: React.FC<any> = ({ active, payload }: { active?: boolean; payload?: any[] }) => {
+     |                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 56 |     if (active && payload && payload.length) {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 57 |       const data = payload[0].payload;
+     ΓÇª
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 83 |     return null;
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 84 |   };
+     | ^^^^ The component is created during render here
+  85 |
+  86 |   return (
+  87 |     <div className="bg-white rounded-lg shadow p-4">  react-hooks/static-components
+
+C:\dev\alkana-dashboard\web\src\components\dashboard\leadtime\OTIFRecentOrdersTable.tsx
+   59:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  158:45  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\dev\alkana-dashboard\web\src\components\dashboard\production\PerformanceMatrix.tsx
+  41:45  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\dev\alkana-dashboard\web\src\components\dashboard\production\ProductionFunnel.tsx
+  55:33  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      @typescript-eslint/no-explicit-any
+  81:30  error  Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+C:\dev\alkana-dashboard\web\src\components\dashboard\production\ProductionFunnel.tsx:81:30
+  79 |           <XAxis dataKey="stage_name" />
+  80 |           <YAxis label={{ value: 'Order Count', angle: -90, position: 'insideLeft' }} />
+> 81 |           <Tooltip content={<CustomTooltip />} {...TOOLTIP_STYLES} />
+     |                              ^^^^^^^^^^^^^ This component is created during render
+  82 |           <Bar dataKey="order_count" fill={SEMANTIC_COLORS.BLUE} radius={[8, 8, 0, 0]} />
+  83 |         </BarChart>
+  84 |       </ResponsiveContainer>
+
+C:\dev\alkana-dashboard\web\src\components\dashboard\production\ProductionFunnel.tsx:55:40
+  53 |   }));
+  54 |
+> 55 |   const CustomTooltip: React.FC<any> = ({ active, payload }) => {
+     |                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 56 |     if (active && payload && payload.length) {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 57 |       const data = payload[0].payload;
+     ΓÇª
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 67 |     return null;
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 68 |   };
+     | ^^^^ The component is created during render here
+  69 |
+  70 |   return (
+  71 |     <div className="bg-white rounded-lg shadow p-4">  react-hooks/static-components
+
+C:\dev\alkana-dashboard\web\src\components\dashboard\sales\CustomerSegmentationScatter.tsx
+  115:33  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-explicit-any
+  211:30  error  Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+C:\dev\alkana-dashboard\web\src\components\dashboard\sales\CustomerSegmentationScatter.tsx:211:30
+  209 |             label={{ value: 'Total Revenue ($)', angle: -90, position: 'insideLeft' }}
+  210 |           />
+> 211 |           <Tooltip content={<CustomTooltip />} {...TOOLTIP_STYLES} />
+      |                              ^^^^^^^^^^^^^ This component is created during render
+  212 |           <ReferenceLine x={medianFreq} stroke={SEMANTIC_COLORS.SLATE} strokeDasharray="3:3" />
+  213 |           <ReferenceLine y={medianRevenue} stroke={SEMANTIC_COLORS.SLATE} strokeDasharray="3:3" />
+  214 |           
+
+C:\dev\alkana-dashboard\web\src\components\dashboard\sales\CustomerSegmentationScatter.tsx:115:40
+  113 |   const filteredDatasets = getFilteredData(filter);
+  114 |
+> 115 |   const CustomTooltip: React.FC<any> = ({ active, payload }) => {
+      |                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 116 |     if (active && payload && payload.length) {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 117 |       const data = payload[0].payload;
+      ΓÇª
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 133 |     return null;
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 134 |   };
+      | ^^^^ The component is created during render here
+  135 |
+  136 |   return (
+  137 |     <div className="bg-white rounded-lg shadow p-4">  react-hooks/static-components
+  221:28  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-explicit-any
+  226:33  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-explicit-any
+  237:28  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-explicit-any
+  242:33  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-explicit-any
+  253:28  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-explicit-any
+  258:33  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-explicit-any
+  269:28  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-explicit-any
+  274:33  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-explicit-any
+
+C:\dev\alkana-dashboard\web\src\components\dashboard\sales\monthly-sales-chart.tsx
+   39:47  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          @typescript-eslint/no-explicit-any
+  100:32  error  Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+C:\dev\alkana-dashboard\web\src\components\dashboard\sales\monthly-sales-chart.tsx:100:32
+   98 |               tickFormatter={formatYAxisLabel}
+   99 |             />
+> 100 |             <Tooltip content={<CustomTooltip />} />
+      |                                ^^^^^^^^^^^^^ This component is created during render
+  101 |             <Bar
+  102 |               dataKey="revenue"
+  103 |               fill="#3b82f6"
+
+C:\dev\alkana-dashboard\web\src\components\dashboard\sales\monthly-sales-chart.tsx:39:25
+  37 |
+  38 |   // Custom tooltip with full currency formatting
+> 39 |   const CustomTooltip = ({ active, payload }: any) => {
+     |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 40 |     if (active && payload && payload.length) {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 41 |       const data = payload[0].payload;
+     ΓÇª
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 52 |     return null;
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 53 |   };
+     | ^^^^ The component is created during render here
+  54 |
+  55 |   // Format Y-Axis labels
+  56 |   const formatYAxisLabel = (value: number) => {  react-hooks/static-components
+
+C:\dev\alkana-dashboard\web\src\pages\ArAging.tsx
+  25:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\dev\alkana-dashboard\web\src\pages\ArAging.tsx:25:7
+  23 |   useEffect(() => {
+  24 |     if (snapshots && snapshots.length > 0 && !selectedSnapshot) {
+> 25 |       setSelectedSnapshot(snapshots[0].snapshot_date);
+     |       ^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  26 |     }
+  27 |   }, [snapshots, selectedSnapshot]);
+  28 |  react-hooks/set-state-in-effect
+
+C:\dev\alkana-dashboard\web\src\pages\ExecutiveDashboard.tsx
+   29:52  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  242:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\dev\alkana-dashboard\web\src\pages\LeadTimeDashboard.tsx
+  584:76  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  591:92  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\dev\alkana-dashboard\web\src\pages\Login.tsx
+  22:14  error  'err' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\dev\alkana-dashboard\web\vite.config.ts
+  21:28  error  '_options' is defined but never used  @typescript-eslint/no-unused-vars
+  22:35  error  '_req' is defined but never used      @typescript-eslint/no-unused-vars
+  22:41  error  '_res' is defined but never used      @typescript-eslint/no-unused-vars
+  25:49  error  '_res' is defined but never used      @typescript-eslint/no-unused-vars
+  28:48  error  '_res' is defined but never used      @typescript-eslint/no-unused-vars
+
+Γ£û 43 problems (42 errors, 1 warning)
+

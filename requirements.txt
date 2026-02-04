@@ -25,6 +25,9 @@ python-magic==0.4.27  # MIME type detection
 bcrypt==4.1.2  # Password hashing for authentication
 python-jose==3.3.0  # JWT token authentication
 
+# Production server
+gunicorn==21.2.0  # Production WSGI server
+
 # Testing
 pytest==7.4.4
 pytest-cov==4.1.0

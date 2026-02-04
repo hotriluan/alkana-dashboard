@@ -1,7 +1,7 @@
 # Dockerfile for Alkana Dashboard Backend (Python/FastAPI)
-FROM python:3.11-slim
+# Multi-stage build for smaller image
+FROM python:3.11-slim as base
 
-# Set working directory
 WORKDIR /app
 
 # Install system dependencies
@@ -12,26 +12,51 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better caching
+# Copy requirements
 COPY requirements.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
+# Production stage
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Copy system dependencies from base
+COPY --from=base /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=base /usr/local/bin /usr/local/bin
+
+# Install runtime dependencies only
+RUN apt-get update && apt-get install -y \
+    postgresql-client \
+    libpq5 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user
+RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+
 # Copy application code
-COPY src/ ./src/
-COPY .env.example .env
+COPY --chown=appuser:appuser src/ ./src/
 
-# Create necessary directories
-RUN mkdir -p logs demodata
+# Create directories
+RUN mkdir -p logs demodata backups && \
+    chown -R appuser:appuser logs demodata backups
 
-# Expose FastAPI port
+USER appuser
+
 EXPOSE 8000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:8000/api/health || exit 1
 
-# Run FastAPI with uvicorn
-CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+# Use gunicorn for production
+CMD ["gunicorn", "src.api.main:app", \
+     "--bind", "0.0.0.0:8000", \
+     "--workers", "4", \
+     "--worker-class", "uvicorn.workers.UvicornWorker", \
+     "--timeout", "120", \
+     "--access-logfile", "-", \
+     "--error-logfile", "-"]

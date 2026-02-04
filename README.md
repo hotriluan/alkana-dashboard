@@ -8,6 +8,22 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg)](https://www.typescriptlang.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-blue.svg)](https://www.postgresql.org/)
 
+## 🚀 Quick Deploy to Production
+
+**One-click deployment to Ubuntu server (192.168.68.166):**
+
+```bash
+# Windows PowerShell
+.\deployment\one-click-deploy.ps1
+
+# Linux/Mac/Git Bash
+bash deployment/one-click-deploy.sh
+```
+
+⏱️ **15 minutes** | 🤖 **95% automated** | 📦 **Includes database**
+
+📖 **[START HERE →](START-HERE.md)** for step-by-step guide
+
 ## 📋 Overview
 
 Alkana Dashboard is a comprehensive supply chain analytics platform that transforms raw SAP data into actionable insights. The system processes data from SAP ERP exports and provides real-time dashboards for:
@@ -271,28 +287,62 @@ FastAPI provides interactive API documentation:
 
 ## 🚢 Deployment
 
+### Quick Deployment to Ubuntu Server
+
+**Automated deployment via GitHub Actions:**
+
+```bash
+# 1. Setup server (one-time)
+./deployment/setup-server.sh
+
+# 2. Configure GitHub secrets
+# Add: SERVER_HOST, SERVER_USER, SSH_PRIVATE_KEY, DB_PASSWORD, etc.
+
+# 3. Deploy by pushing to main branch
+git push origin main
+```
+
+**Manual deployment:**
+
+```bash
+# On server
+./deployment/deploy.sh
+
+# Migrate local database to server
+./deployment/migrate-database.sh YOUR_SERVER_IP
+```
+
+📖 **Complete guides:**
+- [Quick Start](docs/QUICKSTART.md) - 30-minute deployment guide
+- [Deployment Guide](docs/DEPLOYMENT.md) - Full production setup
+- [Database Migration](docs/DATABASE-MIGRATION.md) - Migrate local DB to server
+
 ### Production Checklist
 
-- [ ] Update `.env` with production credentials
+- [ ] Run server setup script
+- [ ] Configure GitHub secrets
+- [ ] Setup SSL certificates
+- [ ] Migrate database from development
+- [ ] Update `.env.production` with credentials
 - [ ] Change default admin password
 - [ ] Configure CORS allowed origins
-- [ ] Enable HTTPS
-- [ ] Set up database backups
-- [ ] Configure logging and monitoring
+- [ ] Set up automated backups
+- [ ] Configure monitoring and alerts
 - [ ] Review security settings
+- [ ] Test all dashboards
 
 ### Environment Variables
 
 ```bash
 # Database
 DATABASE_URL=postgresql://user:password@localhost:5432/alkana_db
+DB_PASSWORD=SecurePassword123
 
 # API
-SECRET_KEY=your-secret-key-here
-ALLOWED_ORIGINS=https://yourdomain.com
+ALLOWED_ORIGINS=https://dashboard.alkana.com
 
 # Frontend
-VITE_API_URL=https://api.yourdomain.com
+VITE_API_URL=/api
 ```
 
 ## 📚 Documentation
