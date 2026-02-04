@@ -4,7 +4,7 @@ import type { ARCollectionSummary, ARAgingBucket, ARCustomerDetail, User, LoginR
 import type { UploadResponse, UploadStatus, UploadHistoryItem } from '../types/upload';
 
 // Use relative URL so it works in both dev and production
-export const API_BASE_URL = import.meta.env.VITE_API_URL || window.location.origin;
+export const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 // Axios instance with default config
 const api = axios.create({
