@@ -14,8 +14,8 @@ RUN npm install
 # Copy source code
 COPY web/ ./
 
-# Build with production env
-ARG VITE_API_URL=/api
+# Build with production env - use empty string to use window.location.origin
+ARG VITE_API_URL=
 ENV VITE_API_URL=$VITE_API_URL
 
 RUN npm run build
