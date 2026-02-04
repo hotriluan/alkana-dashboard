@@ -192,42 +192,40 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
           </div>
           
           {topMoversChartData.length > 0 ? (
-            <div key={`top-movers-${topMovers.length}`} className="w-full overflow-x-auto">
-              <div style={{ width: '100%', height: '400px', minWidth: '600px' }}>
-                <ResponsiveContainer width="100%" height={400}>
-                  <BarChart
-                    data={topMoversChartData}
-                    layout="vertical"
-                    margin={{ top: 5, right: 30, left: 220, bottom: 5 }}
+            <div key={`top-movers-${topMovers.length}`} style={{ width: '100%', height: '400px' }}>
+              <ResponsiveContainer width="100%" height={400}>
+                <BarChart
+                  data={topMoversChartData}
+                  layout="vertical"
+                  margin={{ top: 5, right: 30, left: 200, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke={SEMANTIC_COLORS.SLATE} vertical={false} />
+                  <XAxis 
+                    type="number" 
+                    tick={{ fill: '#64748b', fontSize: 11 }} 
+                    domain={[0, 'dataMax + 5']}
+                    allowDataOverflow={false}
+                  />
+                  <YAxis 
+                    dataKey="material_label" 
+                    type="category" 
+                    tick={{ fill: '#64748b', fontSize: 10 }}
+                    width={180}
+                  />
+                  <Tooltip content={<TopMoverTooltip dayCount={dayCount} />} {...TOOLTIP_STYLES} />
+                  <Bar 
+                    dataKey="velocity_score" 
+                    radius={[0, 8, 8, 0]} 
+                    name={`Movements/${dayCount}d`}
+                    fill="#10b981"
+                    minPointSize={4}
                   >
-                    <CartesianGrid strokeDasharray="3 3" stroke={SEMANTIC_COLORS.SLATE} vertical={false} />
-                    <XAxis 
-                      type="number" 
-                      tick={{ fill: '#64748b', fontSize: 11 }} 
-                      domain={[0, 'dataMax + 5']}
-                      allowDataOverflow={false}
-                    />
-                    <YAxis 
-                      dataKey="material_label" 
-                      type="category" 
-                      tick={{ fill: '#64748b', fontSize: 10 }}
-                      width={210}
-                    />
-                    <Tooltip content={<TopMoverTooltip dayCount={dayCount} />} {...TOOLTIP_STYLES} />
-                    <Bar 
-                      dataKey="velocity_score" 
-                      radius={[0, 8, 8, 0]} 
-                      name={`Movements/${dayCount}d`}
-                      fill="#10b981"
-                      minPointSize={4}
-                    >
-                      {topMoversChartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={getMaterialColor(entry.material_type)} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+                    {topMoversChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={getMaterialColor(entry.material_type)} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-96 bg-slate-50 rounded text-slate-500 p-6">
@@ -249,42 +247,40 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
           </div>
 
           {deadStockChartData.length > 0 ? (
-            <div key={`dead-stock-${deadStock.length}`} className="w-full overflow-x-auto">
-              <div style={{ width: '100%', height: '400px', minWidth: '600px' }}>
-                <ResponsiveContainer width="100%" height={400}>
-                  <BarChart
-                    data={deadStockChartData}
-                    layout="vertical"
-                    margin={{ top: 5, right: 30, left: 220, bottom: 5 }}
+            <div key={`dead-stock-${deadStock.length}`} style={{ width: '100%', height: '400px' }}>
+              <ResponsiveContainer width="100%" height={400}>
+                <BarChart
+                  data={deadStockChartData}
+                  layout="vertical"
+                  margin={{ top: 5, right: 30, left: 200, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke={SEMANTIC_COLORS.SLATE} vertical={false} />
+                  <XAxis 
+                    type="number" 
+                    tick={{ fill: '#64748b', fontSize: 11 }} 
+                    domain={[0, 'dataMax + 100']}
+                    allowDataOverflow={false}
+                  />
+                  <YAxis 
+                    dataKey="material_label" 
+                    type="category" 
+                    tick={{ fill: '#64748b', fontSize: 10 }}
+                    width={180}
+                  />
+                  <Tooltip content={<DeadStockTooltip />} {...TOOLTIP_STYLES} />
+                  <Bar 
+                    dataKey="stock_kg" 
+                    radius={[0, 8, 8, 0]} 
+                    name="Stock (kg)"
+                    fill="#ef4444"
+                    minPointSize={4}
                   >
-                    <CartesianGrid strokeDasharray="3 3" stroke={SEMANTIC_COLORS.SLATE} vertical={false} />
-                    <XAxis 
-                      type="number" 
-                      tick={{ fill: '#64748b', fontSize: 11 }} 
-                      domain={[0, 'dataMax + 100']}
-                      allowDataOverflow={false}
-                    />
-                    <YAxis 
-                      dataKey="material_label" 
-                      type="category" 
-                      tick={{ fill: '#64748b', fontSize: 10 }}
-                      width={210}
-                    />
-                    <Tooltip content={<DeadStockTooltip />} {...TOOLTIP_STYLES} />
-                    <Bar 
-                      dataKey="stock_kg" 
-                      radius={[0, 8, 8, 0]} 
-                      name="Stock (kg)"
-                      fill="#ef4444"
-                      minPointSize={4}
-                    >
-                      {deadStockChartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={getMaterialColor(entry.material_type)} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+                    {deadStockChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={getMaterialColor(entry.material_type)} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-96 bg-slate-50 rounded text-slate-500 p-6">
