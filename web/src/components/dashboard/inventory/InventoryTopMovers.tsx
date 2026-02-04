@@ -62,21 +62,6 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
   selectedCategory,
   onCategoryChange,
 }) => {
-  // Debug logging on render
-  React.useEffect(() => {
-    console.log('🎨 InventoryTopMovers Component Render:', {
-      topMoversCount: topMovers.length,
-      deadStockCount: deadStock.length,
-      loading,
-      hasTopMovers: topMovers.length > 0,
-      hasDeadStock: deadStock.length > 0,
-    });
-    if (topMovers.length > 0) {
-      console.log('📊 Sample TopMover:', topMovers[0]);
-      console.log('📊 TopMover keys:', Object.keys(topMovers[0]));
-    }
-  }, [topMovers, deadStock, loading]);
-
   // Calculate number of days in date range
   const getDayCount = () => {
     if (!dateRange) return 90; // Fallback to 90 if not provided
@@ -200,7 +185,12 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
                   margin={{ top: 5, right: 30, left: 200, bottom: 5 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke={SEMANTIC_COLORS.SLATE} vertical={false} />
-                  <XAxis type="number" tick={{ fill: '#64748b', fontSize: 11 }} />
+                  <XAxis 
+                    type="number" 
+                    tick={{ fill: '#64748b', fontSize: 11 }} 
+                    domain={[0, 'dataMax + 5']}
+                    allowDataOverflow={false}
+                  />
                   <YAxis 
                     dataKey={(item) => formatMaterial(item)} 
                     type="category" 
@@ -248,7 +238,12 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
                   margin={{ top: 5, right: 30, left: 200, bottom: 5 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke={SEMANTIC_COLORS.SLATE} vertical={false} />
-                  <XAxis type="number" tick={{ fill: '#64748b', fontSize: 11 }} />
+                  <XAxis 
+                    type="number" 
+                    tick={{ fill: '#64748b', fontSize: 11 }} 
+                    domain={[0, 'dataMax + 100']}
+                    allowDataOverflow={false}
+                  />
                   <YAxis 
                     dataKey={(item) => formatMaterial(item)} 
                     type="category" 
