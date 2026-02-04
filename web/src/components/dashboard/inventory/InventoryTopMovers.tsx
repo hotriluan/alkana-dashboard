@@ -192,8 +192,8 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
           </div>
           
           {topMovers && topMovers.length > 0 ? (
-            <div key={`top-movers-${topMovers.length}`} style={{ position: 'relative', width: '100%', height: 350 }}>
-              <ResponsiveContainer width="100%" height="100%">
+            <div key={`top-movers-${topMovers.length}`} style={{ width: '100%', height: '350px', minHeight: '350px' }}>
+              <ResponsiveContainer width="100%" height={350}
                 <BarChart
                   data={topMovers}
                   layout="vertical"
@@ -240,8 +240,8 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
           </div>
 
           {deadStock && deadStock.length > 0 ? (
-            <div key={`dead-stock-${deadStock.length}`} style={{ position: 'relative', width: '100%', height: 350 }}>
-              <ResponsiveContainer width="100%" height="100%">
+            <div key={`dead-stock-${deadStock.length}`} style={{ width: '100%', height: '350px', minHeight: '350px' }}>
+              <ResponsiveContainer width="100%" height={350}
                 <BarChart
                   data={deadStock}
                   layout="vertical"
