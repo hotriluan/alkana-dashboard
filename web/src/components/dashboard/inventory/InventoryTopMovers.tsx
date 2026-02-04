@@ -10,6 +10,11 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell, ResponsiveCo
 import { SEMANTIC_COLORS, TOOLTIP_STYLES } from '../../../constants/chartColors';
 import { Spinner } from '../../common/Spinner';
 
+interface TooltipProps {
+  active?: boolean;
+  payload?: Array<{ payload: Record<string, unknown> }>;
+}
+
 interface TopMover {
   material_code: string;
   material_description: string;
@@ -54,6 +59,52 @@ const CATEGORY_OPTIONS = [
   { id: 'RM', label: 'Raw Material (15)', emoji: '🟤' },
 ];
 
+// Helper function to get material color
+const getMaterialColor = (materialType: string): string => {
+  return MATERIAL_TYPE_COLORS[materialType as keyof typeof MATERIAL_TYPE_COLORS] || MATERIAL_TYPE_COLORS.OTHER;
+};
+
+// Top Movers Tooltip Component
+const TopMoverTooltip: React.FC<TooltipProps & { dayCount: number }> = ({ active, payload, dayCount }) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload as unknown as TopMover;
+    return (
+      <div className="bg-white rounded shadow-lg p-3 border border-slate-200 max-w-xs">
+        <p className="text-sm font-bold text-slate-900">[{data.material_type}] {data.material_code}</p>
+        <p className="text-xs text-slate-600 mb-2">{data.material_description}</p>
+        <p className="text-sm">
+          <span className="font-semibold text-slate-700">Movements:</span>{' '}
+          <span className="font-bold" style={{ color: getMaterialColor(data.material_type) }}>
+            {data.velocity_score}/{dayCount}d
+          </span>
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
+// Dead Stock Tooltip Component
+const DeadStockTooltip: React.FC<TooltipProps> = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload as unknown as DeadStock;
+    return (
+      <div className="bg-white rounded shadow-lg p-3 border border-red-200 max-w-xs">
+        <p className="text-sm font-bold text-slate-900">[{data.material_type}] {data.material_code}</p>
+        <p className="text-xs text-slate-600 mb-2">{data.material_description}</p>
+        <p className="text-sm">
+          <span className="font-semibold text-slate-700">Stock:</span>{' '}
+          <span className="text-red-600 font-bold">{data.stock_kg.toLocaleString('en-US', { maximumFractionDigits: 0 })} kg</span>
+        </p>
+        <p className="text-xs text-slate-600 mt-1">
+          <span className="font-semibold">Velocity:</span> {data.velocity_score} movements
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
 const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
   topMovers = [],
   deadStock = [],
@@ -96,11 +147,6 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
     return item.material_description || item.material_code;
   };
 
-  // Get color based on material type
-  const getMaterialColor = (materialType: string) => {
-    return MATERIAL_TYPE_COLORS[materialType as keyof typeof MATERIAL_TYPE_COLORS] || MATERIAL_TYPE_COLORS.OTHER;
-  };
-
   const topMoversChartData = topMovers.map((item) => ({
     ...item,
     material_label: formatMaterial(item),
@@ -110,47 +156,6 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
     ...item,
     material_label: formatMaterial(item),
   }));
-
-  // Tooltip for Top Movers
-  const TopMoverTooltip: React.FC<any> = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div className="bg-white rounded shadow-lg p-3 border border-slate-200 max-w-xs">
-          <p className="text-sm font-bold text-slate-900">[{data.material_type}] {data.material_code}</p>
-          <p className="text-xs text-slate-600 mb-2">{data.material_description}</p>
-          <p className="text-sm">
-            <span className="font-semibold text-slate-700">Movements:</span>{' '}
-            <span className="font-bold" style={{ color: getMaterialColor(data.material_type) }}>
-              {data.velocity_score}/{dayCount}d
-            </span>
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  // Tooltip for Dead Stock
-  const DeadStockTooltip: React.FC<any> = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div className="bg-white rounded shadow-lg p-3 border border-red-200 max-w-xs">
-          <p className="text-sm font-bold text-slate-900">[{data.material_type}] {data.material_code}</p>
-          <p className="text-xs text-slate-600 mb-2">{data.material_description}</p>
-          <p className="text-sm">
-            <span className="font-semibold text-slate-700">Stock:</span>{' '}
-            <span className="text-red-600 font-bold">{data.stock_kg.toLocaleString('en-US', { maximumFractionDigits: 0 })} kg</span>
-          </p>
-          <p className="text-xs text-slate-600 mt-1">
-            <span className="font-semibold">Velocity:</span> {data.velocity_score} movements
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
@@ -207,7 +212,7 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
                     tick={{ fill: '#64748b', fontSize: 10 }}
                     width={195}
                   />
-                  <Tooltip content={<TopMoverTooltip />} {...TOOLTIP_STYLES} />
+                  <Tooltip content={<TopMoverTooltip dayCount={dayCount} />} {...TOOLTIP_STYLES} />
                   <Bar 
                     dataKey="velocity_score" 
                     radius={[0, 8, 8, 0]} 
