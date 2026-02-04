@@ -183,49 +183,51 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full overflow-hidden">
         {/* Left: Top Movers */}
-        <div className="border border-slate-200 rounded-lg p-4 bg-gradient-to-br from-green-50 to-slate-50" style={{ minWidth: 0 }}>
+        <div className="border border-slate-200 rounded-lg p-4 bg-gradient-to-br from-green-50 to-slate-50 overflow-hidden" style={{ minWidth: 0 }}>
           <div className="mb-4">
             <h3 className="text-lg font-semibold text-green-900">🟢 Top 10 High Velocity Items</h3>
             <p className="text-xs text-slate-600 mt-1">Most actively moving materials</p>
           </div>
           
           {topMoversChartData.length > 0 ? (
-            <div key={`top-movers-${topMovers.length}`} style={{ width: '100%', height: '350px', minHeight: '350px' }}>
-              <ResponsiveContainer width="100%" height={350}>
-                <BarChart
-                  data={topMoversChartData}
-                  layout="vertical"
-                  margin={{ top: 5, right: 30, left: 200, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" stroke={SEMANTIC_COLORS.SLATE} vertical={false} />
-                  <XAxis 
-                    type="number" 
-                    tick={{ fill: '#64748b', fontSize: 11 }} 
-                    domain={[0, 'dataMax + 5']}
-                    allowDataOverflow={false}
-                  />
-                  <YAxis 
-                    dataKey="material_label" 
-                    type="category" 
-                    tick={{ fill: '#64748b', fontSize: 10 }}
-                    width={195}
-                  />
-                  <Tooltip content={<TopMoverTooltip dayCount={dayCount} />} {...TOOLTIP_STYLES} />
-                  <Bar 
-                    dataKey="velocity_score" 
-                    radius={[0, 8, 8, 0]} 
-                    name={`Movements/${dayCount}d`}
-                    fill="#10b981"
-                    minPointSize={4}
+            <div key={`top-movers-${topMovers.length}`} className="w-full overflow-x-auto">
+              <div style={{ width: '100%', height: '400px', minWidth: '600px' }}>
+                <ResponsiveContainer width="100%" height={400}>
+                  <BarChart
+                    data={topMoversChartData}
+                    layout="vertical"
+                    margin={{ top: 5, right: 30, left: 220, bottom: 5 }}
                   >
-                    {topMoversChartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={getMaterialColor(entry.material_type)} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+                    <CartesianGrid strokeDasharray="3 3" stroke={SEMANTIC_COLORS.SLATE} vertical={false} />
+                    <XAxis 
+                      type="number" 
+                      tick={{ fill: '#64748b', fontSize: 11 }} 
+                      domain={[0, 'dataMax + 5']}
+                      allowDataOverflow={false}
+                    />
+                    <YAxis 
+                      dataKey="material_label" 
+                      type="category" 
+                      tick={{ fill: '#64748b', fontSize: 10 }}
+                      width={210}
+                    />
+                    <Tooltip content={<TopMoverTooltip dayCount={dayCount} />} {...TOOLTIP_STYLES} />
+                    <Bar 
+                      dataKey="velocity_score" 
+                      radius={[0, 8, 8, 0]} 
+                      name={`Movements/${dayCount}d`}
+                      fill="#10b981"
+                      minPointSize={4}
+                    >
+                      {topMoversChartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={getMaterialColor(entry.material_type)} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-96 bg-slate-50 rounded text-slate-500 p-6">
@@ -240,47 +242,49 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
         </div>
 
         {/* Right: Dead Stock */}
-        <div className="border border-slate-200 rounded-lg p-4 bg-gradient-to-br from-red-50 to-slate-50" style={{ minWidth: 0 }}>
+        <div className="border border-slate-200 rounded-lg p-4 bg-gradient-to-br from-red-50 to-slate-50 overflow-hidden" style={{ minWidth: 0 }}>
           <div className="mb-4">
             <h3 className="text-lg font-semibold text-red-900">🔴 Top 10 Dead Stock Risks</h3>
             <p className="text-xs text-slate-600 mt-1">High stock, zero movement (inventory waste)</p>
           </div>
 
           {deadStockChartData.length > 0 ? (
-            <div key={`dead-stock-${deadStock.length}`} style={{ width: '100%', height: '350px', minHeight: '350px' }}>
-              <ResponsiveContainer width="100%" height={350}>
-                <BarChart
-                  data={deadStockChartData}
-                  layout="vertical"
-                  margin={{ top: 5, right: 30, left: 200, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" stroke={SEMANTIC_COLORS.SLATE} vertical={false} />
-                  <XAxis 
-                    type="number" 
-                    tick={{ fill: '#64748b', fontSize: 11 }} 
-                    domain={[0, 'dataMax + 100']}
-                    allowDataOverflow={false}
-                  />
-                  <YAxis 
-                    dataKey="material_label" 
-                    type="category" 
-                    tick={{ fill: '#64748b', fontSize: 10 }}
-                    width={195}
-                  />
-                  <Tooltip content={<DeadStockTooltip />} {...TOOLTIP_STYLES} />
-                  <Bar 
-                    dataKey="stock_kg" 
-                    radius={[0, 8, 8, 0]} 
-                    name="Stock (kg)"
-                    fill="#ef4444"
-                    minPointSize={4}
+            <div key={`dead-stock-${deadStock.length}`} className="w-full overflow-x-auto">
+              <div style={{ width: '100%', height: '400px', minWidth: '600px' }}>
+                <ResponsiveContainer width="100%" height={400}>
+                  <BarChart
+                    data={deadStockChartData}
+                    layout="vertical"
+                    margin={{ top: 5, right: 30, left: 220, bottom: 5 }}
                   >
-                    {deadStockChartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={getMaterialColor(entry.material_type)} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+                    <CartesianGrid strokeDasharray="3 3" stroke={SEMANTIC_COLORS.SLATE} vertical={false} />
+                    <XAxis 
+                      type="number" 
+                      tick={{ fill: '#64748b', fontSize: 11 }} 
+                      domain={[0, 'dataMax + 100']}
+                      allowDataOverflow={false}
+                    />
+                    <YAxis 
+                      dataKey="material_label" 
+                      type="category" 
+                      tick={{ fill: '#64748b', fontSize: 10 }}
+                      width={210}
+                    />
+                    <Tooltip content={<DeadStockTooltip />} {...TOOLTIP_STYLES} />
+                    <Bar 
+                      dataKey="stock_kg" 
+                      radius={[0, 8, 8, 0]} 
+                      name="Stock (kg)"
+                      fill="#ef4444"
+                      minPointSize={4}
+                    >
+                      {deadStockChartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={getMaterialColor(entry.material_type)} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-96 bg-slate-50 rounded text-slate-500 p-6">
