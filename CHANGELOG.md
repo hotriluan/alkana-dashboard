@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### [Fixed] 2026-02-04
+
+**INVENTORY TOP MOVERS / DEAD STOCK BARS VISIBLE**
+- Stabilized Y-axis labels with explicit material label fields
+- Enforced minimum bar size for visibility on both charts
+
+**Frontend Changes:**
+
+**File:** `web/src/components/dashboard/inventory/InventoryTopMovers.tsx`
+- Added `material_label` fields for chart categories
+- Applied `minPointSize` to bar rendering
+
 ### [Fixed] 2026-01-20
 
 **MTO COMPLETION TREND CHART - DYNAMIC TIME RANGE**

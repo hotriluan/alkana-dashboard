@@ -101,6 +101,16 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
     return MATERIAL_TYPE_COLORS[materialType as keyof typeof MATERIAL_TYPE_COLORS] || MATERIAL_TYPE_COLORS.OTHER;
   };
 
+  const topMoversChartData = topMovers.map((item) => ({
+    ...item,
+    material_label: formatMaterial(item),
+  }));
+
+  const deadStockChartData = deadStock.map((item) => ({
+    ...item,
+    material_label: formatMaterial(item),
+  }));
+
   // Tooltip for Top Movers
   const TopMoverTooltip: React.FC<any> = ({ active, payload }) => {
     if (active && payload && payload.length) {
@@ -176,11 +186,11 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
             <p className="text-xs text-slate-600 mt-1">Most actively moving materials</p>
           </div>
           
-          {topMovers && topMovers.length > 0 ? (
+          {topMoversChartData.length > 0 ? (
             <div key={`top-movers-${topMovers.length}`} style={{ width: '100%', height: '350px', minHeight: '350px' }}>
               <ResponsiveContainer width="100%" height={350}>
                 <BarChart
-                  data={topMovers}
+                  data={topMoversChartData}
                   layout="vertical"
                   margin={{ top: 5, right: 30, left: 200, bottom: 5 }}
                 >
@@ -192,7 +202,7 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
                     allowDataOverflow={false}
                   />
                   <YAxis 
-                    dataKey={(item) => formatMaterial(item)} 
+                    dataKey="material_label" 
                     type="category" 
                     tick={{ fill: '#64748b', fontSize: 10 }}
                     width={195}
@@ -202,8 +212,10 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
                     dataKey="velocity_score" 
                     radius={[0, 8, 8, 0]} 
                     name={`Movements/${dayCount}d`}
+                    fill="#10b981"
+                    minPointSize={4}
                   >
-                    {topMovers.map((entry, index) => (
+                    {topMoversChartData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={getMaterialColor(entry.material_type)} />
                     ))}
                   </Bar>
@@ -229,11 +241,11 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
             <p className="text-xs text-slate-600 mt-1">High stock, zero movement (inventory waste)</p>
           </div>
 
-          {deadStock && deadStock.length > 0 ? (
+          {deadStockChartData.length > 0 ? (
             <div key={`dead-stock-${deadStock.length}`} style={{ width: '100%', height: '350px', minHeight: '350px' }}>
               <ResponsiveContainer width="100%" height={350}>
                 <BarChart
-                  data={deadStock}
+                  data={deadStockChartData}
                   layout="vertical"
                   margin={{ top: 5, right: 30, left: 200, bottom: 5 }}
                 >
@@ -245,7 +257,7 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
                     allowDataOverflow={false}
                   />
                   <YAxis 
-                    dataKey={(item) => formatMaterial(item)} 
+                    dataKey="material_label" 
                     type="category" 
                     tick={{ fill: '#64748b', fontSize: 10 }}
                     width={195}
@@ -255,8 +267,10 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
                     dataKey="stock_kg" 
                     radius={[0, 8, 8, 0]} 
                     name="Stock (kg)"
+                    fill="#ef4444"
+                    minPointSize={4}
                   >
-                    {deadStock.map((entry, index) => (
+                    {deadStockChartData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={getMaterialColor(entry.material_type)} />
                     ))}
                   </Bar>
