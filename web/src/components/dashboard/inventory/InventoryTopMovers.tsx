@@ -141,8 +141,8 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
 
   // Format material name: show description if available, fallback to code
   const formatMaterial = (item: TopMover | DeadStock) => {
-    if (item.material_description && item.material_description.length > 30) {
-      return item.material_description.substring(0, 30) + '...';
+    if (item.material_description && item.material_description.length > 22) {
+      return item.material_description.substring(0, 22) + '...';
     }
     return item.material_description || item.material_code;
   };
@@ -192,12 +192,12 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
           </div>
           
           {topMoversChartData.length > 0 ? (
-            <div key={`top-movers-${topMovers.length}`} style={{ width: '100%', height: '400px' }}>
-              <ResponsiveContainer width="100%" height={400}>
+            <div key={`top-movers-${topMovers.length}`} style={{ width: '100%', height: '360px' }}>
+              <ResponsiveContainer width="100%" height={360}>
                 <BarChart
                   data={topMoversChartData}
                   layout="vertical"
-                  margin={{ top: 5, right: 30, left: 200, bottom: 5 }}
+                  margin={{ top: 5, right: 24, left: 130, bottom: 5 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke={SEMANTIC_COLORS.SLATE} vertical={false} />
                   <XAxis 
@@ -209,8 +209,8 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
                   <YAxis 
                     dataKey="material_label" 
                     type="category" 
-                    tick={{ fill: '#64748b', fontSize: 10 }}
-                    width={180}
+                    tick={{ fill: '#64748b', fontSize: 9 }}
+                    width={120}
                   />
                   <Tooltip content={<TopMoverTooltip dayCount={dayCount} />} {...TOOLTIP_STYLES} />
                   <Bar 
@@ -247,12 +247,12 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
           </div>
 
           {deadStockChartData.length > 0 ? (
-            <div key={`dead-stock-${deadStock.length}`} style={{ width: '100%', height: '400px' }}>
-              <ResponsiveContainer width="100%" height={400}>
+            <div key={`dead-stock-${deadStock.length}`} style={{ width: '100%', height: '360px' }}>
+              <ResponsiveContainer width="100%" height={360}>
                 <BarChart
                   data={deadStockChartData}
                   layout="vertical"
-                  margin={{ top: 5, right: 30, left: 200, bottom: 5 }}
+                  margin={{ top: 5, right: 24, left: 130, bottom: 5 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke={SEMANTIC_COLORS.SLATE} vertical={false} />
                   <XAxis 
@@ -264,8 +264,8 @@ const InventoryTopMovers: React.FC<InventoryTopMoversProps> = ({
                   <YAxis 
                     dataKey="material_label" 
                     type="category" 
-                    tick={{ fill: '#64748b', fontSize: 10 }}
-                    width={180}
+                    tick={{ fill: '#64748b', fontSize: 9 }}
+                    width={120}
                   />
                   <Tooltip content={<DeadStockTooltip />} {...TOOLTIP_STYLES} />
                   <Bar 
