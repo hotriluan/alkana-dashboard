@@ -228,7 +228,7 @@ class Transformer:
             return 'OTHER'
     
     def transform_cooispi(self):
-        """Transform raw_cooispi to fact_production"""
+        """Transform raw_cooispi to fact_production (optimized with bulk operations)"""
         print("Transforming cooispi → fact_production...")
         
         raw_df = self.load_raw_to_df(RawCooispi)
@@ -236,13 +236,32 @@ class Transformer:
             print("  ⚠ No data in raw_cooispi")
             return
         
-        count = 0
+        # OPTIMIZATION: Load all existing records once for in-memory lookups
+        print(f"  📊 Loading {len(raw_df)} raw records...")
+        existing_records = self.db.query(
+            FactProduction.order_number,
+            FactProduction.plant_code,
+            FactProduction.row_hash,
+            FactProduction.id
+        ).all()
+        
+        # Build lookup dict: (order_number, plant_code) -> (row_hash, id)
+        existing_map = {
+            (rec.order_number, rec.plant_code): (rec.row_hash, rec.id)
+            for rec in existing_records
+        }
+        print(f"  📋 Loaded {len(existing_map)} existing production records")
+        
+        # Collect bulk operations
+        to_insert = []
+        to_update = []
+        
         for _, row in raw_df.iterrows():
-            # Apply business logic
+            # Apply business logic (PRESERVED)
             is_mto = self.classifier.is_mto(row)
             order_status = self.classifier.get_order_status(row)
             
-            # Normalize quantities to KG using UOM converter
+            # Normalize quantities to KG using UOM converter (PRESERVED)
             material_code = row.get('material_number')
             uom = row.get('unit_of_measure')
             order_qty = row.get('order_quantity')
@@ -259,7 +278,7 @@ class Transformer:
                     if delivered_qty:
                         delivered_qty_kg = float(delivered_qty) * kg_per_unit if uom == 'PC' else float(delivered_qty)
             
-            # Compute hash for change detection
+            # Compute hash for change detection (PRESERVED)
             hash_data = {
                 'order': row.get('order'),
                 'batch': row.get('batch'),
@@ -271,65 +290,75 @@ class Transformer:
             }
             row_hash = compute_row_hash(hash_data)
             
-            # Check if exists
-            existing = self.db.query(FactProduction).filter_by(
-                order_number=row.get('order'),
-                plant_code=row.get('plant')
-            ).first()
+            # OPTIMIZATION: Check existence in-memory instead of querying DB
+            order_number = row.get('order')
+            plant_code = row.get('plant')
+            lookup_key = (order_number, plant_code)
             
-            if existing:
-                if existing.row_hash != row_hash:
-                    # Update ALL fields when data changes
-                    existing.sales_order = clean_value(row.get('sales_order'))
-                    existing.order_type = clean_value(row.get('order_type'))
-                    existing.material_code = clean_value(row.get('material_number'))
-                    existing.material_description = clean_value(row.get('material_description'))
-                    existing.release_date = clean_value(row.get('release_date_actual'))
-                    existing.actual_finish_date = clean_value(row.get('actual_finish_date'))
-                    existing.bom_alternative = clean_value(row.get('bom_alternative'))
-                    existing.batch = clean_value(row.get('batch'))
-                    existing.system_status = clean_value(row.get('system_status'))
-                    existing.mrp_controller = clean_value(row.get('mrp_controller'))
-                    existing.order_qty = clean_value(row.get('order_quantity'))
-                    existing.delivered_qty = clean_value(row.get('delivered_quantity'))
-                    existing.uom = clean_value(row.get('unit_of_measure'))
-                    existing.order_qty_kg = clean_value(order_qty_kg)
-                    existing.delivered_qty_kg = clean_value(delivered_qty_kg)
-                    existing.is_mto = is_mto
-                    existing.order_status = order_status
-                    existing.row_hash = row_hash
-                    existing.updated_at = datetime.utcnow()
-                    count += 1
+            if lookup_key in existing_map:
+                existing_hash, existing_id = existing_map[lookup_key]
+                if existing_hash != row_hash:
+                    # Collect update (ALL fields preserved)
+                    to_update.append({
+                        'id': existing_id,
+                        'sales_order': clean_value(row.get('sales_order')),
+                        'order_type': clean_value(row.get('order_type')),
+                        'material_code': clean_value(row.get('material_number')),
+                        'material_description': clean_value(row.get('material_description')),
+                        'release_date': clean_value(row.get('release_date_actual')),
+                        'actual_finish_date': clean_value(row.get('actual_finish_date')),
+                        'bom_alternative': clean_value(row.get('bom_alternative')),
+                        'batch': clean_value(row.get('batch')),
+                        'system_status': clean_value(row.get('system_status')),
+                        'mrp_controller': clean_value(row.get('mrp_controller')),
+                        'order_qty': clean_value(row.get('order_quantity')),
+                        'delivered_qty': clean_value(row.get('delivered_quantity')),
+                        'uom': clean_value(row.get('unit_of_measure')),
+                        'order_qty_kg': clean_value(order_qty_kg),
+                        'delivered_qty_kg': clean_value(delivered_qty_kg),
+                        'is_mto': is_mto,
+                        'order_status': order_status,
+                        'row_hash': row_hash,
+                        'updated_at': datetime.utcnow()
+                    })
             else:
-                # Insert
-                fact = FactProduction(
-                    plant_code=clean_value(row.get('plant')),
-                    sales_order=clean_value(row.get('sales_order')),
-                    order_number=clean_value(row.get('order')),
-                    order_type=clean_value(row.get('order_type')),
-                    material_code=clean_value(row.get('material_number')),
-                    material_description=clean_value(row.get('material_description')),
-                    release_date=clean_value(row.get('release_date_actual')),
-                    actual_finish_date=clean_value(row.get('actual_finish_date')),
-                    bom_alternative=clean_value(row.get('bom_alternative')),
-                    batch=clean_value(row.get('batch')),
-                    system_status=clean_value(row.get('system_status')),
-                    mrp_controller=clean_value(row.get('mrp_controller')),
-                    order_qty=clean_value(row.get('order_quantity')),
-                    delivered_qty=clean_value(row.get('delivered_quantity')),
-                    uom=clean_value(row.get('unit_of_measure')),
-                    order_qty_kg=clean_value(order_qty_kg),
-                    delivered_qty_kg=clean_value(delivered_qty_kg),
-                    is_mto=is_mto,
-                    order_status=order_status,
-                    row_hash=row_hash,
-                    raw_id=clean_value(row.get('id'))
-                )
-                self.db.add(fact)
-                count += 1
+                # Collect insert
+                to_insert.append({
+                    'plant_code': clean_value(row.get('plant')),
+                    'sales_order': clean_value(row.get('sales_order')),
+                    'order_number': clean_value(row.get('order')),
+                    'order_type': clean_value(row.get('order_type')),
+                    'material_code': clean_value(row.get('material_number')),
+                    'material_description': clean_value(row.get('material_description')),
+                    'release_date': clean_value(row.get('release_date_actual')),
+                    'actual_finish_date': clean_value(row.get('actual_finish_date')),
+                    'bom_alternative': clean_value(row.get('bom_alternative')),
+                    'batch': clean_value(row.get('batch')),
+                    'system_status': clean_value(row.get('system_status')),
+                    'mrp_controller': clean_value(row.get('mrp_controller')),
+                    'order_qty': clean_value(row.get('order_quantity')),
+                    'delivered_qty': clean_value(row.get('delivered_quantity')),
+                    'uom': clean_value(row.get('unit_of_measure')),
+                    'order_qty_kg': clean_value(order_qty_kg),
+                    'delivered_qty_kg': clean_value(delivered_qty_kg),
+                    'is_mto': is_mto,
+                    'order_status': order_status,
+                    'row_hash': row_hash,
+                    'raw_id': clean_value(row.get('id')),
+                    'created_at': datetime.utcnow()
+                })
+        
+        # OPTIMIZATION: Bulk database operations
+        if to_insert:
+            self.db.bulk_insert_mappings(FactProduction, to_insert)
+            print(f"  ✓ Inserted {len(to_insert)} new records")
+        
+        if to_update:
+            self.db.bulk_update_mappings(FactProduction, to_update)
+            print(f"  ✓ Updated {len(to_update)} changed records")
         
         self.db.commit()
-        print(f"  ✓ Transformed {count} production orders")
+        print(f"  ✓ Transformed {len(to_insert) + len(to_update)} production orders")
     
     def transform_mb51(self):
         """Transform raw_mb51 to fact_inventory (INDIVIDUAL transactions with REAL movement types)"""

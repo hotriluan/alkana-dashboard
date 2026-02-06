@@ -530,11 +530,6 @@ class FactDelivery(Base):
     row_hash = Column(String(32))
     raw_id = Column(Integer)
     created_at = Column(DateTime, default=datetime.utcnow)
-    
-    # Composite index for channel lookup queries
-    __table_args__ = (
-        Index('idx_billing_so_channel', 'so_number', 'dist_channel'),
-    )
 
 
 class FactArAging(Base):
