@@ -971,6 +971,31 @@ class Transformer:
         print(f"  [OK] Indexed {len(batch_issue_map)} outbound batches for storage calc")
 
         # ---------------------------------------------------------
+        # 0A. PREPARE DC RECEIPT DATA (For Transit Time - P01)
+        # ---------------------------------------------------------
+        # Get MIN posting date for MVT 101 at DC (plant 1401) per Batch
+        dc_receipt_df = pd.read_sql(
+            self.db.query(RawMb51.col_6_batch, func.min(RawMb51.col_0_posting_date).label('dc_receipt_date'))
+            .filter(RawMb51.col_1_mvt_type == 101)
+            .filter(RawMb51.col_2_plant == 1401)
+            .filter(RawMb51.col_6_batch.isnot(None))
+            .group_by(RawMb51.col_6_batch).statement,
+            self.db.bind
+        )
+        
+        # Create Lookup: Batch -> DC Receipt Date
+        batch_dc_receipt_map = {}
+        if not dc_receipt_df.empty:
+            for _, row in dc_receipt_df.iterrows():
+                b = str(row['col_6_batch']).strip()
+                d = safe_convert(row['dc_receipt_date'])
+                if b and d:
+                    if isinstance(d, datetime): d = d.date()
+                    batch_dc_receipt_map[b] = d
+        
+        print(f"  [OK] Indexed {len(batch_dc_receipt_map)} DC receipts for transit calc")
+
+        # ---------------------------------------------------------
         # 0B. PREPARE BACKTRACKING DATA (For Preparation Time - MTO)
         # ---------------------------------------------------------
         # 1. Map: Batch -> PO Number (from RawMb51 101 where PO like '44%')
@@ -1065,6 +1090,15 @@ class Transformer:
             self.db.bind
         )
         
+        # DELETE old records for batches in Production (handles reclassification Purchase → Production)
+        # This prevents duplicate/incorrect records when actual_finish_date gets updated later
+        if not prod_df.empty:
+            production_batches = prod_df['batch'].dropna().unique().tolist()
+            if production_batches:
+                deleted = self.db.query(FactLeadTime).filter(FactLeadTime.batch.in_(production_batches)).delete(synchronize_session=False)
+                if deleted > 0:
+                    print(f"  ♻️  Reclassified {deleted} records from {len(production_batches)} batches (Purchase → Production)")
+        
         if not prod_df.empty:
             for _, row in prod_df.iterrows():
                 start = safe_convert(row.get('release_date'))
@@ -1084,19 +1118,10 @@ class Transformer:
                 # Transit = Time from production finish (Factory) to MVT 101 at DC (1401)
                 transit_days = 0
                 mrp_controller = safe_convert(row.get('mrp_controller'))
-                if batch and mrp_controller == 'P01':
-                    # Get MVT 101 at DC (plant 1401) for this batch
-                    dc_receipt = self.db.query(func.min(RawMb51.col_0_posting_date))\
-                        .filter(RawMb51.col_6_batch == batch)\
-                        .filter(RawMb51.col_1_mvt_type == 101)\
-                        .filter(RawMb51.col_2_plant == 1401)\
-                        .scalar()
-                    
-                    if dc_receipt:
-                        if isinstance(dc_receipt, datetime):
-                            dc_receipt = dc_receipt.date()
-                        if dc_receipt >= end:
-                            transit_days = (dc_receipt - end).days
+                if batch and mrp_controller == 'P01' and batch in batch_dc_receipt_map:
+                    dc_receipt = batch_dc_receipt_map[batch]
+                    if dc_receipt >= end:
+                        transit_days = (dc_receipt - end).days
                 
                 # Calculate Storage Time (DC receipt to DC issue)
                 # Note: For batches with transit, storage starts from DC receipt, not production finish
