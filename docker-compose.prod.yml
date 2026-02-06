@@ -46,7 +46,7 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - ./demodata:/app/demodata:ro
+      - ./demodata:/app/demodata:rw
       - backend_logs:/app/logs
       - ./backups:/app/backups
     restart: unless-stopped
