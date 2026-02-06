@@ -379,6 +379,11 @@ class FactProduction(Base):
     raw_id = Column(Integer)  # Link to raw_cooispi
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, onupdate=datetime.utcnow)
+    
+    # Composite index for existence checks in transform
+    __table_args__ = (
+        Index('idx_production_order_plant', 'order_number', 'plant_code'),
+    )
 
 
 class FactInventory(Base):
@@ -525,6 +530,11 @@ class FactDelivery(Base):
     row_hash = Column(String(32))
     raw_id = Column(Integer)
     created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Composite index for channel lookup queries
+    __table_args__ = (
+        Index('idx_billing_so_channel', 'so_number', 'dist_channel'),
+    )
 
 
 class FactArAging(Base):
@@ -730,6 +740,11 @@ class FactAlert(Base):
     
     # Description
     message = Column(Text)
+    
+    # Composite index for alert lookup queries
+    __table_args__ = (
+        Index('idx_alert_type_entity', 'alert_type', 'entity_id'),
+    )
 
 class FactLeadTime(Base):
     """Fact: Lead Time Analysis (Unified MTO/MTS/Purchase)"""
