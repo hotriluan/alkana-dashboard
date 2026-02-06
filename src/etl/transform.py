@@ -265,7 +265,9 @@ class Transformer:
                 'batch': row.get('batch'),
                 'plant': row.get('plant'),
                 'delivered_qty': row.get('delivered_quantity'),
-                'status': row.get('system_status')
+                'status': row.get('system_status'),
+                'release_date': str(row.get('release_date_actual')) if row.get('release_date_actual') else None,
+                'finish_date': str(row.get('actual_finish_date')) if row.get('actual_finish_date') else None
             }
             row_hash = compute_row_hash(hash_data)
             
@@ -277,11 +279,27 @@ class Transformer:
             
             if existing:
                 if existing.row_hash != row_hash:
-                    # Update
+                    # Update ALL fields when data changes
+                    existing.sales_order = clean_value(row.get('sales_order'))
+                    existing.order_type = clean_value(row.get('order_type'))
+                    existing.material_code = clean_value(row.get('material_number'))
+                    existing.material_description = clean_value(row.get('material_description'))
+                    existing.release_date = clean_value(row.get('release_date_actual'))
+                    existing.actual_finish_date = clean_value(row.get('actual_finish_date'))
+                    existing.bom_alternative = clean_value(row.get('bom_alternative'))
+                    existing.batch = clean_value(row.get('batch'))
+                    existing.system_status = clean_value(row.get('system_status'))
+                    existing.mrp_controller = clean_value(row.get('mrp_controller'))
+                    existing.order_qty = clean_value(row.get('order_quantity'))
+                    existing.delivered_qty = clean_value(row.get('delivered_quantity'))
+                    existing.uom = clean_value(row.get('unit_of_measure'))
+                    existing.order_qty_kg = clean_value(order_qty_kg)
+                    existing.delivered_qty_kg = clean_value(delivered_qty_kg)
                     existing.is_mto = is_mto
                     existing.order_status = order_status
                     existing.row_hash = row_hash
                     existing.updated_at = datetime.utcnow()
+                    count += 1
             else:
                 # Insert
                 fact = FactProduction(
