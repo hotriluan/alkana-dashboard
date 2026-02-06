@@ -5,7 +5,7 @@ Handles file upload logic:
 - File type detection (auto-detect SAP report type)
 - File validation (structure, headers, size)
 - Background processing with loaders
-- Cleanup scheduler
+- Automatic file cleanup after processing (success or failure)
 - Transform to fact tables for dashboard
 
 Skills: backend-development, database-operations
@@ -261,6 +261,15 @@ def process_file_sync(upload_id: int, file_path: Path) -> Dict:
         db.commit()
         
         print(f"✅ Upload {upload_id} completed: {stats}")
+        
+        # Clean up uploaded file after successful processing
+        try:
+            if file_path.exists():
+                file_path.unlink()
+                print(f"🗑️  Cleaned up file: {file_path.name}")
+        except Exception as cleanup_error:
+            print(f"⚠️  Failed to cleanup file {file_path}: {cleanup_error}")
+        
         return stats
     
     except Exception as e:
@@ -279,6 +288,15 @@ def process_file_sync(upload_id: int, file_path: Path) -> Dict:
                 db.commit()
         except:
             pass
+        
+        # Clean up uploaded file even on failure
+        try:
+            if file_path.exists():
+                file_path.unlink()
+                print(f"🗑️  Cleaned up file after error: {file_path.name}")
+        except Exception as cleanup_error:
+            print(f"⚠️  Failed to cleanup file {file_path}: {cleanup_error}")
+        
         raise
     finally:
         db.close()
@@ -383,6 +401,14 @@ async def process_file(upload_id: int, file_path: Path, db: Session) -> Dict:
         upload.processed_at = datetime.utcnow()
         db.commit()
         
+        # Clean up uploaded file after successful processing
+        try:
+            if file_path.exists():
+                file_path.unlink()
+                print(f"🗑️  Cleaned up file: {file_path.name}")
+        except Exception as cleanup_error:
+            print(f"⚠️  Failed to cleanup file {file_path}: {cleanup_error}")
+        
         return stats
     
     except Exception as e:
@@ -392,6 +418,15 @@ async def process_file(upload_id: int, file_path: Path, db: Session) -> Dict:
         upload.error_message = str(e)
         upload.processed_at = datetime.utcnow()
         db.commit()
+        
+        # Clean up uploaded file even on failure
+        try:
+            if file_path.exists():
+                file_path.unlink()
+                print(f"🗑️  Cleaned up file after error: {file_path.name}")
+        except Exception as cleanup_error:
+            print(f"⚠️  Failed to cleanup file {file_path}: {cleanup_error}")
+        
         raise
 
 

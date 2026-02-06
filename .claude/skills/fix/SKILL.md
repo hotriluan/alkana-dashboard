@@ -1,7 +1,7 @@
 ---
 name: fix
 description: ALWAYS activate this skill before fixing ANY bug, error, test failure, CI/CD issue, type error, lint, log error, UI issue, code problem.
-version: 1.1.0
+version: 1.1.1
 ---
 
 # Fixing
@@ -13,6 +13,7 @@ Unified skill for fixing issues of any complexity with intelligent routing.
 - `--auto` - Activate autonomous mode (**default**)
 - `--review` - Activate human-in-the-loop review mode
 - `--quick` - Activate quick mode
+- `--parallel` - Activate parallel mode: route to parallel `fullstack-developer` agents per issue
 
 ## Workflow
 
@@ -44,7 +45,7 @@ Classify before routing. See `references/complexity-assessment.md`.
 | **Simple** | Single file, clear error, type/lint | `references/workflow-quick.md` |
 | **Moderate** | Multi-file, root cause unclear | `references/workflow-standard.md` |
 | **Complex** | System-wide, architecture impact | `references/workflow-deep.md` |
-| **Parallel** | 2+ independent issues | Parallel `fullstack-developer` agents |
+| **Parallel** | 2+ independent issues OR `--parallel` flag | Parallel `fullstack-developer` agents |
 
 ### Step 4: Fix Verification & Prevent Future Issues
 
@@ -53,10 +54,12 @@ Classify before routing. See `references/complexity-assessment.md`.
 - Make sure these fixes don't break other parts of the codebase.
 - Prevent future issues by adding comprehensive validation.
 
-### Step 5: Finalize
+### Step 5: Finalize (MANDATORY - never skip)
 
-- Report summary to user with confidence level/score, all the changes and related files.
-- Ask to commit via `git-manager` subagent and update docs if needed via `docs-manager` subagent (in parallel).
+1. Report summary: confidence score, changes, files
+2. `docs-manager` subagent → update `./docs` if changes warrant (NON-OPTIONAL)
+3. `TaskUpdate` → mark all Claude Tasks complete
+4. Ask user if they want to commit via `git-manager` subagent
 
 ---
 
@@ -65,7 +68,7 @@ Classify before routing. See `references/complexity-assessment.md`.
 See `references/skill-activation-matrix.md` for complete matrix.
 
 **Always activate:** `debug` (all workflows)
-**Conditional:** `problem-solving`, `sequential-thinking`, `brainstorming`, `context-engineering`
+**Conditional:** `problem-solving`, `sequential-thinking`, `brainstorm`, `context-engineering`
 **Subagents:** `debugger`, `researcher`, `planner`, `code-reviewer`, `tester`, `Bash`
 **Parallel:** Multiple `Explore` agents for scouting, `Bash` agents for verification
 

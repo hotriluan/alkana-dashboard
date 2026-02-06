@@ -380,7 +380,7 @@ function buildModularizationSection() {
     `## **[IMPORTANT] Consider Modularization:**`,
     `- Check existing modules before creating new`,
     `- Analyze logical separation boundaries (functions, classes, concerns)`,
-    `- Use kebab-case naming with descriptive names, it's fine if the file name is long because this ensures file names are self-documenting for LLM tools (Grep, Glob, Search)`,
+    `- Prefer kebab-case for JS/TS/Python/shell; respect language conventions (C#/Java use PascalCase, Go/Rust use snake_case)`,
     `- Write descriptive code comments`,
     `- After modularization, continue with main task`,
     `- When not to modularize: Markdown files, plain text files, bash scripts, configuration files, environment variables files, etc.`,
@@ -478,14 +478,20 @@ function buildReminder(params) {
     validationMode,
     validationMin,
     validationMax,
-    staticEnv
+    staticEnv,
+    hooks
   } = params;
+
+  // Respect hooks config — skip sections when their corresponding hook is disabled
+  const hooksConfig = hooks || {};
+  const contextEnabled = hooksConfig['context-tracking'] !== false;
+  const usageEnabled = hooksConfig['usage-context-awareness'] !== false;
 
   return [
     ...buildLanguageSection({ thinkingLanguage, responseLanguage }),
     ...buildSessionSection(staticEnv),
-    ...buildContextSection(sessionId),
-    ...buildUsageSection(),
+    ...(contextEnabled ? buildContextSection(sessionId) : []),
+    ...(usageEnabled ? buildUsageSection() : []),
     ...buildRulesSection({ devRulesPath, catalogScript, skillsVenv }),
     ...buildModularizationSection(),
     ...buildPathsSection({ reportsPath, plansPath, docsPath, docsMaxLoc }),
@@ -545,10 +551,16 @@ function buildReminderContext({ sessionId, config, staticEnv, configDirName = '.
     validationMode: planCtx.validationMode,
     validationMin: planCtx.validationMin,
     validationMax: planCtx.validationMax,
-    staticEnv
+    staticEnv,
+    hooks: cfg.hooks
   };
 
   const lines = buildReminder(params);
+
+  // Respect hooks config for sections object too
+  const hooksConfig = cfg.hooks || {};
+  const contextEnabled = hooksConfig['context-tracking'] !== false;
+  const usageEnabled = hooksConfig['usage-context-awareness'] !== false;
 
   return {
     content: lines.join('\n'),
@@ -556,8 +568,8 @@ function buildReminderContext({ sessionId, config, staticEnv, configDirName = '.
     sections: {
       language: buildLanguageSection({ thinkingLanguage: params.thinkingLanguage, responseLanguage: params.responseLanguage }),
       session: buildSessionSection(staticEnv),
-      context: buildContextSection(sessionId),
-      usage: buildUsageSection(),
+      context: contextEnabled ? buildContextSection(sessionId) : [],
+      usage: usageEnabled ? buildUsageSection() : [],
       rules: buildRulesSection({ devRulesPath, catalogScript, skillsVenv }),
       modularization: buildModularizationSection(),
       paths: buildPathsSection({ reportsPath: params.reportsPath, plansPath: params.plansPath, docsPath: params.docsPath, docsMaxLoc: params.docsMaxLoc }),

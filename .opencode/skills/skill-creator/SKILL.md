@@ -60,7 +60,7 @@ Every skill consists of a required SKILL.md file and optional bundled resources:
 - **Referenced scripts**:
   - Prefer nodejs or python scripts instead of bash script, because bash scripts are not well-supported on Windows.
   - If you're going to write python scripts, make sure you have `requirements.txt`
-  - Make sure scripts respect `.env` file follow this order: `process.env` > `.opencode/skills/${SKILL}/.env` > `.opencode/skills/.env` > `.opencode/.env` 
+  - Make sure scripts respect `.env` file follow this order: `process.env` > `$HOME/.opencode/skills/${SKILL}/.env` (global) > `$HOME/.opencode/skills/.env` (global) > `$HOME/.opencode/.env` (global) > `./.opencode/skills/${SKILL}/.env` (cwd) > `./.opencode/skills/.env` (cwd) > `./.opencode/.env` (cwd)
   - Create `.env.example` files to show the required environment variables.
   - Always write tests for these scripts.
 
@@ -96,7 +96,7 @@ Executable code (Python/Bash/etc.) for tasks that require deterministic reliabil
 - Write tests for scripts.
 - Run tests and make sure it works, if tests fail, fix them and run tests again, repeat until tests pass.
 - Run scripts manually with some usecases to make sure it works.
-- Make sure scripts respect `.env` file follow this order: `process.env` > `.opencode/skills/docs-seeker/.env` > `.opencode/skills/.env` > `.opencode/.env`
+- Make sure scripts respect `.env` file follow this order: `process.env` > `$HOME/.opencode/skills/${SKILL}/.env` (global) > `$HOME/.opencode/skills/.env` (global) > `$HOME/.opencode/.env` (global) > `./.opencode/skills/${SKILL}/.env` (cwd) > `./.opencode/skills/.env` (cwd) > `./.opencode/.env` (cwd)
 
 ##### References (`references/`)
 
@@ -199,7 +199,7 @@ To turn concrete examples into an effective skill, analyze each example by:
 
 To establish the skill's contents, analyze each concrete example to create a list of the reusable resources to include: scripts, references, and assets.
 
-- Make sure scripts respect `.env` file follow this order: `process.env` > `.opencode/skills/docs-seeker/.env` > `.opencode/skills/.env` > `.opencode/.env`
+- Make sure scripts respect `.env` file follow this order: `process.env` > `$HOME/.opencode/skills/${SKILL}/.env` (global) > `$HOME/.opencode/skills/.env` (global) > `$HOME/.opencode/.env` (global) > `./.opencode/skills/${SKILL}/.env` (cwd) > `./.opencode/skills/.env` (cwd) > `./.opencode/.env` (cwd)
 - Make sure scripts have tests, run all tests and ensure they pass. DO NOT SKIP THIS STEP.
 
 ### Step 4: Initializing the Skill
@@ -292,8 +292,18 @@ Detailed validation criteria for evaluating skills:
 - **Script quality**: `references/script-quality-criteria.md`
 - **Structure & organization**: `references/structure-organization-criteria.md`
 
+## Plugin Marketplaces
+
+For distributing skills as plugins via marketplaces, see:
+- **Overview**: `references/plugin-marketplace-overview.md`
+- **Schema**: `references/plugin-marketplace-schema.md`
+- **Sources**: `references/plugin-marketplace-sources.md`
+- **Hosting**: `references/plugin-marketplace-hosting.md`
+- **Troubleshooting**: `references/plugin-marketplace-troubleshooting.md`
+
 ## References
 - [Agent Skills](https://docs.claude.com/en/docs/claude-code/skills.md)
-- [Agent Skills Spec](.opencode/skills/agent_skills_spec.md)
+- [Agent Skills Spec](../agent_skills_spec.md)
 - [Agent Skills Overview](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview.md)
 - [Best Practices](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/best-practices.md)
+- [Plugin Marketplaces](https://code.claude.com/docs/en/plugin-marketplaces.md)

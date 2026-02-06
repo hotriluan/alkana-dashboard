@@ -1,6 +1,6 @@
 {
-  "version": "2.8.1",
-  "generatedAt": "2026-01-27T23:56:19.607Z",
+  "version": "2.10.1",
+  "generatedAt": "2026-02-05T03:33:58.575Z",
   "files": [
     {
       "path": ".gitignore",
@@ -16,9 +16,9 @@
     },
     {
       "path": "agents/code-reviewer.md",
-      "checksum": "a655c8bb18dd9a40f6db4626fcd82f201d37af06f8cbbb69097efbcf5dca3bea",
-      "size": 9081,
-      "lastModified": "2026-01-12T13:25:29-05:00"
+      "checksum": "569408bebfd77b63f0208b18b4e5fb59d2301772f755b3b2bf1ab3a07b0db1bb",
+      "size": 3549,
+      "lastModified": "2026-02-04T12:57:36+07:00"
     },
     {
       "path": "agents/code-simplifier.md",
@@ -58,9 +58,9 @@
     },
     {
       "path": "agents/mcp-manager.md",
-      "checksum": "df7ca365777615158472842ec5ec0f90f301440796d7a4696e94138f5951818a",
-      "size": 3422,
-      "lastModified": "2026-01-20T13:00:30+07:00"
+      "checksum": "0c6a58513a7a7a8bd99de5a798abf2a3886c70bb77deb85406c5502724115af4",
+      "size": 3428,
+      "lastModified": "2026-01-29T12:50:22-05:00"
     },
     {
       "path": "agents/planner.md",
@@ -94,9 +94,9 @@
     },
     {
       "path": "commands/ask.md",
-      "checksum": "66ed0311754f8accf7e64bb740c1f66592a3dcf19497bbb5a157c0bd224120c0",
-      "size": 3273,
-      "lastModified": "2026-01-12T13:25:29-05:00"
+      "checksum": "1fcaa1f2509dd1d6ae6f02b5489f4b022ccf422b18634831bdf945da6f1669be",
+      "size": 3235,
+      "lastModified": "2026-01-28T22:19:02-05:00"
     },
     {
       "path": "commands/bootstrap/auto/fast.md",
@@ -136,9 +136,9 @@
     },
     {
       "path": "commands/docs/init.md",
-      "checksum": "ecdd47ba186ec94fb312afe20dc62efb046a580dc4297f33d81fd4c217f33915",
-      "size": 1868,
-      "lastModified": "2026-01-20T15:51:42+07:00"
+      "checksum": "f16326a351c3a703b8c2eae1c2fc15c56ed19a93cc0462b9269e749cc8686f75",
+      "size": 1892,
+      "lastModified": "2026-02-03T11:52:17-05:00"
     },
     {
       "path": "commands/docs/summarize.md",
@@ -148,9 +148,9 @@
     },
     {
       "path": "commands/docs/update.md",
-      "checksum": "ab59aee30808de5b2fbfe9fe59e094710c5c0359a75020a1601c6569c2984d47",
-      "size": 3326,
-      "lastModified": "2026-01-20T15:51:42+07:00"
+      "checksum": "014705e1a34b77ed8c5c996516a194250a05504c4172d9e8b61015620c281458",
+      "size": 3367,
+      "lastModified": "2026-02-03T11:52:17-05:00"
     },
     {
       "path": "commands/journal.md",
@@ -178,39 +178,39 @@
     },
     {
       "path": "commands/plan/cro.md",
-      "checksum": "c58c2042cbda2e4fd028a19cbc7d921b84887311b1b41a937341b57b176d47ba",
-      "size": 4691,
-      "lastModified": "2025-12-16T02:57:26-05:00"
+      "checksum": "05d1f83c11fa6cea3fb80380d5427ea52381e32b3355cba2a35561922c5cdf62",
+      "size": 4700,
+      "lastModified": "2026-01-28T22:19:02-05:00"
     },
     {
       "path": "commands/plan/fast.md",
-      "checksum": "1aed57583f8a5e9749e72abfad6251238c7f65a5606ce9f1cf4b72b39a011be7",
-      "size": 3153,
-      "lastModified": "2026-01-26T22:52:53-05:00"
+      "checksum": "e41fd09f10846623e2186058b899b853e2af75857166cb4b0c3ad3db3084fe4e",
+      "size": 3547,
+      "lastModified": "2026-02-03T22:34:59-05:00"
     },
     {
       "path": "commands/plan/hard.md",
-      "checksum": "7161c118636a688073761afe7f36eba0ee07dbbca02da34cde0334d72029cd5b",
-      "size": 4611,
-      "lastModified": "2026-01-26T22:52:53-05:00"
+      "checksum": "76d5be0855e3e4e3dad0a09609d1425b8389d809391f286e4379da2efc783041",
+      "size": 5020,
+      "lastModified": "2026-02-03T22:34:59-05:00"
     },
     {
       "path": "commands/plan/parallel.md",
-      "checksum": "81730740b63c643c07ff3de54509e4ea85219a51e374d25aa927f2dd3dd4c47b",
-      "size": 5725,
-      "lastModified": "2025-12-17T00:33:48-05:00"
+      "checksum": "6b67ba8d11950421da453361bbecc7d26922d623a5400bb565a6eb2c0439befa",
+      "size": 6484,
+      "lastModified": "2026-02-03T22:34:59-05:00"
     },
     {
       "path": "commands/plan/two.md",
-      "checksum": "eae91b91e8c18fd14883ab8369e5e737fde3154b93513e0fc62c820037cb2856",
-      "size": 2023,
-      "lastModified": "2025-12-16T02:57:26-05:00"
+      "checksum": "7d1f9d4a77a6e885cef502277ca0961eb3c9bf9f98512955fb3f331cf4cfa805",
+      "size": 2735,
+      "lastModified": "2026-02-03T22:34:59-05:00"
     },
     {
       "path": "commands/plan/validate.md",
-      "checksum": "8ba5c28d046cc6ee942bf70b3832e584e2f1d496f44a0b638866c0ba33bd3bf2",
-      "size": 4097,
-      "lastModified": "2026-01-26T22:52:53-05:00"
+      "checksum": "6f1b98b71118e81d152d8a5a1f29148f7c4118a5f314b8020d0ade75d3a4a3aa",
+      "size": 7050,
+      "lastModified": "2026-02-03T22:34:59-05:00"
     },
     {
       "path": "commands/plan.md",
@@ -220,15 +220,15 @@
     },
     {
       "path": "commands/preview.md",
-      "checksum": "6e41f23df189a50b0dac93362426d2bda373f4d599c10ed122b37d39766922bd",
-      "size": 2863,
-      "lastModified": "2026-01-08T08:50:20-05:00"
+      "checksum": "fa22cc5692255dbc6f9d4be04061d6d0d108488e77a2d641f841764571098fa3",
+      "size": 9794,
+      "lastModified": "2026-02-03T18:06:01-05:00"
     },
     {
       "path": "commands/review/codebase/parallel.md",
-      "checksum": "15ab2a109d1dc95df491443a5c54553d994338f6e349ffcab46893345036e3d5",
-      "size": 3189,
-      "lastModified": "2025-12-27T01:05:48-05:00"
+      "checksum": "a3c1551f6a4d6aaf90cdfa031d400fa8c958736185665fde5a7304f6599348eb",
+      "size": 3195,
+      "lastModified": "2026-01-30T09:02:37-05:00"
     },
     {
       "path": "commands/review/codebase.md",
@@ -250,9 +250,9 @@
     },
     {
       "path": "commands/use-mcp.md",
-      "checksum": "e1db31c4f0a4707382af19262cd33f1d707e6b042970887e65e849cab8ed5275",
-      "size": 1628,
-      "lastModified": "2026-01-20T13:00:30+07:00"
+      "checksum": "6bfdfa86e005d204a66a981064e6cfe8c35c76ff581c3f904c4242ffa34822b0",
+      "size": 1640,
+      "lastModified": "2026-01-29T12:50:22-05:00"
     },
     {
       "path": "commands/watzup.md",
@@ -337,6 +337,12 @@
       "checksum": "1b16beb6e12ff4ab7b38a85aeccde0a8a2db3c75f93e2b022d77b72f0f8609d2",
       "size": 7083,
       "lastModified": "2026-01-20T15:51:35+07:00"
+    },
+    {
+      "path": "commands-archived/debug.md",
+      "checksum": "0510a2961caf4594d7fa4f1913f7ab4a16d3ae1c01bb17abc7447e3b44e86bec",
+      "size": 511,
+      "lastModified": "2026-01-31T17:40:32-05:00"
     },
     {
       "path": "commands-archived/design/3d.md",
@@ -430,9 +436,9 @@
     },
     {
       "path": "commands-archived/scout/ext.md",
-      "checksum": "ec55e908a9194f52b495b1551403c4e9b0d5788fffe63636705f4c2a5fe84c00",
-      "size": 2346,
-      "lastModified": "2026-01-20T15:51:35+07:00"
+      "checksum": "8463aafdc1d07f919a95dff7e2dba0958598654badf753e438c906bdf1b059cd",
+      "size": 2352,
+      "lastModified": "2026-01-29T12:50:22-05:00"
     },
     {
       "path": "commands-archived/scout.md",
@@ -489,6 +495,12 @@
       "lastModified": "2026-01-11T11:26:17-05:00"
     },
     {
+      "path": "hooks/__tests__/descriptive-name.test.cjs",
+      "checksum": "b307a81902cab7d4c0b016df32837cc8598c0adc493ae7d05d016069908a86be",
+      "size": 9123,
+      "lastModified": "2026-02-04T09:35:49-05:00"
+    },
+    {
       "path": "hooks/__tests__/dev-rules-reminder.test.cjs",
       "checksum": "fc2099fb6dfa0905d01720db82054f82d6c5e5768a95eed0bf143441877412c6",
       "size": 10353,
@@ -513,16 +525,28 @@
       "lastModified": "2026-01-11T10:51:59-05:00"
     },
     {
+      "path": "hooks/__tests__/skill-dedup.test.cjs",
+      "checksum": "790082bdcfbe54abaa792a109b23325a8501b98f4c62fe5dc9ba749ef9cb0093",
+      "size": 18335,
+      "lastModified": "2026-02-02T20:29:49-05:00"
+    },
+    {
       "path": "hooks/__tests__/subagent-init.test.cjs",
       "checksum": "10839eff794c0c1ea723954b9512678a4eda2ab349469c4f709d60df01283eb8",
       "size": 20530,
       "lastModified": "2026-01-03T12:46:25-05:00"
     },
     {
+      "path": "hooks/cook-after-plan-reminder.cjs",
+      "checksum": "a23b3549f6eff71bc4ba83a2f67c1fef2cde088a749c66de07ea2446a9f31644",
+      "size": 1699,
+      "lastModified": "2026-02-03T22:34:59-05:00"
+    },
+    {
       "path": "hooks/descriptive-name.cjs",
-      "checksum": "c861190b26691a0335774d5458dfe98615713230cf1f97fb8a74cbd116bb8b92",
-      "size": 917,
-      "lastModified": "2026-01-26T22:03:49+07:00"
+      "checksum": "5ef600f2b1f89b47489fddfd9500f28a345269b278d49ab96048295b5f2fd2ab",
+      "size": 1053,
+      "lastModified": "2026-02-05T10:30:33+07:00"
     },
     {
       "path": "hooks/dev-rules-reminder.cjs",
@@ -550,9 +574,9 @@
     },
     {
       "path": "hooks/lib/__tests__/context-builder.test.cjs",
-      "checksum": "e498bf3ec9352161a64f42008560def39c73c294ade9c94353e888fa298ef875",
-      "size": 13107,
-      "lastModified": "2026-01-12T14:29:02-05:00"
+      "checksum": "b12f086d82c841998f9346564e4b01fe1dd623646637424d53d510e6296a72b5",
+      "size": 15819,
+      "lastModified": "2026-02-02T14:44:35-05:00"
     },
     {
       "path": "hooks/lib/__tests__/statusline-integration.test.cjs",
@@ -568,9 +592,9 @@
     },
     {
       "path": "hooks/lib/ck-config-utils.cjs",
-      "checksum": "1d1d220f96a84150ddd69971a206f363480b98f688422c23c93404571995c7c6",
-      "size": 25886,
-      "lastModified": "2026-01-25T19:48:46+07:00"
+      "checksum": "259880193046db93ee96fc84a8f38db995c491f0033f78eaf14cd96f09529af2",
+      "size": 26486,
+      "lastModified": "2026-02-03T20:40:40-05:00"
     },
     {
       "path": "hooks/lib/colors.cjs",
@@ -586,9 +610,9 @@
     },
     {
       "path": "hooks/lib/context-builder.cjs",
-      "checksum": "f753e689a899097a5a25d45d7b73a4773ee27d1c4dd52ee77a3a7ccd4b6295cc",
-      "size": 23112,
-      "lastModified": "2026-01-15T21:46:40+07:00"
+      "checksum": "ba9328303692f96ea706c9e2fc97619cbc48add38b63a04eef7a60d3adeb4e3f",
+      "size": 23678,
+      "lastModified": "2026-02-04T09:35:49-05:00"
     },
     {
       "path": "hooks/lib/privacy-checker.cjs",
@@ -778,9 +802,15 @@
     },
     {
       "path": "hooks/session-init.cjs",
-      "checksum": "3d49e6558b34d0d84eb40a744e08f3dbc3a2b6528142cbcbcb76f1fd97b203e5",
-      "size": 9158,
-      "lastModified": "2026-01-25T19:09:51+07:00"
+      "checksum": "63e9c3b36b802dfd6fae39e3430469c38b7e5e58dc03c10cb0fac1e6b1c58c3d",
+      "size": 13036,
+      "lastModified": "2026-02-03T00:14:22-05:00"
+    },
+    {
+      "path": "hooks/skill-dedup.cjs",
+      "checksum": "2e0ddb4351281efeb855c0ee9d5c32ac248288017aca8af26fa806a24a0230ac",
+      "size": 7324,
+      "lastModified": "2026-02-03T00:14:22-05:00"
     },
     {
       "path": "hooks/subagent-init.cjs",
@@ -820,9 +850,9 @@
     },
     {
       "path": "metadata.json",
-      "checksum": "54b120d23d2fe7e8b6e3e85a37c057c5d5abe1ce8dda5c4a8a61579256de8114",
-      "size": 1120,
-      "lastModified": "2026-01-27T23:55:35Z"
+      "checksum": "aa2a4d8f83bbc61d59e95278aab15d3dc18aafcd0d46c96a870d5d875ac72f1a",
+      "size": 1200,
+      "lastModified": "2026-02-05T03:32:17Z"
     },
     {
       "path": "output-styles/coding-level-0-eli5.md",
@@ -862,9 +892,9 @@
     },
     {
       "path": "rules/development-rules.md",
-      "checksum": "787582949533c8be59d36f571692bd8d736534033232d6811e095efc9ad7fbc1",
-      "size": 2954,
-      "lastModified": "2026-01-26T13:07:27+07:00"
+      "checksum": "b31d1c24a67de38db4023a245ad45a36e71c480349e9d9bb277dc6e66a99a95b",
+      "size": 3619,
+      "lastModified": "2026-02-03T16:11:10-05:00"
     },
     {
       "path": "rules/documentation-management.md",
@@ -880,15 +910,15 @@
     },
     {
       "path": "rules/primary-workflow.md",
-      "checksum": "a42150a01323a5e7a26f8165e934e0cd57db9a564b61fec66aefd14551819f44",
-      "size": 2557,
-      "lastModified": "2026-01-26T13:27:23+07:00"
+      "checksum": "0218014d151daee0414877245d19aa2487619849651ca9226049d6951ae81982",
+      "size": 3318,
+      "lastModified": "2026-02-03T15:34:21-05:00"
     },
     {
       "path": "schemas/ck-config.schema.json",
-      "checksum": "8fa3c3e15b7df3f07288e2ad91ee4715242ccafb73cf2e8dd69fc8f347ec9e61",
-      "size": 10819,
-      "lastModified": "2026-01-25T19:48:46+07:00"
+      "checksum": "7dbfdaa2c06fa9b0721381a1a40361120d2476b333e724a3005113cb4a8843ce",
+      "size": 11339,
+      "lastModified": "2026-02-03T09:59:01+07:00"
     },
     {
       "path": "scripts/README.md",
@@ -898,9 +928,9 @@
     },
     {
       "path": "scripts/ck-help.py",
-      "checksum": "e82fa81fd4b8cae00a7aec9bdc99359e7282f34efe2f5434d506d6df0af7b05d",
-      "size": 44230,
-      "lastModified": "2026-01-26T22:52:53-05:00"
+      "checksum": "aca8984eca632caabeef3aa09e2298b13663c1576807bccbed4e92db94f07e50",
+      "size": 41317,
+      "lastModified": "2026-02-04T20:14:49-05:00"
     },
     {
       "path": "scripts/commands_data.yaml",
@@ -982,21 +1012,27 @@
     },
     {
       "path": "scripts/worktree.cjs",
-      "checksum": "1b687a95f43d02aa873b2ff621ec849d4ca352c73029b81719905b214cab541c",
-      "size": 26782,
-      "lastModified": "2026-01-19T13:26:02-05:00"
+      "checksum": "b4816fc4f4e43a35593f26c89a0fa813335348bbc605346c0a4729598abe594a",
+      "size": 26998,
+      "lastModified": "2026-02-03T11:45:39-05:00"
     },
     {
       "path": "scripts/worktree.test.cjs",
-      "checksum": "a3df5d9f270852302fea37757850836be0b6b4896bd2a03f3fef4422f7a5dd10",
-      "size": 30707,
-      "lastModified": "2026-01-19T13:31:22-05:00"
+      "checksum": "065bafebe8548bfbf17f5006ae402aa35e0a2646f8a951a88213433c646214dc",
+      "size": 31286,
+      "lastModified": "2026-02-03T11:45:39-05:00"
     },
     {
       "path": "settings.json",
-      "checksum": "7f9ea2d2e392f9f5bed16c620f48800a0396af085ce620a8513cc2bd5e081599",
-      "size": 1968,
-      "lastModified": "2026-01-26T22:03:49+07:00"
+      "checksum": "22aed7a52ac3f90832ffe1db82b8b767b8a9f566a699233f6048690a0961a1ab",
+      "size": 2197,
+      "lastModified": "2026-02-03T14:40:40+07:00"
+    },
+    {
+      "path": "skills/.gitignore",
+      "checksum": "b04e004e1077a3fdbe5c61670ec325a99f75925675d39c6c173c8ac1bb646296",
+      "size": 73,
+      "lastModified": "2026-02-03T00:17:21-05:00"
     },
     {
       "path": "skills/INSTALLATION.md",
@@ -1180,9 +1216,9 @@
     },
     {
       "path": "skills/ai-artist/scripts/search.py",
-      "checksum": "00ac2c78f68a7fc522d70645ff05617800d09d2751f4a86ac730e8e1580344f4",
-      "size": 5578,
-      "lastModified": "2026-01-21T14:04:24+07:00"
+      "checksum": "6d644dadc252bfe74f0cbae9b330c2a97d74eb41cf91d74a354c18ddcd38cb1d",
+      "size": 5902,
+      "lastModified": "2026-02-02T20:11:34-05:00"
     },
     {
       "path": "skills/ai-multimodal/SKILL.md",
@@ -1228,9 +1264,9 @@
     },
     {
       "path": "skills/ai-multimodal/scripts/check_setup.py",
-      "checksum": "771c6caf22c3847fabfef7c60acfa371f282bd353a1da32d559c7679c31fc3cd",
-      "size": 9518,
-      "lastModified": "2026-01-08T08:50:20-05:00"
+      "checksum": "1750392ce4f2e36288876e551ed3df951134a8d2936432604524882bf4b5d28a",
+      "size": 9661,
+      "lastModified": "2026-02-02T20:11:34-05:00"
     },
     {
       "path": "skills/ai-multimodal/scripts/document_converter.py",
@@ -1582,21 +1618,27 @@
     },
     {
       "path": "skills/code-review/SKILL.md",
-      "checksum": "512cb440d9066dc441cff08d62326f2d7d814d5bc1fdd6b5fb52c6b38e256b5e",
-      "size": 5209,
-      "lastModified": "2026-01-15T16:13:15+07:00"
+      "checksum": "17877a3224aca6623134d0749db9a5fef7b95a7fbbd4c662303cc8e8e61ca63f",
+      "size": 3903,
+      "lastModified": "2026-02-04T12:58:03+07:00"
     },
     {
       "path": "skills/code-review/references/code-review-reception.md",
-      "checksum": "a8847b178c983555ef9b8b650ca0fe8fc522f8390548b0b6ea6f274434acd9a8",
-      "size": 6318,
-      "lastModified": "2025-11-06T11:09:51+07:00"
+      "checksum": "f8b818db1b47ecf7a43328783cd298f4efeacdf8d2bb04061281149a2256cada",
+      "size": 3214,
+      "lastModified": "2026-02-04T12:58:03+07:00"
+    },
+    {
+      "path": "skills/code-review/references/edge-case-scouting.md",
+      "checksum": "02e705d4482937c771930e19da73ba3fb1e7eb2c813cdb0f52f34ae06e58ddc7",
+      "size": 3015,
+      "lastModified": "2026-02-04T12:58:03+07:00"
     },
     {
       "path": "skills/code-review/references/requesting-code-review.md",
-      "checksum": "4f0d44953238f97d766a8f6457c14c0c14d87e84907fc7cd1cf28e8dbad60f18",
-      "size": 2877,
-      "lastModified": "2025-11-06T11:09:51+07:00"
+      "checksum": "22793d73c3e0c2c36f03af1098b369016bff4edd8f64c9371d11f634d2fa62c4",
+      "size": 3180,
+      "lastModified": "2026-02-04T12:58:03+07:00"
     },
     {
       "path": "skills/code-review/references/verification-before-completion.md",
@@ -1714,9 +1756,9 @@
     },
     {
       "path": "skills/cook/SKILL.md",
-      "checksum": "ef3eaa46e77e5e3ac157ff8da28e803b89ae921172d3fb8992e26674cd5be666",
-      "size": 3250,
-      "lastModified": "2026-01-26T13:07:27+07:00"
+      "checksum": "e7281286931f29516519d89e420debfc2ba05fd999c8f5db8ce0ada695fdfe1f",
+      "size": 4387,
+      "lastModified": "2026-02-03T13:29:05+07:00"
     },
     {
       "path": "skills/cook/references/intent-detection.md",
@@ -1738,15 +1780,15 @@
     },
     {
       "path": "skills/cook/references/workflow-steps.md",
-      "checksum": "a51fe204135ac9380e11e193a111eb12dc04d8b9faf268ae974654c981115b77",
-      "size": 4534,
-      "lastModified": "2026-01-26T13:07:27+07:00"
+      "checksum": "aefc1fc5d86616ea904ae85e8b8ac9174a04b6aba209c5c9868aba96b02a288d",
+      "size": 6803,
+      "lastModified": "2026-02-03T13:29:05+07:00"
     },
     {
       "path": "skills/copywriting/SKILL.md",
-      "checksum": "1478649d69e30c6b557a0c9d30d086db90a27ec7d45fc7a293f93cd8ae819a79",
-      "size": 3699,
-      "lastModified": "2026-01-16T22:15:21+07:00"
+      "checksum": "6cb50cb1ecd7fd49e33ff026e4c08490057b062c0e47964b08956732897fe1bd",
+      "size": 3708,
+      "lastModified": "2026-01-28T22:19:02-05:00"
     },
     {
       "path": "skills/copywriting/references/copy-formulas.md",
@@ -1792,27 +1834,27 @@
     },
     {
       "path": "skills/copywriting/references/workflow-cro.md",
-      "checksum": "d3541da42481d6316b0e2aab7c9d1ef243edab9a5da7f0ba72709d8a543b8363",
-      "size": 2850,
-      "lastModified": "2026-01-16T22:15:21+07:00"
+      "checksum": "007832aa238113d91c129fce0161841cef817ae4e74080f7ea6ddcb6c6ebe2c6",
+      "size": 2859,
+      "lastModified": "2026-01-28T22:19:02-05:00"
     },
     {
       "path": "skills/copywriting/references/workflow-enhance.md",
-      "checksum": "4b3ee12e91375d6c0fd6c3eb224d8ffd1908ea1a057c927f7b9fb3a6a9d1ffc5",
-      "size": 1118,
-      "lastModified": "2026-01-16T22:15:21+07:00"
+      "checksum": "002a39e494beaba3d75f7155c125d257abe2adeb9571cbe53f08b823f7a21d7b",
+      "size": 1127,
+      "lastModified": "2026-01-28T22:19:02-05:00"
     },
     {
       "path": "skills/copywriting/references/workflow-fast.md",
-      "checksum": "5c9db5975e504d233fc884050689bee67a9d24ac755ee034ad027dfd659e7478",
-      "size": 753,
-      "lastModified": "2026-01-16T22:15:21+07:00"
+      "checksum": "2daa91761befc607bc7adc21e8310b16853912827a4ad141bc1d31c7126ab3b0",
+      "size": 762,
+      "lastModified": "2026-01-28T22:19:02-05:00"
     },
     {
       "path": "skills/copywriting/references/workflow-good.md",
-      "checksum": "978647b8eca0c31c4b8338ca45a2593abf80ea93938ee919b011671b7396fe43",
-      "size": 1380,
-      "lastModified": "2026-01-16T22:15:21+07:00"
+      "checksum": "4b6fc08198f9a55f67ec76d93de096f2742bfe31796f0da5336b5594063bf448",
+      "size": 1389,
+      "lastModified": "2026-01-28T22:19:02-05:00"
     },
     {
       "path": "skills/copywriting/references/writing-styles.md",
@@ -3039,16 +3081,22 @@
       "lastModified": "2026-01-08T08:50:20-05:00"
     },
     {
+      "path": "skills/find-skills/SKILL.md",
+      "checksum": "54b44dc9539df865fbb060f62fb062e8232e765852a0cf14c38301fe0c1eb264",
+      "size": 4635,
+      "lastModified": "2026-01-28T18:58:10+07:00"
+    },
+    {
       "path": "skills/fix/SKILL.md",
-      "checksum": "050b9f5efc3a8142d5b33b2168eef66e6522bd01ef8161c1d14c8ebf5c45a50f",
-      "size": 3933,
-      "lastModified": "2026-01-26T13:07:27+07:00"
+      "checksum": "a880779a00d42c092342650e1719e87098bea8d93b2a824f2beeeb31106fa896",
+      "size": 4119,
+      "lastModified": "2026-02-01T02:48:51-05:00"
     },
     {
       "path": "skills/fix/references/complexity-assessment.md",
-      "checksum": "9d01ad4a9a0b31fdcba026de06e1e7a4341b9a941044512353a6b464734efbda",
-      "size": 1637,
-      "lastModified": "2026-01-22T15:09:02+07:00"
+      "checksum": "4bd028ac687418e71aa273fad06e839950589dc171aab62631524bda91fab9d0",
+      "size": 1752,
+      "lastModified": "2026-01-30T09:23:20-05:00"
     },
     {
       "path": "skills/fix/references/mode-selection.md",
@@ -3070,9 +3118,9 @@
     },
     {
       "path": "skills/fix/references/skill-activation-matrix.md",
-      "checksum": "b5c3fa610888653b90f722a8bf76b13549b4a621eecd0abb3f339c595a76daac",
-      "size": 2545,
-      "lastModified": "2026-01-26T13:07:27+07:00"
+      "checksum": "7439b2425473487847fb9f8a35ffd652c195f6fc4a799c0245bf0f6b306721c1",
+      "size": 2539,
+      "lastModified": "2026-01-28T22:19:02-05:00"
     },
     {
       "path": "skills/fix/references/workflow-ci.md",
@@ -3082,9 +3130,9 @@
     },
     {
       "path": "skills/fix/references/workflow-deep.md",
-      "checksum": "8b1e740c001f0da810c422fd1fbd8c8ae8f473f62a782e3b164c11a6476b5d71",
-      "size": 2698,
-      "lastModified": "2026-01-26T13:07:27+07:00"
+      "checksum": "c3c9c0c0ce3f5fae51f966e3eab6f8da26a3b46af250e3bc17828847947f96f0",
+      "size": 2695,
+      "lastModified": "2026-01-28T22:19:02-05:00"
     },
     {
       "path": "skills/fix/references/workflow-logs.md",
@@ -3118,9 +3166,9 @@
     },
     {
       "path": "skills/fix/references/workflow-ui.md",
-      "checksum": "4fb4982fa3b26d9df629e8315d69380ec735832b7c36cb86a74076e54fd42645",
-      "size": 1127,
-      "lastModified": "2026-01-22T15:09:02+07:00"
+      "checksum": "a6075b3473fd35952777603b8e7584e89d4740682aac6d2f88722a40f738cfc8",
+      "size": 1131,
+      "lastModified": "2026-01-28T22:19:02-05:00"
     },
     {
       "path": "skills/frontend-design/SKILL.md",
@@ -3412,9 +3460,51 @@
     },
     {
       "path": "skills/google-adk-python/SKILL.md",
-      "checksum": "35c6509e4b6b57813dea64e4448a737f7c9f2e6c79c478c233e8347e77286b0a",
-      "size": 7032,
-      "lastModified": "2026-01-15T16:13:23+07:00"
+      "checksum": "4537e2f694eafc5ae52176aef3cab757a1008c658b1a2709a8b399a2dfd79ebb",
+      "size": 4867,
+      "lastModified": "2026-01-29T14:31:30-05:00"
+    },
+    {
+      "path": "skills/google-adk-python/references/agent-types-and-architecture.md",
+      "checksum": "edf54ebe1293bfbeb40666978b0cf759a41c7c8d168e09e45cd293f9f674b055",
+      "size": 2979,
+      "lastModified": "2026-01-29T14:31:30-05:00"
+    },
+    {
+      "path": "skills/google-adk-python/references/callbacks-plugins-observability.md",
+      "checksum": "a7d4f0bad7d239efbd31616cdeec1d196b936b9136c71700ec0e004814c0cc73",
+      "size": 3556,
+      "lastModified": "2026-01-29T14:31:30-05:00"
+    },
+    {
+      "path": "skills/google-adk-python/references/deployment-cloud-run-vertex-gke.md",
+      "checksum": "42f94cdb2324703c84f1d085e50aa21cb9a83dbf7b53e56cff5907793baa9ac7",
+      "size": 3442,
+      "lastModified": "2026-01-29T14:31:30-05:00"
+    },
+    {
+      "path": "skills/google-adk-python/references/evaluation-testing-cli.md",
+      "checksum": "2c83ff074efca06167b85672f4cc9ea4450578734f9bfe084b23a9c0e0116e82",
+      "size": 2671,
+      "lastModified": "2026-01-29T14:31:30-05:00"
+    },
+    {
+      "path": "skills/google-adk-python/references/multi-agent-and-a2a-protocol.md",
+      "checksum": "badfdb96be7845cf9b53a58cb2e79b8530e6b17f67300794ec7ab9d38148f89d",
+      "size": 3850,
+      "lastModified": "2026-01-29T14:31:30-05:00"
+    },
+    {
+      "path": "skills/google-adk-python/references/sessions-state-memory-artifacts.md",
+      "checksum": "8e41bda48a5396ae24f5cd159cfa80c0235ebe0c264538d421e4e3f2ee3f1713",
+      "size": 4317,
+      "lastModified": "2026-01-29T14:26:45-05:00"
+    },
+    {
+      "path": "skills/google-adk-python/references/tools-and-mcp-integration.md",
+      "checksum": "faa533d7a69f81df4233c7d1e562d8151197bfc346f5642f4de81170a2ba3d91",
+      "size": 3963,
+      "lastModified": "2026-01-29T14:31:30-05:00"
     },
     {
       "path": "skills/install.ps1",
@@ -3430,9 +3520,9 @@
     },
     {
       "path": "skills/markdown-novel-viewer/SKILL.md",
-      "checksum": "e4fe8ac4b52c395644c6f5c3f3ab5b3f79e5328174f3bca1dc7abaaec2331a03",
-      "size": 7233,
-      "lastModified": "2026-01-15T16:13:23+07:00"
+      "checksum": "8dcf5eb9ef63b1784a558222da877f31481297c4679922def3820cdbe6d84ab4",
+      "size": 9114,
+      "lastModified": "2026-02-04T09:30:29-05:00"
     },
     {
       "path": "skills/markdown-novel-viewer/assets/directory-browser.css",
@@ -3448,21 +3538,75 @@
     },
     {
       "path": "skills/markdown-novel-viewer/assets/novel-theme.css",
-      "checksum": "edf410c331eb18fe244bbef05f4f6f65c7ff96ea26eed84c5b0ba485e6895ea4",
-      "size": 15026,
-      "lastModified": "2025-12-25T15:49:19+07:00"
+      "checksum": "5cd1b6e39f05ab3e47d09bb0e7b4a7bed1c8e887ee84fdfd3e792e9a8d0171e8",
+      "size": 612,
+      "lastModified": "2026-02-04T09:30:29-05:00"
     },
     {
       "path": "skills/markdown-novel-viewer/assets/reader.js",
-      "checksum": "6b3383ea11ce5bd80b01f93945150563b1899f6416efdfe112833c1cc62ec437",
-      "size": 10158,
-      "lastModified": "2025-12-25T15:49:19+07:00"
+      "checksum": "f1bb49ea0e5d1a69a9c5c21f81a41f0d0a34c4c6b5b7b9c1014219a3a4f6eeaa",
+      "size": 22060,
+      "lastModified": "2026-02-04T09:45:31-05:00"
+    },
+    {
+      "path": "skills/markdown-novel-viewer/assets/styles/novel-theme-base.css",
+      "checksum": "c4ff0f672e8ac24cdb07de6161f8844188318a76cf4d210fb6e4b0354af413b1",
+      "size": 1013,
+      "lastModified": "2026-02-04T09:45:31-05:00"
+    },
+    {
+      "path": "skills/markdown-novel-viewer/assets/styles/novel-theme-components.css",
+      "checksum": "6882ee0b7efa6c889de046d39c7627257b323f5490dfb337d37c8e7540fdebeb",
+      "size": 1343,
+      "lastModified": "2026-02-04T09:30:29-05:00"
+    },
+    {
+      "path": "skills/markdown-novel-viewer/assets/styles/novel-theme-content.css",
+      "checksum": "de0bd34b2cbc707f57573898d2f4c6688db3f1235033915c98ec273ff54121ae",
+      "size": 2857,
+      "lastModified": "2026-02-04T09:45:31-05:00"
+    },
+    {
+      "path": "skills/markdown-novel-viewer/assets/styles/novel-theme-header.css",
+      "checksum": "f1e0e91b9ea83b804af52dc6d5f2300bd18274ec502e902098751d41fbdca023",
+      "size": 3980,
+      "lastModified": "2026-02-04T09:30:29-05:00"
+    },
+    {
+      "path": "skills/markdown-novel-viewer/assets/styles/novel-theme-mermaid.css",
+      "checksum": "08b0c41340f2eaaf2c416f1bb5671e7666837ee354c85a4d4094a9dcc60c6ba5",
+      "size": 2522,
+      "lastModified": "2026-02-04T09:30:29-05:00"
+    },
+    {
+      "path": "skills/markdown-novel-viewer/assets/styles/novel-theme-overlays.css",
+      "checksum": "464d82b4861edcf9ef06d3f1bb0cd1f3775c986ade36b8a8498721d173c89383",
+      "size": 3729,
+      "lastModified": "2026-02-04T09:30:29-05:00"
+    },
+    {
+      "path": "skills/markdown-novel-viewer/assets/styles/novel-theme-responsive.css",
+      "checksum": "9b528f14390993caa252aa459a2bba02064a5cc9a69ec492435b27616d722101",
+      "size": 4653,
+      "lastModified": "2026-02-04T09:30:29-05:00"
+    },
+    {
+      "path": "skills/markdown-novel-viewer/assets/styles/novel-theme-sidebar.css",
+      "checksum": "f56b56320744a68f132b58eba09a39493f1b50371a649c97a2f51ef908a083c8",
+      "size": 6351,
+      "lastModified": "2026-02-04T09:45:31-05:00"
+    },
+    {
+      "path": "skills/markdown-novel-viewer/assets/styles/novel-theme-variables.css",
+      "checksum": "99a1177a06ce7641cdf5e3f831d6e3b84937154012a15204603d13b3ac7370b1",
+      "size": 1395,
+      "lastModified": "2026-02-04T09:45:31-05:00"
     },
     {
       "path": "skills/markdown-novel-viewer/assets/template.html",
-      "checksum": "58fdd359df3c80d6305b8917b5da0b1d4f7983dce0d4e1d968982e4c7b6fdbab",
-      "size": 3532,
-      "lastModified": "2025-12-25T15:49:19+07:00"
+      "checksum": "f735e6aab371063babc28b8ec69110edaed15ab7a184561775af1d6ad8ad4b02",
+      "size": 6181,
+      "lastModified": "2026-02-04T09:45:31-05:00"
     },
     {
       "path": "skills/markdown-novel-viewer/package.json",
@@ -3484,9 +3628,9 @@
     },
     {
       "path": "skills/markdown-novel-viewer/scripts/lib/plan-navigator.cjs",
-      "checksum": "e8269a00f5a1a400b33b4a8303656a7761d3e358ae84933d4fbc94387f0ac847",
-      "size": 18269,
-      "lastModified": "2025-12-16T04:30:36-05:00"
+      "checksum": "9251db2bc7d2ec2d4eef863bc6908157c3e4c2f45ad03995bf36127389f6ebb0",
+      "size": 20464,
+      "lastModified": "2026-02-04T09:30:29-05:00"
     },
     {
       "path": "skills/markdown-novel-viewer/scripts/lib/port-finder.cjs",
@@ -3634,9 +3778,9 @@
     },
     {
       "path": "skills/mcp-management/references/gemini-cli-integration.md",
-      "checksum": "fd93a5901bbc4d369245ee64b7a068e22be9017119f4721d3632e58307f83c30",
-      "size": 5151,
-      "lastModified": "2026-01-20T13:00:31+07:00"
+      "checksum": "4598c3b6d0737c5986a64f6b46a1a64f101a76b7a0a4b49fba7db2716d4b63f0",
+      "size": 5173,
+      "lastModified": "2026-01-29T12:50:22-05:00"
     },
     {
       "path": "skills/mcp-management/references/mcp-protocol.md",
@@ -3843,6 +3987,48 @@
       "lastModified": "2025-12-29T11:45:06+07:00"
     },
     {
+      "path": "skills/mintlify/SKILL.md",
+      "checksum": "61d4918c19ee474f4f8e05bcfadfea1211d6e2316d41e9173b8daed0e47a1921",
+      "size": 4083,
+      "lastModified": "2026-01-29T23:12:40-05:00"
+    },
+    {
+      "path": "skills/mintlify/references/ai-features-and-integrations-reference.md",
+      "checksum": "8cb36514f4e4d00531ef82a4f28263e32954f63dbdab6fef828a36ae9c3931a1",
+      "size": 13341,
+      "lastModified": "2026-01-29T23:12:40-05:00"
+    },
+    {
+      "path": "skills/mintlify/references/api-documentation-components-reference.md",
+      "checksum": "869518c4c37194de0b0ff4f9d8e13173d00e79897241fa2a4542b93e23f14b45",
+      "size": 16398,
+      "lastModified": "2026-01-29T23:12:40-05:00"
+    },
+    {
+      "path": "skills/mintlify/references/deployment-and-continuous-integration-reference.md",
+      "checksum": "51504e7fd585ae9a09619afcb1015ccfa9a4ed7efd1518ef23cd9e026cc00f2a",
+      "size": 13082,
+      "lastModified": "2026-01-29T23:12:40-05:00"
+    },
+    {
+      "path": "skills/mintlify/references/docs-json-configuration-reference.md",
+      "checksum": "e5de8fa71562a52ed51e10370d95e44d7f54ab033067829f1e6ff9d9b59ed39e",
+      "size": 10996,
+      "lastModified": "2026-01-29T23:12:40-05:00"
+    },
+    {
+      "path": "skills/mintlify/references/mdx-components-reference.md",
+      "checksum": "7ab8ecc5cf7e40f6e61cedda457db9f0f6fe2e610dd377836c0289c706ee0b08",
+      "size": 10274,
+      "lastModified": "2026-01-29T23:12:40-05:00"
+    },
+    {
+      "path": "skills/mintlify/references/navigation-structure-and-organization-reference.md",
+      "checksum": "da98eefd266a04e037bffc03303ae253482cc4ee86e531c65a44d27946cd8277",
+      "size": 13669,
+      "lastModified": "2026-01-29T23:12:40-05:00"
+    },
+    {
       "path": "skills/mobile-development/SKILL.md",
       "checksum": "60304135b4196148a896563a13f45ff6bfc9a4ebbcf50076089bb9f6aa389ba5",
       "size": 9548,
@@ -3886,15 +4072,111 @@
     },
     {
       "path": "skills/payment-integration/README.md",
-      "checksum": "32ce754c669c353429c0e1d242945ec6cd06d1114a5491f0cf6aa660e453e3b0",
-      "size": 6037,
-      "lastModified": "2025-11-13T20:57:04+07:00"
+      "checksum": "bc170cfff3ceb8eab8282e53a9643f50137c455a64fd063df2a75e12e224b3f7",
+      "size": 7434,
+      "lastModified": "2026-01-30T11:17:53+07:00"
     },
     {
       "path": "skills/payment-integration/SKILL.md",
-      "checksum": "7eb9a5a60d80e9d603caa46d05142ac0f1501290033d4196df0094be97784b23",
-      "size": 5058,
-      "lastModified": "2026-01-15T16:13:15+07:00"
+      "checksum": "1e00f6b4afb4ab282acd9b9215004750807331375a7004022e2a291544b982d5",
+      "size": 4207,
+      "lastModified": "2026-02-01T17:18:43+07:00"
+    },
+    {
+      "path": "skills/payment-integration/references/creem/api.md",
+      "checksum": "a135d189d12a1411c762ad7f5eedf9328cc472347099b9e32317eedfc3d48872",
+      "size": 3044,
+      "lastModified": "2026-02-01T17:06:17+07:00"
+    },
+    {
+      "path": "skills/payment-integration/references/creem/checkouts.md",
+      "checksum": "cb4abc34abd528af6965aaed79b28a54daa01a9b7d41220b73a4c2d0d8cfe9ae",
+      "size": 2537,
+      "lastModified": "2026-02-01T17:06:17+07:00"
+    },
+    {
+      "path": "skills/payment-integration/references/creem/licensing.md",
+      "checksum": "5eb6450e7373d8cdbfd0e72e3fa295d866ab053c8d969bd7fc8ee544b9f4bc37",
+      "size": 3151,
+      "lastModified": "2026-02-01T17:06:17+07:00"
+    },
+    {
+      "path": "skills/payment-integration/references/creem/overview.md",
+      "checksum": "e26ceb657c0aa552144b20b40b88cbdafa8c1ff232b1920256068989f8f3156a",
+      "size": 2046,
+      "lastModified": "2026-02-01T17:06:17+07:00"
+    },
+    {
+      "path": "skills/payment-integration/references/creem/sdk.md",
+      "checksum": "f4376e5c0f75ee55bd12a20fd19b72361c6f9fd92867cacde32983dbd81a147b",
+      "size": 3111,
+      "lastModified": "2026-02-01T17:06:17+07:00"
+    },
+    {
+      "path": "skills/payment-integration/references/creem/subscriptions.md",
+      "checksum": "29af22a7cac9bb650d72d22ecdc7161d03d45d8613855f3a961c76cefd79f212",
+      "size": 2858,
+      "lastModified": "2026-02-01T17:06:17+07:00"
+    },
+    {
+      "path": "skills/payment-integration/references/creem/webhooks.md",
+      "checksum": "1639c9df6408024c6a0e98fb405e50baf139790a2495ee46b1ff5e27cbf5d7db",
+      "size": 2989,
+      "lastModified": "2026-02-01T17:06:17+07:00"
+    },
+    {
+      "path": "skills/payment-integration/references/implementation-workflows.md",
+      "checksum": "ee34ca8cea4163510327a27b2dd85e9909e4432090bdf967c42edeed684f79f2",
+      "size": 2254,
+      "lastModified": "2026-02-01T17:06:17+07:00"
+    },
+    {
+      "path": "skills/payment-integration/references/multi-provider-order-management-patterns.md",
+      "checksum": "bcc64ec48aacde5347e8917461a70eb89b734ff047ce5f526ba968ae1c83b252",
+      "size": 23553,
+      "lastModified": "2026-01-30T11:17:53+07:00"
+    },
+    {
+      "path": "skills/payment-integration/references/paddle/api.md",
+      "checksum": "1672b30920ecc6c0b232956a0570e1c20741bac578f61c883d14c019f6432561",
+      "size": 1843,
+      "lastModified": "2026-02-01T17:18:43+07:00"
+    },
+    {
+      "path": "skills/payment-integration/references/paddle/best-practices.md",
+      "checksum": "a65f0e521d07c8be45b77c500daeb53da93148bd733e828080aef7d4a4823f13",
+      "size": 3213,
+      "lastModified": "2026-02-01T17:18:43+07:00"
+    },
+    {
+      "path": "skills/payment-integration/references/paddle/overview.md",
+      "checksum": "d7a8f6666da098b89a345ca5f263300bf6fe76973d9ea3ae714c6d7618764dd5",
+      "size": 1542,
+      "lastModified": "2026-02-01T17:18:43+07:00"
+    },
+    {
+      "path": "skills/payment-integration/references/paddle/paddle-js.md",
+      "checksum": "5d484bc2fab13bdf9e6aa15e55a9a2b930710a4a8fb4a7b6772900ad68f01105",
+      "size": 2129,
+      "lastModified": "2026-02-01T17:18:43+07:00"
+    },
+    {
+      "path": "skills/payment-integration/references/paddle/sdk.md",
+      "checksum": "45646b1607eed2dfcdb341b3da0b6c64aeeb51a67dbb2e9e5899714ecf298b46",
+      "size": 2619,
+      "lastModified": "2026-02-01T17:18:43+07:00"
+    },
+    {
+      "path": "skills/payment-integration/references/paddle/subscriptions.md",
+      "checksum": "0224cc12fa5e10c3712f63ba5a7fa095d8efdc716f507ee6ea7a7251e992096a",
+      "size": 2241,
+      "lastModified": "2026-02-01T17:18:43+07:00"
+    },
+    {
+      "path": "skills/payment-integration/references/paddle/webhooks.md",
+      "checksum": "df9447392afc5c1978466f379a687bb87bc5776229cf8136cc778e2dc242098c",
+      "size": 2661,
+      "lastModified": "2026-02-01T17:18:43+07:00"
     },
     {
       "path": "skills/payment-integration/references/polar/benefits.md",
@@ -3904,9 +4186,9 @@
     },
     {
       "path": "skills/payment-integration/references/polar/best-practices.md",
-      "checksum": "c1c9371e0587fb6d8476f5603f9114ab7813e70a636b40498050e01ce5ea59d5",
-      "size": 11180,
-      "lastModified": "2025-11-13T20:57:04+07:00"
+      "checksum": "ee28b89c334842660e5b941f82f97010193633496438c6df8844677f90ce6870",
+      "size": 26911,
+      "lastModified": "2026-01-30T11:17:53+07:00"
     },
     {
       "path": "skills/payment-integration/references/polar/checkouts.md",
@@ -3952,9 +4234,9 @@
     },
     {
       "path": "skills/payment-integration/references/sepay/best-practices.md",
-      "checksum": "21c3e8d0b732b860406fe248e7d89577d07287c62152520c402eb1fc16c5274f",
-      "size": 8409,
-      "lastModified": "2025-11-13T20:57:04+07:00"
+      "checksum": "fb36b6ccfc3703f71245bc6444bebbe923b6c6fdabb0bae5802d7acfbde3ee83",
+      "size": 29693,
+      "lastModified": "2026-01-30T11:17:53+07:00"
     },
     {
       "path": "skills/payment-integration/references/sepay/overview.md",
@@ -3979,6 +4261,36 @@
       "checksum": "15534c7c56b6cbdba7ec13ecae3709127b486c9a8a61fe530cb47a0988a7cda7",
       "size": 4723,
       "lastModified": "2025-11-13T20:57:04+07:00"
+    },
+    {
+      "path": "skills/payment-integration/references/stripe/stripe-best-practices.md",
+      "checksum": "dc6eaaec4fa486512989d85b28524545c3598bacb2bbdda7642c90aa57c8bce8",
+      "size": 5426,
+      "lastModified": "2026-01-28T18:55:32+07:00"
+    },
+    {
+      "path": "skills/payment-integration/references/stripe/stripe-cli.md",
+      "checksum": "e441bb79c57b79e56ed10a57e47499a371413701ffd49c4407b6773566d75bdc",
+      "size": 3027,
+      "lastModified": "2026-02-01T16:51:39+07:00"
+    },
+    {
+      "path": "skills/payment-integration/references/stripe/stripe-js.md",
+      "checksum": "ea89bd966fbce6ddac2a2f3db436efe8993c6dddb7e6eb14b8d85bf4ec5513a2",
+      "size": 2320,
+      "lastModified": "2026-02-01T16:51:39+07:00"
+    },
+    {
+      "path": "skills/payment-integration/references/stripe/stripe-sdks.md",
+      "checksum": "2e929ac8e8f587e13336e8225249f922092f64f47eba7516c75fdaa5f5992111",
+      "size": 2202,
+      "lastModified": "2026-02-01T16:51:39+07:00"
+    },
+    {
+      "path": "skills/payment-integration/references/stripe/stripe-upgrade.md",
+      "checksum": "1f3280b10690fe85bcc47fe5f7331d242c9c270f6519486974009182e470bb14",
+      "size": 5506,
+      "lastModified": "2026-01-28T18:55:32+07:00"
     },
     {
       "path": "skills/payment-integration/scripts/checkout-helper.js",
@@ -4726,21 +5038,21 @@
     },
     {
       "path": "skills/research/SKILL.md",
-      "checksum": "99afc0960c8c54d17b9d0981316573fcd952db6096f47b0e56f8c8e7880262b1",
-      "size": 6994,
-      "lastModified": "2026-01-20T13:00:30+07:00"
+      "checksum": "29553fee8646ba8ca4cd1fe2335f416c3b91391d43a71190289f31dba9adef04",
+      "size": 7000,
+      "lastModified": "2026-01-29T12:50:22-05:00"
     },
     {
       "path": "skills/scout/SKILL.md",
-      "checksum": "d3503756530f354a0b656436b9a2980e5271264471ad46a751f755f64dd85625",
-      "size": 2694,
-      "lastModified": "2026-01-20T15:52:05+07:00"
+      "checksum": "b57807745a5274ab4eaf430426446f3fd79374cae75bf790c4efb8b82f057df2",
+      "size": 2700,
+      "lastModified": "2026-01-29T12:50:22-05:00"
     },
     {
       "path": "skills/scout/references/external-scouting.md",
-      "checksum": "51dd65b81f1ad7382ffc171059371879b0e2acec859b6ebb7edaa77ced6d0384",
-      "size": 3517,
-      "lastModified": "2026-01-20T15:52:05+07:00"
+      "checksum": "c0ad3f523021d678a9180bb3e9937179bbb933394af92eb9e7e47fa77dcd20f4",
+      "size": 3571,
+      "lastModified": "2026-01-29T12:50:22-05:00"
     },
     {
       "path": "skills/scout/references/internal-scouting.md",
@@ -4966,9 +5278,9 @@
     },
     {
       "path": "skills/skill-creator/SKILL.md",
-      "checksum": "a7e6fdb9b0da0634a926e246089e2573e0cec5a1803cf1bdcc39f4d60faf2ee2",
-      "size": 17797,
-      "lastModified": "2026-01-20T15:52:31+07:00"
+      "checksum": "018170b648b9afa4ce6762fab368f91e453c23d3cf3c08ccee4773b9a4821f63",
+      "size": 18676,
+      "lastModified": "2026-02-03T13:29:27+07:00"
     },
     {
       "path": "skills/skill-creator/references/metadata-quality-criteria.md",
@@ -4977,10 +5289,40 @@
       "lastModified": "2026-01-20T14:10:08+07:00"
     },
     {
+      "path": "skills/skill-creator/references/plugin-marketplace-hosting.md",
+      "checksum": "f6a9e99a8a66826bd6beb69edad14199481881dd191b955802aff9c86c130d9d",
+      "size": 2593,
+      "lastModified": "2026-01-29T15:36:20+07:00"
+    },
+    {
+      "path": "skills/skill-creator/references/plugin-marketplace-overview.md",
+      "checksum": "4c5e5cdb7f447dad0ee990ff74f16daae3708c2e8dcc6fa6d43dfcd6e8d436bb",
+      "size": 1927,
+      "lastModified": "2026-01-29T15:36:20+07:00"
+    },
+    {
+      "path": "skills/skill-creator/references/plugin-marketplace-schema.md",
+      "checksum": "a314ea4a71d60feec62a244f1961c33feae9244ace3e55ca6ca6302292c7ef3d",
+      "size": 3705,
+      "lastModified": "2026-01-29T15:36:20+07:00"
+    },
+    {
+      "path": "skills/skill-creator/references/plugin-marketplace-sources.md",
+      "checksum": "c43166241e24f6f4b0584b03ca990a295da18bb2bc134f0f4bed3b610716d07a",
+      "size": 2505,
+      "lastModified": "2026-01-29T15:36:20+07:00"
+    },
+    {
+      "path": "skills/skill-creator/references/plugin-marketplace-troubleshooting.md",
+      "checksum": "93eb35cf609757b0e7f9810ef21e379c6f10cd3709a884867715cbc195360c23",
+      "size": 3048,
+      "lastModified": "2026-01-29T15:36:20+07:00"
+    },
+    {
       "path": "skills/skill-creator/references/script-quality-criteria.md",
-      "checksum": "21c18d1cdabfa786ecb90f11725f33c5cf4d864ba8e387d18891d90e61876f74",
-      "size": 1781,
-      "lastModified": "2026-01-20T14:10:08+07:00"
+      "checksum": "0c56828f468e226a340745a1c72ffa75b86de466b49ef76b3b75037833baa474",
+      "size": 2031,
+      "lastModified": "2026-02-03T13:29:27+07:00"
     },
     {
       "path": "skills/skill-creator/references/structure-organization-criteria.md",
@@ -4996,15 +5338,15 @@
     },
     {
       "path": "skills/skill-creator/references/validation-checklist.md",
-      "checksum": "ea8cf3df200fa3c071e4a2d7810940c4f640f1e92325aa55426df3e0548ce84c",
-      "size": 1675,
-      "lastModified": "2026-01-20T14:10:08+07:00"
+      "checksum": "9ce1cd1f8f4d7a05bb844dec8bddedc86f47abcce1a9eda8170ca201b0be4bc3",
+      "size": 2628,
+      "lastModified": "2026-02-03T13:29:27+07:00"
     },
     {
       "path": "skills/skill-creator/scripts/encoding_utils.py",
       "checksum": "ca81ae98072328ad4be406e2ceb672bc5c42fd0a65efdefc836b705e2e9c6c6d",
       "size": 1088,
-      "lastModified": "2026-01-03T13:53:53-05:00"
+      "lastModified": "2026-02-03T13:29:27+07:00"
     },
     {
       "path": "skills/skill-creator/scripts/init_skill.py",
@@ -5938,15 +6280,15 @@
     },
     {
       "path": "skills/ui-ux-pro-max/scripts/design_system.py",
-      "checksum": "3bfd1aa556a80cd588fb169d0c8066bcfd6ebf00c969e1408f031c82376a2227",
-      "size": 20874,
-      "lastModified": "2026-01-16T12:45:00+07:00"
+      "checksum": "953299108226cff4063ddecf8e020f9e2b9263af8194d9b9474c1edac5d815d1",
+      "size": 21188,
+      "lastModified": "2026-02-02T20:11:34-05:00"
     },
     {
       "path": "skills/ui-ux-pro-max/scripts/search.py",
-      "checksum": "fec2ed2e6031c2fe44f8e22e7c910555476acc1e370797cd90c047e7e52bd78b",
-      "size": 3296,
-      "lastModified": "2026-01-16T12:45:00+07:00"
+      "checksum": "557a5fe4fc9d0e7689532c29d67ffa1db7c41c9e484d7375075c57d907e09723",
+      "size": 3640,
+      "lastModified": "2026-02-02T20:11:34-05:00"
     },
     {
       "path": "skills/web-design-guidelines/SKILL.md",
@@ -6244,8 +6586,8 @@
     },
     {
       "path": ".opencode/agents/code-reviewer.md",
-      "checksum": "b4d938c74cc9e334a50d808dfc5fd7ce954be21822d2726c4eaab75746a61e78",
-      "size": 7580,
+      "checksum": "ec9ab397208627de28c6cad182c0b53e8536e85f2de4045634d7e8b0629b0086",
+      "size": 3631,
       "lastModified": "2026-01-25T17:53:40+07:00"
     },
     {
@@ -6285,8 +6627,8 @@
     },
     {
       "path": ".opencode/agents/mcp-manager.md",
-      "checksum": "5bdaa59a3edeee55c71d28dd79cab15525ef4da0a7f9f71a8f88018abc60923c",
-      "size": 3290,
+      "checksum": "9844853dc51b2b8ca13f6ca588788701daca741ecf8cc4b4514c6683e48856a0",
+      "size": 3296,
       "lastModified": "2026-01-25T17:53:40+07:00"
     },
     {
@@ -6321,8 +6663,8 @@
     },
     {
       "path": ".opencode/commands/ask.md",
-      "checksum": "ce58aa4f6194401f6e7e760c1df62685fdc7ac1bdb85a0972e4db754444f68a2",
-      "size": 3280,
+      "checksum": "998f7421bb617fb4c8a2ba065744eed25408d289641fb75765380c378859d2e0",
+      "size": 3240,
       "lastModified": "2026-01-25T17:53:40+07:00"
     },
     {
@@ -6363,8 +6705,8 @@
     },
     {
       "path": ".opencode/commands/docs-init.md",
-      "checksum": "a520900efe86f8adc9a81be826c0d9ff58031213a23c3ce6dd30cd0673df598d",
-      "size": 1870,
+      "checksum": "043d4f9382bbcbe42827064601e3ec567f0f986435058832992360fd7b6c30a0",
+      "size": 1894,
       "lastModified": "2026-01-25T17:53:40+07:00"
     },
     {
@@ -6375,8 +6717,8 @@
     },
     {
       "path": ".opencode/commands/docs-update.md",
-      "checksum": "5c19dac5dbcadb7977a19879bbe4e73fb53022919ecb0b03e1180f12817ac099",
-      "size": 3330,
+      "checksum": "8fdb77997d29ef2a6d9d8bf254aaf24b284e1dfe5464262f1ae982597cb9ceff",
+      "size": 3371,
       "lastModified": "2026-01-25T17:53:40+07:00"
     },
     {
@@ -6405,38 +6747,38 @@
     },
     {
       "path": ".opencode/commands/plan-cro.md",
-      "checksum": "92dd0d8d8ba3abc2aa3683d258a5550aa0c5c584a924c0a196859152cf5b49e2",
-      "size": 4688,
+      "checksum": "5dde31f142c932ac6d7b8654019d07595cfaf3051cceb2eafac3ba37ed4b3856",
+      "size": 4697,
       "lastModified": "2026-01-25T17:53:40+07:00"
     },
     {
       "path": ".opencode/commands/plan-fast.md",
-      "checksum": "651e9ba9e7439680ca59cc2c07d39137dcf8336a7cc0b9178f5cf730060251bc",
-      "size": 3151,
+      "checksum": "ea37a1b2fe043a229b434fd228259d80c8af6d6fe7fcec9e201b9359b4622ef3",
+      "size": 3545,
       "lastModified": "2026-01-25T17:53:40+07:00"
     },
     {
       "path": ".opencode/commands/plan-hard.md",
-      "checksum": "e34c331bcf1feb6d847bd7cfbaa7d42dcf3fdd5a0728efd6e9fe7c46d3609261",
-      "size": 4609,
+      "checksum": "588465f4b3a27bbab97138384af5168374d789542ee8bd96eed312666be258e1",
+      "size": 5018,
       "lastModified": "2026-01-25T17:53:40+07:00"
     },
     {
       "path": ".opencode/commands/plan-parallel.md",
-      "checksum": "2d7a9f5c625c739921f7d9a78257ab7199ed219c8d5b001b16fd1a9ef4a072e0",
-      "size": 5721,
+      "checksum": "7bd8dc820ff09beba00127f6c224c39dfc89abe278babbc4a142d60ca522e020",
+      "size": 6480,
       "lastModified": "2026-01-25T17:53:40+07:00"
     },
     {
       "path": ".opencode/commands/plan-two.md",
-      "checksum": "39dce35bd0d74f6b4531f9cd51d51cc339bf01cfe17e128a067fc28745b228c0",
-      "size": 2020,
+      "checksum": "fe66c65497ce4a70d8a92a65162671e5e5f5d76c38ca82716ab2d8df89638786",
+      "size": 2732,
       "lastModified": "2026-01-25T17:53:40+07:00"
     },
     {
       "path": ".opencode/commands/plan-validate.md",
-      "checksum": "e6327f081d608283f7ceb6bd97dcd8827cfd0bf23d1d9f42862aaa5a59126b4f",
-      "size": 4093,
+      "checksum": "bd7c9a7fe11e35e8c07736cd73f3c32282c455c08f464ad3de3cda2110a5a760",
+      "size": 7046,
       "lastModified": "2026-01-25T17:53:40+07:00"
     },
     {
@@ -6447,14 +6789,14 @@
     },
     {
       "path": ".opencode/commands/preview.md",
-      "checksum": "152f78e264b959d6f90c9988beb49cc5e502355c6b770618fa9d14d33c03fd3c",
-      "size": 2752,
+      "checksum": "42cbefd67dab07057fc68b090bd00ee4d61af0dbd11c1167e11cd388174b7c0f",
+      "size": 9671,
       "lastModified": "2026-01-25T17:53:40+07:00"
     },
     {
       "path": ".opencode/commands/review-codebase-parallel.md",
-      "checksum": "993d8bea7b72f5ffef0a222c11725103e57134b5e2b92051e25f8516c61ae1a0",
-      "size": 3185,
+      "checksum": "cb2499a03b0febb44e7ad47fa0ee7756ff1c06b44a6b7b7307c3cce66fe6f76e",
+      "size": 3191,
       "lastModified": "2026-01-25T17:53:40+07:00"
     },
     {
@@ -6477,8 +6819,8 @@
     },
     {
       "path": ".opencode/commands/use-mcp.md",
-      "checksum": "06a393b2387425083a97b7804e20e6446b586c5cbbee45b6e2fb1165b8619d90",
-      "size": 1628,
+      "checksum": "1f36260ef6c9e2a4a84d3ae376b762e79c8de5c478610f4496e08019d7239c95",
+      "size": 1640,
       "lastModified": "2026-01-25T17:53:40+07:00"
     },
     {
@@ -6506,8 +6848,8 @@
     },
     {
       "path": ".opencode/plugin/lib/ck-config-utils.cjs",
-      "checksum": "c33bd52f46857d220b8bb102f66c2384954e330de44194ba56f81e96fe532ca4",
-      "size": 25892,
+      "checksum": "e8b5bcc1f76b68ff6aacfd962bd61cff999ba4da0b7b3b33c84d991d7cea55c3",
+      "size": 26492,
       "lastModified": "2026-01-25T17:53:40+07:00"
     },
     {
@@ -6518,8 +6860,8 @@
     },
     {
       "path": ".opencode/plugin/lib/context-builder.cjs",
-      "checksum": "3ea0c2838acf7ceacd67480d6f1b6c86379bf1fd9279c83140eecf2bd26684a4",
-      "size": 23122,
+      "checksum": "2cbc9b93ccd4652c0ccc96cb3a9160984fbb01f09867fb37c883a02f83c0d773",
+      "size": 23688,
       "lastModified": "2026-01-25T17:53:40+07:00"
     },
     {
@@ -6632,8 +6974,8 @@
     },
     {
       "path": ".opencode/scripts/ck-help.py",
-      "checksum": "f5acd1c867d7cdac936eb5b12c37e4fdbab8f6e25e63fae3e452033da17652f0",
-      "size": 44276,
+      "checksum": "60d5d95f79f4a047d2136e05f1b82ce40070e3129a93fb12d384067dde9d50cb",
+      "size": 41363,
       "lastModified": "2026-01-25T17:53:40+07:00"
     },
     {
@@ -6716,14 +7058,14 @@
     },
     {
       "path": ".opencode/scripts/worktree.cjs",
-      "checksum": "1b687a95f43d02aa873b2ff621ec849d4ca352c73029b81719905b214cab541c",
-      "size": 26782,
+      "checksum": "b4816fc4f4e43a35593f26c89a0fa813335348bbc605346c0a4729598abe594a",
+      "size": 26998,
       "lastModified": "2026-01-25T17:53:40+07:00"
     },
     {
       "path": ".opencode/scripts/worktree.test.cjs",
-      "checksum": "a3df5d9f270852302fea37757850836be0b6b4896bd2a03f3fef4422f7a5dd10",
-      "size": 30707,
+      "checksum": "065bafebe8548bfbf17f5006ae402aa35e0a2646f8a951a88213433c646214dc",
+      "size": 31286,
       "lastModified": "2026-01-25T17:53:40+07:00"
     },
     {
@@ -6869,8 +7211,8 @@
     },
     {
       "path": ".opencode/skills/ai-artist/scripts/search.py",
-      "checksum": "00ac2c78f68a7fc522d70645ff05617800d09d2751f4a86ac730e8e1580344f4",
-      "size": 5578
+      "checksum": "6d644dadc252bfe74f0cbae9b330c2a97d74eb41cf91d74a354c18ddcd38cb1d",
+      "size": 5902
     },
     {
       "path": ".opencode/skills/ai-multimodal/SKILL.md",
@@ -6916,8 +7258,8 @@
     },
     {
       "path": ".opencode/skills/ai-multimodal/scripts/check_setup.py",
-      "checksum": "36a9bb4822adf7cb6e61faf727e1390f835fd8df9a42a94812c5af05a578dcb8",
-      "size": 9526,
+      "checksum": "f81e5307dec90b2fcd2498396e96e09bb9845de0a90a87973b2406d644b563be",
+      "size": 9669,
       "lastModified": "2026-01-25T17:53:40+07:00"
     },
     {
@@ -7265,20 +7607,25 @@
     },
     {
       "path": ".opencode/skills/code-review/SKILL.md",
-      "checksum": "512cb440d9066dc441cff08d62326f2d7d814d5bc1fdd6b5fb52c6b38e256b5e",
-      "size": 5209,
+      "checksum": "17877a3224aca6623134d0749db9a5fef7b95a7fbbd4c662303cc8e8e61ca63f",
+      "size": 3903,
       "lastModified": "2026-01-25T17:53:40+07:00"
     },
     {
       "path": ".opencode/skills/code-review/references/code-review-reception.md",
-      "checksum": "a8847b178c983555ef9b8b650ca0fe8fc522f8390548b0b6ea6f274434acd9a8",
-      "size": 6318,
+      "checksum": "f8b818db1b47ecf7a43328783cd298f4efeacdf8d2bb04061281149a2256cada",
+      "size": 3214,
       "lastModified": "2026-01-25T17:53:40+07:00"
     },
     {
+      "path": ".opencode/skills/code-review/references/edge-case-scouting.md",
+      "checksum": "02e705d4482937c771930e19da73ba3fb1e7eb2c813cdb0f52f34ae06e58ddc7",
+      "size": 3015
+    },
+    {
       "path": ".opencode/skills/code-review/references/requesting-code-review.md",
-      "checksum": "4f0d44953238f97d766a8f6457c14c0c14d87e84907fc7cd1cf28e8dbad60f18",
-      "size": 2877,
+      "checksum": "22793d73c3e0c2c36f03af1098b369016bff4edd8f64c9371d11f634d2fa62c4",
+      "size": 3180,
       "lastModified": "2026-01-25T17:53:40+07:00"
     },
     {
@@ -7377,8 +7724,8 @@
     },
     {
       "path": ".opencode/skills/cook/SKILL.md",
-      "checksum": "ef3eaa46e77e5e3ac157ff8da28e803b89ae921172d3fb8992e26674cd5be666",
-      "size": 3250
+      "checksum": "e7281286931f29516519d89e420debfc2ba05fd999c8f5db8ce0ada695fdfe1f",
+      "size": 4387
     },
     {
       "path": ".opencode/skills/cook/references/intent-detection.md",
@@ -7397,13 +7744,13 @@
     },
     {
       "path": ".opencode/skills/cook/references/workflow-steps.md",
-      "checksum": "a51fe204135ac9380e11e193a111eb12dc04d8b9faf268ae974654c981115b77",
-      "size": 4534
+      "checksum": "aefc1fc5d86616ea904ae85e8b8ac9174a04b6aba209c5c9868aba96b02a288d",
+      "size": 6803
     },
     {
       "path": ".opencode/skills/copywriting/SKILL.md",
-      "checksum": "078b86f115c76d6843a6092d349211fe271cf9539e89b0f37fc4fcf8e950d1b3",
-      "size": 3703
+      "checksum": "235233474efd3cba2dea8569441f511038bee6dce58ff413ce95f104f83d89b3",
+      "size": 3712
     },
     {
       "path": ".opencode/skills/copywriting/references/copy-formulas.md",
@@ -7442,23 +7789,23 @@
     },
     {
       "path": ".opencode/skills/copywriting/references/workflow-cro.md",
-      "checksum": "d3541da42481d6316b0e2aab7c9d1ef243edab9a5da7f0ba72709d8a543b8363",
-      "size": 2850
+      "checksum": "007832aa238113d91c129fce0161841cef817ae4e74080f7ea6ddcb6c6ebe2c6",
+      "size": 2859
     },
     {
       "path": ".opencode/skills/copywriting/references/workflow-enhance.md",
-      "checksum": "4b3ee12e91375d6c0fd6c3eb224d8ffd1908ea1a057c927f7b9fb3a6a9d1ffc5",
-      "size": 1118
+      "checksum": "002a39e494beaba3d75f7155c125d257abe2adeb9571cbe53f08b823f7a21d7b",
+      "size": 1127
     },
     {
       "path": ".opencode/skills/copywriting/references/workflow-fast.md",
-      "checksum": "5c9db5975e504d233fc884050689bee67a9d24ac755ee034ad027dfd659e7478",
-      "size": 753
+      "checksum": "2daa91761befc607bc7adc21e8310b16853912827a4ad141bc1d31c7126ab3b0",
+      "size": 762
     },
     {
       "path": ".opencode/skills/copywriting/references/workflow-good.md",
-      "checksum": "978647b8eca0c31c4b8338ca45a2593abf80ea93938ee919b011671b7396fe43",
-      "size": 1380
+      "checksum": "4b6fc08198f9a55f67ec76d93de096f2742bfe31796f0da5336b5594063bf448",
+      "size": 1389
     },
     {
       "path": ".opencode/skills/copywriting/references/writing-styles.md",
@@ -7882,14 +8229,19 @@
       "lastModified": "2026-01-25T17:53:40+07:00"
     },
     {
+      "path": ".opencode/skills/find-skills/SKILL.md",
+      "checksum": "54b44dc9539df865fbb060f62fb062e8232e765852a0cf14c38301fe0c1eb264",
+      "size": 4635
+    },
+    {
       "path": ".opencode/skills/fix/SKILL.md",
-      "checksum": "050b9f5efc3a8142d5b33b2168eef66e6522bd01ef8161c1d14c8ebf5c45a50f",
-      "size": 3933
+      "checksum": "a880779a00d42c092342650e1719e87098bea8d93b2a824f2beeeb31106fa896",
+      "size": 4119
     },
     {
       "path": ".opencode/skills/fix/references/complexity-assessment.md",
-      "checksum": "9d01ad4a9a0b31fdcba026de06e1e7a4341b9a941044512353a6b464734efbda",
-      "size": 1637
+      "checksum": "4bd028ac687418e71aa273fad06e839950589dc171aab62631524bda91fab9d0",
+      "size": 1752
     },
     {
       "path": ".opencode/skills/fix/references/mode-selection.md",
@@ -7908,8 +8260,8 @@
     },
     {
       "path": ".opencode/skills/fix/references/skill-activation-matrix.md",
-      "checksum": "b5c3fa610888653b90f722a8bf76b13549b4a621eecd0abb3f339c595a76daac",
-      "size": 2545
+      "checksum": "7439b2425473487847fb9f8a35ffd652c195f6fc4a799c0245bf0f6b306721c1",
+      "size": 2539
     },
     {
       "path": ".opencode/skills/fix/references/workflow-ci.md",
@@ -7918,8 +8270,8 @@
     },
     {
       "path": ".opencode/skills/fix/references/workflow-deep.md",
-      "checksum": "8b1e740c001f0da810c422fd1fbd8c8ae8f473f62a782e3b164c11a6476b5d71",
-      "size": 2698
+      "checksum": "c3c9c0c0ce3f5fae51f966e3eab6f8da26a3b46af250e3bc17828847947f96f0",
+      "size": 2695
     },
     {
       "path": ".opencode/skills/fix/references/workflow-logs.md",
@@ -7948,8 +8300,8 @@
     },
     {
       "path": ".opencode/skills/fix/references/workflow-ui.md",
-      "checksum": "bd73525ef15365f40990557a4c0b62b9bedf4f02f74527355d678bf31583f694",
-      "size": 1133
+      "checksum": "5962258e6a951a33b6a7966ab42497fe28e26701bd0e5d0465372598f9bdeb86",
+      "size": 1137
     },
     {
       "path": ".opencode/skills/frontend-design/SKILL.md",
@@ -8221,14 +8573,49 @@
     },
     {
       "path": ".opencode/skills/google-adk-python/SKILL.md",
-      "checksum": "35c6509e4b6b57813dea64e4448a737f7c9f2e6c79c478c233e8347e77286b0a",
-      "size": 7032,
+      "checksum": "4537e2f694eafc5ae52176aef3cab757a1008c658b1a2709a8b399a2dfd79ebb",
+      "size": 4867,
       "lastModified": "2026-01-25T17:53:40+07:00"
     },
     {
+      "path": ".opencode/skills/google-adk-python/references/agent-types-and-architecture.md",
+      "checksum": "edf54ebe1293bfbeb40666978b0cf759a41c7c8d168e09e45cd293f9f674b055",
+      "size": 2979
+    },
+    {
+      "path": ".opencode/skills/google-adk-python/references/callbacks-plugins-observability.md",
+      "checksum": "a7d4f0bad7d239efbd31616cdeec1d196b936b9136c71700ec0e004814c0cc73",
+      "size": 3556
+    },
+    {
+      "path": ".opencode/skills/google-adk-python/references/deployment-cloud-run-vertex-gke.md",
+      "checksum": "42f94cdb2324703c84f1d085e50aa21cb9a83dbf7b53e56cff5907793baa9ac7",
+      "size": 3442
+    },
+    {
+      "path": ".opencode/skills/google-adk-python/references/evaluation-testing-cli.md",
+      "checksum": "2c83ff074efca06167b85672f4cc9ea4450578734f9bfe084b23a9c0e0116e82",
+      "size": 2671
+    },
+    {
+      "path": ".opencode/skills/google-adk-python/references/multi-agent-and-a2a-protocol.md",
+      "checksum": "badfdb96be7845cf9b53a58cb2e79b8530e6b17f67300794ec7ab9d38148f89d",
+      "size": 3850
+    },
+    {
+      "path": ".opencode/skills/google-adk-python/references/sessions-state-memory-artifacts.md",
+      "checksum": "8e41bda48a5396ae24f5cd159cfa80c0235ebe0c264538d421e4e3f2ee3f1713",
+      "size": 4317
+    },
+    {
+      "path": ".opencode/skills/google-adk-python/references/tools-and-mcp-integration.md",
+      "checksum": "faa533d7a69f81df4233c7d1e562d8151197bfc346f5642f4de81170a2ba3d91",
+      "size": 3963
+    },
+    {
       "path": ".opencode/skills/markdown-novel-viewer/SKILL.md",
-      "checksum": "0eb667d80bf73873388425b277ac6eede84270efa262edaef62191fee3c4f3cb",
-      "size": 7243,
+      "checksum": "036261ae1b6d8a4b477e4c4703b3db946c88fd182c2cdd43134b14f728eafa1e",
+      "size": 9124,
       "lastModified": "2026-01-25T17:53:40+07:00"
     },
     {
@@ -8245,20 +8632,65 @@
     },
     {
       "path": ".opencode/skills/markdown-novel-viewer/assets/novel-theme.css",
-      "checksum": "edf410c331eb18fe244bbef05f4f6f65c7ff96ea26eed84c5b0ba485e6895ea4",
-      "size": 15026,
+      "checksum": "5cd1b6e39f05ab3e47d09bb0e7b4a7bed1c8e887ee84fdfd3e792e9a8d0171e8",
+      "size": 612,
       "lastModified": "2026-01-25T17:53:40+07:00"
     },
     {
       "path": ".opencode/skills/markdown-novel-viewer/assets/reader.js",
-      "checksum": "6b3383ea11ce5bd80b01f93945150563b1899f6416efdfe112833c1cc62ec437",
-      "size": 10158,
+      "checksum": "f1bb49ea0e5d1a69a9c5c21f81a41f0d0a34c4c6b5b7b9c1014219a3a4f6eeaa",
+      "size": 22060,
       "lastModified": "2026-01-25T17:53:40+07:00"
     },
     {
+      "path": ".opencode/skills/markdown-novel-viewer/assets/styles/novel-theme-base.css",
+      "checksum": "c4ff0f672e8ac24cdb07de6161f8844188318a76cf4d210fb6e4b0354af413b1",
+      "size": 1013
+    },
+    {
+      "path": ".opencode/skills/markdown-novel-viewer/assets/styles/novel-theme-components.css",
+      "checksum": "6882ee0b7efa6c889de046d39c7627257b323f5490dfb337d37c8e7540fdebeb",
+      "size": 1343
+    },
+    {
+      "path": ".opencode/skills/markdown-novel-viewer/assets/styles/novel-theme-content.css",
+      "checksum": "de0bd34b2cbc707f57573898d2f4c6688db3f1235033915c98ec273ff54121ae",
+      "size": 2857
+    },
+    {
+      "path": ".opencode/skills/markdown-novel-viewer/assets/styles/novel-theme-header.css",
+      "checksum": "f1e0e91b9ea83b804af52dc6d5f2300bd18274ec502e902098751d41fbdca023",
+      "size": 3980
+    },
+    {
+      "path": ".opencode/skills/markdown-novel-viewer/assets/styles/novel-theme-mermaid.css",
+      "checksum": "08b0c41340f2eaaf2c416f1bb5671e7666837ee354c85a4d4094a9dcc60c6ba5",
+      "size": 2522
+    },
+    {
+      "path": ".opencode/skills/markdown-novel-viewer/assets/styles/novel-theme-overlays.css",
+      "checksum": "464d82b4861edcf9ef06d3f1bb0cd1f3775c986ade36b8a8498721d173c89383",
+      "size": 3729
+    },
+    {
+      "path": ".opencode/skills/markdown-novel-viewer/assets/styles/novel-theme-responsive.css",
+      "checksum": "9b528f14390993caa252aa459a2bba02064a5cc9a69ec492435b27616d722101",
+      "size": 4653
+    },
+    {
+      "path": ".opencode/skills/markdown-novel-viewer/assets/styles/novel-theme-sidebar.css",
+      "checksum": "f56b56320744a68f132b58eba09a39493f1b50371a649c97a2f51ef908a083c8",
+      "size": 6351
+    },
+    {
+      "path": ".opencode/skills/markdown-novel-viewer/assets/styles/novel-theme-variables.css",
+      "checksum": "99a1177a06ce7641cdf5e3f831d6e3b84937154012a15204603d13b3ac7370b1",
+      "size": 1395
+    },
+    {
       "path": ".opencode/skills/markdown-novel-viewer/assets/template.html",
-      "checksum": "58fdd359df3c80d6305b8917b5da0b1d4f7983dce0d4e1d968982e4c7b6fdbab",
-      "size": 3532,
+      "checksum": "f735e6aab371063babc28b8ec69110edaed15ab7a184561775af1d6ad8ad4b02",
+      "size": 6181,
       "lastModified": "2026-01-25T17:53:40+07:00"
     },
     {
@@ -8280,8 +8712,8 @@
     },
     {
       "path": ".opencode/skills/markdown-novel-viewer/scripts/lib/plan-navigator.cjs",
-      "checksum": "e8269a00f5a1a400b33b4a8303656a7761d3e358ae84933d4fbc94387f0ac847",
-      "size": 18269,
+      "checksum": "9251db2bc7d2ec2d4eef863bc6908157c3e4c2f45ad03995bf36127389f6ebb0",
+      "size": 20464,
       "lastModified": "2026-01-25T17:53:40+07:00"
     },
     {
@@ -8430,8 +8862,8 @@
     },
     {
       "path": ".opencode/skills/mcp-management/references/gemini-cli-integration.md",
-      "checksum": "69e5c579851cc4df0b2a41709a3eb75021c7ffe628c1779f8a4be05c90f65081",
-      "size": 5163,
+      "checksum": "3a6cc681c4efd4bf1780bc2a32ec73dc7c173178a97abdb5d3eaad4050e4924a",
+      "size": 5185,
       "lastModified": "2026-01-25T17:53:40+07:00"
     },
     {
@@ -8637,6 +9069,41 @@
       "lastModified": "2026-01-25T17:53:40+07:00"
     },
     {
+      "path": ".opencode/skills/mintlify/SKILL.md",
+      "checksum": "61d4918c19ee474f4f8e05bcfadfea1211d6e2316d41e9173b8daed0e47a1921",
+      "size": 4083
+    },
+    {
+      "path": ".opencode/skills/mintlify/references/ai-features-and-integrations-reference.md",
+      "checksum": "8cb36514f4e4d00531ef82a4f28263e32954f63dbdab6fef828a36ae9c3931a1",
+      "size": 13341
+    },
+    {
+      "path": ".opencode/skills/mintlify/references/api-documentation-components-reference.md",
+      "checksum": "869518c4c37194de0b0ff4f9d8e13173d00e79897241fa2a4542b93e23f14b45",
+      "size": 16398
+    },
+    {
+      "path": ".opencode/skills/mintlify/references/deployment-and-continuous-integration-reference.md",
+      "checksum": "51504e7fd585ae9a09619afcb1015ccfa9a4ed7efd1518ef23cd9e026cc00f2a",
+      "size": 13082
+    },
+    {
+      "path": ".opencode/skills/mintlify/references/docs-json-configuration-reference.md",
+      "checksum": "e5de8fa71562a52ed51e10370d95e44d7f54ab033067829f1e6ff9d9b59ed39e",
+      "size": 10996
+    },
+    {
+      "path": ".opencode/skills/mintlify/references/mdx-components-reference.md",
+      "checksum": "7ab8ecc5cf7e40f6e61cedda457db9f0f6fe2e610dd377836c0289c706ee0b08",
+      "size": 10274
+    },
+    {
+      "path": ".opencode/skills/mintlify/references/navigation-structure-and-organization-reference.md",
+      "checksum": "da98eefd266a04e037bffc03303ae253482cc4ee86e531c65a44d27946cd8277",
+      "size": 13669
+    },
+    {
       "path": ".opencode/skills/mobile-development/SKILL.md",
       "checksum": "60304135b4196148a896563a13f45ff6bfc9a4ebbcf50076089bb9f6aa389ba5",
       "size": 9548,
@@ -8680,15 +9147,95 @@
     },
     {
       "path": ".opencode/skills/payment-integration/README.md",
-      "checksum": "f18930fd9a6414b88f514c08dd7a4a4aa38e324520263a9eed49ab7c2cb93089",
-      "size": 6039,
+      "checksum": "9557f7ca8ec7b34448aa8d06f306574876f160b812fe24d5795eaf1539cca5f2",
+      "size": 7436,
       "lastModified": "2026-01-25T17:53:40+07:00"
     },
     {
       "path": ".opencode/skills/payment-integration/SKILL.md",
-      "checksum": "7eb9a5a60d80e9d603caa46d05142ac0f1501290033d4196df0094be97784b23",
-      "size": 5058,
+      "checksum": "1e00f6b4afb4ab282acd9b9215004750807331375a7004022e2a291544b982d5",
+      "size": 4207,
       "lastModified": "2026-01-25T17:53:40+07:00"
+    },
+    {
+      "path": ".opencode/skills/payment-integration/references/creem/api.md",
+      "checksum": "a135d189d12a1411c762ad7f5eedf9328cc472347099b9e32317eedfc3d48872",
+      "size": 3044
+    },
+    {
+      "path": ".opencode/skills/payment-integration/references/creem/checkouts.md",
+      "checksum": "cb4abc34abd528af6965aaed79b28a54daa01a9b7d41220b73a4c2d0d8cfe9ae",
+      "size": 2537
+    },
+    {
+      "path": ".opencode/skills/payment-integration/references/creem/licensing.md",
+      "checksum": "5eb6450e7373d8cdbfd0e72e3fa295d866ab053c8d969bd7fc8ee544b9f4bc37",
+      "size": 3151
+    },
+    {
+      "path": ".opencode/skills/payment-integration/references/creem/overview.md",
+      "checksum": "e26ceb657c0aa552144b20b40b88cbdafa8c1ff232b1920256068989f8f3156a",
+      "size": 2046
+    },
+    {
+      "path": ".opencode/skills/payment-integration/references/creem/sdk.md",
+      "checksum": "f4376e5c0f75ee55bd12a20fd19b72361c6f9fd92867cacde32983dbd81a147b",
+      "size": 3111
+    },
+    {
+      "path": ".opencode/skills/payment-integration/references/creem/subscriptions.md",
+      "checksum": "29af22a7cac9bb650d72d22ecdc7161d03d45d8613855f3a961c76cefd79f212",
+      "size": 2858
+    },
+    {
+      "path": ".opencode/skills/payment-integration/references/creem/webhooks.md",
+      "checksum": "1639c9df6408024c6a0e98fb405e50baf139790a2495ee46b1ff5e27cbf5d7db",
+      "size": 2989
+    },
+    {
+      "path": ".opencode/skills/payment-integration/references/implementation-workflows.md",
+      "checksum": "ee34ca8cea4163510327a27b2dd85e9909e4432090bdf967c42edeed684f79f2",
+      "size": 2254
+    },
+    {
+      "path": ".opencode/skills/payment-integration/references/multi-provider-order-management-patterns.md",
+      "checksum": "bcc64ec48aacde5347e8917461a70eb89b734ff047ce5f526ba968ae1c83b252",
+      "size": 23553
+    },
+    {
+      "path": ".opencode/skills/payment-integration/references/paddle/api.md",
+      "checksum": "1672b30920ecc6c0b232956a0570e1c20741bac578f61c883d14c019f6432561",
+      "size": 1843
+    },
+    {
+      "path": ".opencode/skills/payment-integration/references/paddle/best-practices.md",
+      "checksum": "a65f0e521d07c8be45b77c500daeb53da93148bd733e828080aef7d4a4823f13",
+      "size": 3213
+    },
+    {
+      "path": ".opencode/skills/payment-integration/references/paddle/overview.md",
+      "checksum": "d7a8f6666da098b89a345ca5f263300bf6fe76973d9ea3ae714c6d7618764dd5",
+      "size": 1542
+    },
+    {
+      "path": ".opencode/skills/payment-integration/references/paddle/paddle-js.md",
+      "checksum": "5d484bc2fab13bdf9e6aa15e55a9a2b930710a4a8fb4a7b6772900ad68f01105",
+      "size": 2129
+    },
+    {
+      "path": ".opencode/skills/payment-integration/references/paddle/sdk.md",
+      "checksum": "45646b1607eed2dfcdb341b3da0b6c64aeeb51a67dbb2e9e5899714ecf298b46",
+      "size": 2619
+    },
+    {
+      "path": ".opencode/skills/payment-integration/references/paddle/subscriptions.md",
+      "checksum": "0224cc12fa5e10c3712f63ba5a7fa095d8efdc716f507ee6ea7a7251e992096a",
+      "size": 2241
+    },
+    {
+      "path": ".opencode/skills/payment-integration/references/paddle/webhooks.md",
+      "checksum": "df9447392afc5c1978466f379a687bb87bc5776229cf8136cc778e2dc242098c",
+      "size": 2661
     },
     {
       "path": ".opencode/skills/payment-integration/references/polar/benefits.md",
@@ -8698,8 +9245,8 @@
     },
     {
       "path": ".opencode/skills/payment-integration/references/polar/best-practices.md",
-      "checksum": "c1c9371e0587fb6d8476f5603f9114ab7813e70a636b40498050e01ce5ea59d5",
-      "size": 11180,
+      "checksum": "ee28b89c334842660e5b941f82f97010193633496438c6df8844677f90ce6870",
+      "size": 26911,
       "lastModified": "2026-01-25T17:53:40+07:00"
     },
     {
@@ -8746,8 +9293,8 @@
     },
     {
       "path": ".opencode/skills/payment-integration/references/sepay/best-practices.md",
-      "checksum": "21c3e8d0b732b860406fe248e7d89577d07287c62152520c402eb1fc16c5274f",
-      "size": 8409,
+      "checksum": "fb36b6ccfc3703f71245bc6444bebbe923b6c6fdabb0bae5802d7acfbde3ee83",
+      "size": 29693,
       "lastModified": "2026-01-25T17:53:40+07:00"
     },
     {
@@ -8773,6 +9320,31 @@
       "checksum": "15534c7c56b6cbdba7ec13ecae3709127b486c9a8a61fe530cb47a0988a7cda7",
       "size": 4723,
       "lastModified": "2026-01-25T17:53:40+07:00"
+    },
+    {
+      "path": ".opencode/skills/payment-integration/references/stripe/stripe-best-practices.md",
+      "checksum": "dc6eaaec4fa486512989d85b28524545c3598bacb2bbdda7642c90aa57c8bce8",
+      "size": 5426
+    },
+    {
+      "path": ".opencode/skills/payment-integration/references/stripe/stripe-cli.md",
+      "checksum": "e441bb79c57b79e56ed10a57e47499a371413701ffd49c4407b6773566d75bdc",
+      "size": 3027
+    },
+    {
+      "path": ".opencode/skills/payment-integration/references/stripe/stripe-js.md",
+      "checksum": "ea89bd966fbce6ddac2a2f3db436efe8993c6dddb7e6eb14b8d85bf4ec5513a2",
+      "size": 2320
+    },
+    {
+      "path": ".opencode/skills/payment-integration/references/stripe/stripe-sdks.md",
+      "checksum": "2e929ac8e8f587e13336e8225249f922092f64f47eba7516c75fdaa5f5992111",
+      "size": 2202
+    },
+    {
+      "path": ".opencode/skills/payment-integration/references/stripe/stripe-upgrade.md",
+      "checksum": "1f3280b10690fe85bcc47fe5f7331d242c9c270f6519486974009182e470bb14",
+      "size": 5506
     },
     {
       "path": ".opencode/skills/payment-integration/scripts/checkout-helper.js",
@@ -9435,19 +10007,19 @@
     },
     {
       "path": ".opencode/skills/research/SKILL.md",
-      "checksum": "d6b60d168ca8a6e9efbbb052e4a50f19b631d22ea2dc45fb672beca13e118737",
-      "size": 7000,
+      "checksum": "027bb8c01269c170b364746e8c7c8e92121a634bb5c1c4546fb7f26d42edbab5",
+      "size": 7006,
       "lastModified": "2026-01-25T17:53:40+07:00"
     },
     {
       "path": ".opencode/skills/scout/SKILL.md",
-      "checksum": "6e67301f948f52a240cb9ee4b59199d2303313a15e73eff438cdabb40ab92dc4",
-      "size": 2696
+      "checksum": "fedcb4e0f06e719dcdef28aaed17e3f9835ec042d4ca10edc614b60a838f4c41",
+      "size": 2702
     },
     {
       "path": ".opencode/skills/scout/references/external-scouting.md",
-      "checksum": "b90f4113e5908970a97f5ab9af6d71cdb152cafb6a5e0063531051fd7171935f",
-      "size": 3519
+      "checksum": "578da5e543f2d90a5d3d93e694b97c81271b10afe114f48ec744522a478282ff",
+      "size": 3573
     },
     {
       "path": ".opencode/skills/scout/references/internal-scouting.md",
@@ -9657,8 +10229,8 @@
     },
     {
       "path": ".opencode/skills/skill-creator/SKILL.md",
-      "checksum": "186768184267142e3e65a76a850b3d1474f15fadba689081ea3c541d61da6623",
-      "size": 17819,
+      "checksum": "137460ec17a135caea309794236263914dd27bca182d417fecfb1f34ff2db101",
+      "size": 18714,
       "lastModified": "2026-01-25T17:53:40+07:00"
     },
     {
@@ -9667,9 +10239,34 @@
       "size": 1780
     },
     {
+      "path": ".opencode/skills/skill-creator/references/plugin-marketplace-hosting.md",
+      "checksum": "a567bb06305241f57fd607f333e47f8a25b482d237acc7aff19d93f7abed7341",
+      "size": 2595
+    },
+    {
+      "path": ".opencode/skills/skill-creator/references/plugin-marketplace-overview.md",
+      "checksum": "4c5e5cdb7f447dad0ee990ff74f16daae3708c2e8dcc6fa6d43dfcd6e8d436bb",
+      "size": 1927
+    },
+    {
+      "path": ".opencode/skills/skill-creator/references/plugin-marketplace-schema.md",
+      "checksum": "a314ea4a71d60feec62a244f1961c33feae9244ace3e55ca6ca6302292c7ef3d",
+      "size": 3705
+    },
+    {
+      "path": ".opencode/skills/skill-creator/references/plugin-marketplace-sources.md",
+      "checksum": "c43166241e24f6f4b0584b03ca990a295da18bb2bc134f0f4bed3b610716d07a",
+      "size": 2505
+    },
+    {
+      "path": ".opencode/skills/skill-creator/references/plugin-marketplace-troubleshooting.md",
+      "checksum": "93eb35cf609757b0e7f9810ef21e379c6f10cd3709a884867715cbc195360c23",
+      "size": 3048
+    },
+    {
       "path": ".opencode/skills/skill-creator/references/script-quality-criteria.md",
-      "checksum": "88aff5b6b14604bafbb47a94bcbab90400391090d7196aab34013ce4b280f31f",
-      "size": 1793
+      "checksum": "736ff468cc5c94578f27b05176118b630fe3791f9cf41e05aa43f377b2a268e2",
+      "size": 2055
     },
     {
       "path": ".opencode/skills/skill-creator/references/structure-organization-criteria.md",
@@ -9683,8 +10280,8 @@
     },
     {
       "path": ".opencode/skills/skill-creator/references/validation-checklist.md",
-      "checksum": "aaca1b6954647721fc96121a38cfe2d80ba01690b0507301fb8719238ab5e74d",
-      "size": 1679
+      "checksum": "2c812c169a229543a0766d6b062ecc6981a7edeca6a2bf95964ad570842f89da",
+      "size": 2640
     },
     {
       "path": ".opencode/skills/skill-creator/scripts/encoding_utils.py",
@@ -10605,13 +11202,13 @@
     },
     {
       "path": ".opencode/skills/ui-ux-pro-max/scripts/design_system.py",
-      "checksum": "3bfd1aa556a80cd588fb169d0c8066bcfd6ebf00c969e1408f031c82376a2227",
-      "size": 20874
+      "checksum": "953299108226cff4063ddecf8e020f9e2b9263af8194d9b9474c1edac5d815d1",
+      "size": 21188
     },
     {
       "path": ".opencode/skills/ui-ux-pro-max/scripts/search.py",
-      "checksum": "fec2ed2e6031c2fe44f8e22e7c910555476acc1e370797cd90c047e7e52bd78b",
-      "size": 3296,
+      "checksum": "557a5fe4fc9d0e7689532c29d67ffa1db7c41c9e484d7375075c57d907e09723",
+      "size": 3640,
       "lastModified": "2026-01-25T17:53:40+07:00"
     },
     {
@@ -10900,7 +11497,7 @@
     },
     {
       "path": "AGENTS.md",
-      "checksum": "9ab53b745cb417cfc8dae048627094afe359a2dedfd8ad7f7272b911c69ec556",
+      "checksum": "a3834e91573dbb36f2c08354251d52e986cad28d1ccea381c3b1c167350720ef",
       "size": 2192,
       "lastModified": "2026-01-18T09:18:05-05:00"
     }
