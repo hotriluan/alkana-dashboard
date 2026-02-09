@@ -169,23 +169,21 @@ class BaseLoader:
         Returns:
             'inserted', 'updated', or 'skipped'
         """
-        # First check if row_hash already exists (to avoid unique constraint violation)
-        existing_by_hash = self.db.query(model_class).filter_by(row_hash=row_hash).first()
-        
-        if existing_by_hash:
-            # Exact same data already exists - skip
-            self.skipped_count += 1
-            return 'skipped'
-        
-        # Find existing record by business keys
+        # Find existing record by business keys FIRST
         existing = self.db.query(model_class).filter_by(**business_keys).first()
         
         if existing:
-            # Record exists with different data - update all fields
-            for key, value in record_data.items():
-                setattr(existing, key, value)
-            self.updated_count += 1
-            return 'updated'
+            # Record exists - check if data changed
+            if existing.row_hash == row_hash:
+                # Same data - skip
+                self.skipped_count += 1
+                return 'skipped'
+            else:
+                # Different data - update all fields
+                for key, value in record_data.items():
+                    setattr(existing, key, value)
+                self.updated_count += 1
+                return 'updated'
         else:
             # New record - insert
             new_record = model_class(**record_data)
@@ -305,7 +303,7 @@ class Mb51Loader(BaseLoader):
     """Load Material Movements from mb51.XLSX - WITH HEADER (merged cells)"""
     
     def load(self) -> Dict[str, int]:
-        file_path = EXCEL_FILES['mb51']
+        file_path = self.file_path or EXCEL_FILES['mb51']
         print(f"Loading {file_path}...")
         
         # File has header in row 1 but pandas can't read it (merged cells issue)
@@ -390,7 +388,7 @@ class Zrmm024Loader(BaseLoader):
     """Load Purchase Orders from zrmm024.XLSX - ALL 58 COLUMNS"""
     
     def load(self) -> Dict[str, int]:
-        file_path = EXCEL_FILES['zrmm024']
+        file_path = self.file_path or EXCEL_FILES['zrmm024']
         print(f"Loading {file_path}...")
 
         header_row = detect_zrmm024_header_row(file_path)
@@ -486,7 +484,7 @@ class Zrsd002Loader(BaseLoader):
     """Load Billing Documents from zrsd002.XLSX - ALL 30 COLUMNS"""
     
     def load(self) -> Dict[str, int]:
-        file_path = EXCEL_FILES['zrsd002']
+        file_path = self.file_path or EXCEL_FILES['zrsd002']
         print(f"Loading {file_path}...")
         
         # File has hidden/merged row 0 (all NaN), row 1 has headers (openpyxl can see it)
@@ -569,7 +567,7 @@ class Zrsd004Loader(BaseLoader):
     """Load Delivery Documents from zrsd004.XLSX - ALL 34 COLUMNS"""
     
     def load(self) -> Dict[str, int]:
-        file_path = EXCEL_FILES['zrsd004']
+        file_path = self.file_path or EXCEL_FILES['zrsd004']
         print(f"Loading {file_path}...")
         
         # File has formatted headers in row 1 that pandas cannot parse
@@ -983,7 +981,7 @@ class TargetLoader(BaseLoader):
     """Load Sales Targets from target.xlsx - ALL 4 COLUMNS"""
     
     def load(self) -> Dict[str, int]:
-        file_path = EXCEL_FILES['target']
+        file_path = self.file_path or EXCEL_FILES['target']
         print(f"Loading {file_path}...")
         
         df = pd.read_excel(file_path, header=0, dtype=str)
