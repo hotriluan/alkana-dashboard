@@ -69,7 +69,7 @@ services:
       context: .
       dockerfile: Dockerfile.frontend
       args:
-        - VITE_API_URL=/api
+        - VITE_API_URL=
     container_name: alkana-frontend
     depends_on:
       backend:
