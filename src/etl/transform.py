@@ -976,75 +976,77 @@ class Transformer:
         seen_pairs = set()
 
         # ---------------------------------------------------------
-        # 0. PREPARE OUTBOUND DATA (For Storage Time)
+        # 0. CONSOLIDATED RawMb51 DATA PREP (Single Query Optimization)
         # ---------------------------------------------------------
-        # Get MIN posting date for MVT 601 (Delivery) per Batch
-        outbound_df = pd.read_sql(
-            self.db.query(RawMb51.col_6_batch, func.min(RawMb51.col_0_posting_date).label('issue_date'))
-            .filter(RawMb51.col_1_mvt_type == 601)
-            .filter(RawMb51.col_6_batch.isnot(None))
-            .group_by(RawMb51.col_6_batch).statement,
-            self.db.bind
-        )
+        # Single query to fetch all needed MB51 data with conditional aggregations
+        # This replaces 4 separate table scans with 1 optimized query
+        from sqlalchemy import case
         
-        # Create Lookup: Batch -> Issue Date
-        batch_issue_map = {}
-        if not outbound_df.empty:
-            for _, row in outbound_df.iterrows():
-                b = str(row['col_6_batch']).strip()
-                d = safe_convert(row['issue_date'])
-                if b and d:
-                    if isinstance(d, datetime): d = d.date()
-                    batch_issue_map[b] = d
-        
-        print(f"  [OK] Indexed {len(batch_issue_map)} outbound batches for storage calc")
-
-        # ---------------------------------------------------------
-        # 0A. PREPARE DC RECEIPT DATA (For Transit Time - P01)
-        # ---------------------------------------------------------
-        # Get MIN posting date for MVT 101 at DC (plant 1401) per Batch
-        dc_receipt_df = pd.read_sql(
-            self.db.query(RawMb51.col_6_batch, func.min(RawMb51.col_0_posting_date).label('dc_receipt_date'))
-            .filter(RawMb51.col_1_mvt_type == 101)
-            .filter(RawMb51.col_2_plant == 1401)
-            .filter(RawMb51.col_6_batch.isnot(None))
-            .group_by(RawMb51.col_6_batch).statement,
-            self.db.bind
-        )
-        
-        # Create Lookup: Batch -> DC Receipt Date
-        batch_dc_receipt_map = {}
-        if not dc_receipt_df.empty:
-            for _, row in dc_receipt_df.iterrows():
-                b = str(row['col_6_batch']).strip()
-                d = safe_convert(row['dc_receipt_date'])
-                if b and d:
-                    if isinstance(d, datetime): d = d.date()
-                    batch_dc_receipt_map[b] = d
-        
-        print(f"  [OK] Indexed {len(batch_dc_receipt_map)} DC receipts for transit calc")
-
-        # ---------------------------------------------------------
-        # 0B. PREPARE BACKTRACKING DATA (For Preparation Time - MTO)
-        # ---------------------------------------------------------
-        # 1. Map: Batch -> PO Number (from RawMb51 101 where PO like '44%')
-        backtrack_data = pd.read_sql(
-            self.db.query(RawMb51.col_6_batch, RawMb51.col_15_purchase_order)
-            .filter(RawMb51.col_1_mvt_type == 101)
-            .filter(RawMb51.col_15_purchase_order.like('44%'))
+        mb51_data = pd.read_sql(
+            self.db.query(
+                RawMb51.col_6_batch,
+                RawMb51.col_1_mvt_type,
+                RawMb51.col_2_plant,
+                RawMb51.col_0_posting_date,
+                RawMb51.col_15_purchase_order,
+                RawMb51.col_4_material
+            )
+            .filter(
+                # Only fetch records we need (MVT 101, 601)
+                RawMb51.col_1_mvt_type.in_([101, 601])
+            )
             .statement,
             self.db.bind
         )
         
-        batch_po_map = {}
-        if not backtrack_data.empty:
-            for _, row in backtrack_data.iterrows():
-                b = str(row['col_6_batch']).strip()
-                p = str(row['col_15_purchase_order']).strip()
-                if b and p:
-                    batch_po_map[b] = p
-                    
-        # 2. Map: PO Number -> PO Date (from FactPurchaseOrder)
+        # Build all lookup maps from the single dataset
+        batch_issue_map = {}  # MVT 601: Batch -> MIN issue date
+        batch_dc_receipt_map = {}  # MVT 101 at plant 1401: Batch -> MIN DC receipt
+        batch_po_map = {}  # MVT 101 with PO like '44%': Batch -> PO number
+        purchase_mvt_101 = []  # All MVT 101 records for purchase processing
+        
+        if not mb51_data.empty:
+            # Process each row once, populate all maps
+            for _, row in mb51_data.iterrows():
+                mvt = row['col_1_mvt_type']
+                batch = str(row['col_6_batch']).strip() if row['col_6_batch'] else None
+                posting_date = safe_convert(row['col_0_posting_date'])
+                plant = row['col_2_plant']
+                po = str(row['col_15_purchase_order']).strip() if row['col_15_purchase_order'] else None
+                
+                if isinstance(posting_date, datetime):
+                    posting_date = posting_date.date()
+                
+                # Map 1: MVT 601 → Batch Issue Date (MIN)
+                if mvt == 601 and batch and posting_date:
+                    if batch not in batch_issue_map or posting_date < batch_issue_map[batch]:
+                        batch_issue_map[batch] = posting_date
+                
+                # Map 2: MVT 101 at plant 1401 → DC Receipt Date (MIN)
+                if mvt == 101 and plant == 1401 and batch and posting_date:
+                    if batch not in batch_dc_receipt_map or posting_date < batch_dc_receipt_map[batch]:
+                        batch_dc_receipt_map[batch] = posting_date
+                
+                # Map 3: MVT 101 with PO like '44%' → Backtracking PO
+                if mvt == 101 and batch and po and po.startswith('44'):
+                    batch_po_map[batch] = po
+                
+                # Map 4: All MVT 101 for purchase processing
+                if mvt == 101:
+                    purchase_mvt_101.append(row)
+        
+        print(f"  [OK] Consolidated MB51 scan:")
+        print(f"      → {len(batch_issue_map)} outbound batches (MVT 601)")
+        print(f"      → {len(batch_dc_receipt_map)} DC receipts (MVT 101 @ 1401)")
+        print(f"      → {len(batch_po_map)} backtracking batches (MVT 101 PO 44%)")
+        print(f"      → {len(purchase_mvt_101)} purchase movements (MVT 101)")
+
+        # ---------------------------------------------------------
+        # 0B. PREPARE BACKTRACKING DATA (For Preparation Time - MTO)
+        # ---------------------------------------------------------
+        # Already populated batch_po_map above, now just fetch PO dates
+        
+        # Map: PO Number -> PO Date (from FactPurchaseOrder)
         po_date_data = pd.read_sql(
             self.db.query(FactPurchaseOrder.purch_order, FactPurchaseOrder.purch_date)
             .filter(FactPurchaseOrder.purch_order.isnot(None))
@@ -1060,8 +1062,6 @@ class Transformer:
                 if p and d:
                     if isinstance(d, datetime): d = d.date()
                     po_date_map[p] = d
-
-        print(f"  [OK] Indexed {len(batch_po_map)} batches for backtracking")
         
         # ---------------------------------------------------------
         # 0C. PREPARE CHANNEL DATA (For Distribution Channel)
@@ -1086,24 +1086,28 @@ class Transformer:
         print(f"  [OK] Indexed {len(so_channel_map)} sales orders for channel lookup")
         
         # Map 2: Material -> Channel Code (from RawZrsd006) - for MTS
-        # Note: zrsd006 loader doesn't populate material column, use raw_data instead
+        # OPTIMIZED: Use PostgreSQL JSONB operators instead of Python JSON parsing
         from src.db.models import RawZrsd006
-        import json
         
-        zrsd006_records = self.db.query(RawZrsd006.raw_data).all()
+        # Direct JSONB extraction in SQL (10-50x faster than Python loop + json.loads)
+        zrsd006_data = pd.read_sql(
+            self.db.query(
+                RawZrsd006.raw_data['Material Code'].astext.label('material'),
+                RawZrsd006.raw_data['Distribution Channel'].astext.label('channel')
+            )
+            .filter(RawZrsd006.raw_data.isnot(None))
+            .statement,
+            self.db.bind
+        )
         
         material_channel_map = {}
-        for record in zrsd006_records:
-            if record.raw_data:
-                data = json.loads(record.raw_data) if isinstance(record.raw_data, str) else record.raw_data
-                mat = data.get('Material Code')
-                ch = data.get('Distribution Channel')
-                
+        if not zrsd006_data.empty:
+            for _, row in zrsd006_data.iterrows():
+                mat = str(row['material']).strip() if row['material'] else None
+                ch = str(row['channel']).strip() if row['channel'] else None
                 if mat and ch:
-                    mat_str = str(mat).strip()
-                    ch_str = str(ch).strip()
-                    if mat_str and ch_str:
-                        material_channel_map[mat_str] = ch_str
+                    material_channel_map[mat] = ch
+
                     
         print(f"  [OK] Indexed {len(material_channel_map)} materials for channel lookup")
         
@@ -1128,6 +1132,8 @@ class Transformer:
                 if deleted > 0:
                     print(f"  ♻️  Reclassified {deleted} records from {len(production_batches)} batches (Purchase → Production)")
         
+        # Bulk insert production records
+        production_records = []
         if not prod_df.empty:
             for _, row in prod_df.iterrows():
                 start = safe_convert(row.get('release_date'))
@@ -1143,8 +1149,7 @@ class Transformer:
                 prod_days = (end - start).days
                 if prod_days < 0: continue
                 
-                # Calculate Transit Time (Factory → DC for P01 batches)
-                # Transit = Time from production finish (Factory) to MVT 101 at DC (1401)
+                # Calculate Transit Time
                 transit_days = 0
                 mrp_controller = safe_convert(row.get('mrp_controller'))
                 if batch and mrp_controller == 'P01' and batch in batch_dc_receipt_map:
@@ -1152,12 +1157,10 @@ class Transformer:
                     if dc_receipt >= end:
                         transit_days = (dc_receipt - end).days
                 
-                # Calculate Storage Time (DC receipt to DC issue)
-                # Note: For batches with transit, storage starts from DC receipt, not production finish
+                # Calculate Storage Time
                 storage_days = 0
                 storage_start = end
                 if transit_days > 0:
-                    # Storage starts after transit completes
                     storage_start = end + timedelta(days=transit_days)
                 
                 if batch and batch in batch_issue_map:
@@ -1170,7 +1173,6 @@ class Transformer:
                 order_type = 'MTS'
                 if is_mto:
                     order_type = 'MTO'
-                    # Backtracking Strategy: Batch → PO (44xx) → PO Date
                     if batch and batch in batch_po_map:
                         po_num = batch_po_map[batch]
                         if po_num in po_date_map:
@@ -1182,60 +1184,56 @@ class Transformer:
                 channel_code = None
                 material_code = safe_convert(row.get('material_code'))
                 
-                if is_mto:
-                    # MTO: Try Sales Order first
-                    if sales_order and sales_order in so_channel_map:
-                        channel_code = so_channel_map[sales_order]
+                if is_mto and sales_order and sales_order in so_channel_map:
+                    channel_code = so_channel_map[sales_order]
                 
-                # Fallback to Material-based channel (for both MTO without SO match, and MTS)
                 if not channel_code and material_code and material_code in material_channel_map:
                     channel_code = material_channel_map[material_code]
                 
                 order_number = safe_convert(row.get('order_number'))
 
-                # Skip duplicates within the same run (unique key: order_number + batch)
+                # Skip duplicates
                 if order_number and batch and (order_number, batch) in seen_pairs:
                     continue
                 if order_number and batch:
                     seen_pairs.add((order_number, batch))
 
-                fact = FactLeadTime(
-                    material_code=safe_convert(row.get('material_code')),
-                    plant_code=safe_convert(row.get('plant_code')),
-                    order_number=order_number,
-                    order_type=order_type,
-                    batch=batch,
-                    channel_code=channel_code,
-                    start_date=start,
-                    end_date=end,
-                    lead_time_days=prod_days + transit_days + storage_days + prep_days, # Total
-                    production_days=prod_days, # Map to Production
-                    transit_days=transit_days, # Map to Transit (Factory → DC)
-                    storage_days=storage_days, # Map to Storage
-                    preparation_days=prep_days # Map to Preparation
-                )
-                self.db.add(fact)
-                count += 1
+                production_records.append({
+                    'material_code': safe_convert(row.get('material_code')),
+                    'plant_code': safe_convert(row.get('plant_code')),
+                    'order_number': order_number,
+                    'order_type': order_type,
+                    'batch': batch,
+                    'channel_code': channel_code,
+                    'start_date': start,
+                    'end_date': end,
+                    'lead_time_days': prod_days + transit_days + storage_days + prep_days,
+                    'production_days': prod_days,
+                    'transit_days': transit_days,
+                    'storage_days': storage_days,
+                    'preparation_days': prep_days
+                })
                 
-                # Batch commit every 1000 records to avoid memory issues
-                if count % 1000 == 0:
-                    self.db.commit()
-                
-                # Track this batch as processed (Production takes priority over Purchase)
                 if batch:
                     processed_batches.add(batch)
+        
+        # Bulk insert production records
+        if production_records:
+            self.db.bulk_insert_mappings(FactLeadTime, production_records)
+            count += len(production_records)
+            self.db.commit()
 
         # ---------------------------------------------------------
         # 2. PURCHASE ORDERS (External) → Transit Time
         # ONLY for batches NOT in Production
+        # Use pre-fetched purchase_mvt_101 data (no additional query)
         # ---------------------------------------------------------
-        raw_mb51 = pd.read_sql(
-            self.db.query(RawMb51).filter(RawMb51.col_1_mvt_type == 101).statement,
-            self.db.bind
-        )
         raw_po = pd.read_sql(self.db.query(FactPurchaseOrder).statement, self.db.bind)
         
-        if not raw_mb51.empty and not raw_po.empty:
+        if purchase_mvt_101 and not raw_po.empty:
+            # Convert list to DataFrame for merge
+            raw_mb51 = pd.DataFrame(purchase_mvt_101)
+            
             raw_mb51['po_number'] = raw_mb51['col_15_purchase_order'].apply(lambda x: str(x).strip() if x else None)
             merged_po = pd.merge(
                 raw_mb51[raw_mb51['po_number'].notna()],
@@ -1245,10 +1243,11 @@ class Transformer:
                 how='inner'
             )
             
+            # Bulk insert purchase records
+            purchase_records = []
             for _, row in merged_po.iterrows():
                 batch = safe_convert(row.get('col_6_batch'))
                 
-                # SKIP if this batch was already processed as Production Order
                 if batch and batch in processed_batches:
                     continue
                     
@@ -1271,31 +1270,31 @@ class Transformer:
                 
                 order_number = safe_convert(row.get('po_number'))
 
-                # Skip duplicates within the same run (unique key: order_number + batch)
+                # Skip duplicates
                 if order_number and batch and (order_number, batch) in seen_pairs:
                     continue
                 if order_number and batch:
                     seen_pairs.add((order_number, batch))
 
-                fact = FactLeadTime(
-                    material_code=safe_convert(row.get('col_4_material')),
-                    plant_code=safe_convert(row.get('col_2_plant')),
-                    order_number=order_number,
-                    order_type='PURCHASE', # External
-                    batch=batch, # Capture Batch!
-                    start_date=po_date,
-                    end_date=gr_date,
-                    lead_time_days=transit_days + storage_days, # Total
-                    transit_days=transit_days, # Map to Transit
-                    storage_days=storage_days, # Map to Storage
-                    # Others 0
-                )
-                self.db.add(fact)
-                count += 1
-                
-                # Batch commit every 1000 records
-                if count % 1000 == 0:
-                    self.db.commit()
+                purchase_records.append({
+                    'material_code': safe_convert(row.get('col_4_material')),
+                    'plant_code': safe_convert(row.get('col_2_plant')),
+                    'order_number': order_number,
+                    'order_type': 'PURCHASE',
+                    'batch': batch,
+                    'start_date': po_date,
+                    'end_date': gr_date,
+                    'lead_time_days': transit_days + storage_days,
+                    'transit_days': transit_days,
+                    'storage_days': storage_days,
+                    'production_days': 0,
+                    'preparation_days': 0
+                })
+            
+            # Bulk insert purchase records
+            if purchase_records:
+                self.db.bulk_insert_mappings(FactLeadTime, purchase_records)
+                count += len(purchase_records)
                 
         self.db.commit()
         print(f"  [OK] Calculated {count} lead time records (Production + Purchase + Storage)")
@@ -1336,40 +1335,48 @@ class Transformer:
         
         # Yield alerts removed - decommissioned
         
-        # Insert alerts
+        # Insert alerts with BULK UPSERT optimization
         all_alerts = stuck_alerts
+        
+        # OPTIMIZATION: Load existing alerts ONCE, not N queries
+        existing_alerts_query = self.db.query(
+            FactAlert.alert_type,
+            FactAlert.entity_id
+        ).all()
+        
+        # Build in-memory set for O(1) lookup
+        existing_set = {(row.alert_type, row.entity_id) for row in existing_alerts_query}
+        
+        print(f"  [OK] Loaded {len(existing_set)} existing alerts for deduplication")
+        
+        # Prepare bulk insert list (only new alerts)
+        new_alerts = []
         count = 0
         
         for alert in all_alerts:
-            try:
-                # Check if similar alert already exists (prevent duplicates)
-                existing = self.db.query(FactAlert).filter_by(
-                    alert_type=alert.alert_type,
-                    entity_id=alert.entity_id
-                ).first()
-                
-                if not existing:
-                    # Map alert data to FactAlert columns
-                    # STUCK_IN_TRANSIT/DELAYED_TRANSIT → stuck_hours
-                    # LOW_YIELD → yield_pct
-                    fact = FactAlert(
-                        alert_type=alert.alert_type,
-                        severity=alert.severity,
-                        entity_type=alert.entity_type,
-                        entity_id=alert.entity_id,
-                        batch=alert.batch,
-                        material=alert.material,
-                        plant=alert.plant,
-                        stuck_hours=alert.metric_value if alert.alert_type in ('STUCK_IN_TRANSIT', 'DELAYED_TRANSIT') else None,
-                        yield_pct=alert.metric_value if alert.alert_type == 'LOW_YIELD' else None,
-                        message=alert.message,  # ← FIX: Add message field
-                        detected_at=alert.detected_at,
-                        status='ACTIVE'
-                    )
-                    self.db.add(fact)
-                    count += 1
-            except Exception as e:
-                print(f"  ⚠ Error inserting alert: {e}")
+            # Check existence in-memory (O(1) vs O(n) database query)
+            if (alert.alert_type, alert.entity_id) not in existing_set:
+                # Map alert data to FactAlert columns
+                fact_dict = {
+                    'alert_type': alert.alert_type,
+                    'severity': alert.severity,
+                    'entity_type': alert.entity_type,
+                    'entity_id': alert.entity_id,
+                    'batch': alert.batch,
+                    'material': alert.material,
+                    'plant': alert.plant,
+                    'stuck_hours': alert.metric_value if alert.alert_type in ('STUCK_IN_TRANSIT', 'DELAYED_TRANSIT') else None,
+                    'yield_pct': alert.metric_value if alert.alert_type == 'LOW_YIELD' else None,
+                    'message': alert.message,
+                    'detected_at': alert.detected_at,
+                    'status': 'ACTIVE'
+                }
+                new_alerts.append(fact_dict)
+                count += 1
+        
+        # Bulk insert all new alerts at once
+        if new_alerts:
+            self.db.bulk_insert_mappings(FactAlert, new_alerts)
         
         self.db.commit()
         print(f"  ✓ Detected {count} new alerts")
