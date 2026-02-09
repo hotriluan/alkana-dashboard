@@ -67,6 +67,25 @@ logs.txt
 test-ck
 __pycache__
 
+# Test and debug scripts
+test_*.py
+verify_*.py
+benchmark_*.py
+debug_*.py
+check_*.py
+quick_*.py
+apply_indexes_*.py
+force_*.py
+rerun_*.py
+run_full_*.py
+rebuild_*.py
+create_batch_*.py
+list_tables.py
+
+# Database dumps and backups
+*.dump
+alkana_dashboard_backup*.dump
+
 # CK meta commands
 prompt.md
 ck.md
