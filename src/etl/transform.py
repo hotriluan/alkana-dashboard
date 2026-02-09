@@ -397,13 +397,10 @@ class Transformer:
         
         print(f"    Loaded {len(raw_df):,} raw movements")
         
-        # STEP 3: TRUNCATE only after validating we have data to insert
-        print("  [3/3] Starting transactional aggregation...")
+        # STEP 3: UPSERT aggregated data (handles duplicates gracefully)
+        print("  [3/3] Starting transactional aggregation with UPSERT...")
         try:
             # Begin transaction
-            self.db.execute(text("TRUNCATE TABLE fact_inventory CASCADE"))
-            print("    ✓ fact_inventory cleared (transaction open)")
-        
             # Filter only valid rows (has material and mvt_type)
             raw_df = raw_df[
                 (raw_df['col_4_material'].notna()) & 
@@ -412,8 +409,7 @@ class Transformer:
             ].copy()
             
             if raw_df.empty:
-                self.db.rollback()
-                print("    ⚠ No valid data after filtering - rolling back")
+                print("    ⚠ No valid data after filtering - skipping transform")
                 return
             
             print(f"    Processing {len(raw_df):,} valid movements...")
@@ -479,8 +475,42 @@ class Transformer:
             
             print(f"    Aggregated {len(raw_df):,} movements → {len(agg_df):,} inventory records")
             
-            # Insert aggregated data
+            # Use raw SQL UPSERT to handle duplicates (ON CONFLICT DO UPDATE)
+            upsert_sql = text("""
+                INSERT INTO fact_inventory (
+                    posting_date, mvt_type, plant_code, sloc_code, material_code,
+                    material_description, batch, qty, uom, qty_kg, cost_center,
+                    gl_account, material_document, reference, outbound_delivery,
+                    purchase_order, stock_impact, row_hash, raw_id
+                ) VALUES (
+                    :posting_date, :mvt_type, :plant_code, :sloc_code, :material_code,
+                    :material_description, :batch, :qty, :uom, :qty_kg, :cost_center,
+                    :gl_account, :material_document, :reference, :outbound_delivery,
+                    :purchase_order, :stock_impact, :row_hash, :raw_id
+                )
+                ON CONFLICT (material_code, plant_code, posting_date)
+                DO UPDATE SET
+                    mvt_type = EXCLUDED.mvt_type,
+                    sloc_code = EXCLUDED.sloc_code,
+                    material_description = EXCLUDED.material_description,
+                    batch = EXCLUDED.batch,
+                    qty = EXCLUDED.qty,
+                    uom = EXCLUDED.uom,
+                    qty_kg = EXCLUDED.qty_kg,
+                    cost_center = EXCLUDED.cost_center,
+                    gl_account = EXCLUDED.gl_account,
+                    material_document = EXCLUDED.material_document,
+                    reference = EXCLUDED.reference,
+                    outbound_delivery = EXCLUDED.outbound_delivery,
+                    purchase_order = EXCLUDED.purchase_order,
+                    stock_impact = EXCLUDED.stock_impact,
+                    row_hash = EXCLUDED.row_hash
+            """)
+            
             count = 0
+            inserted = 0
+            updated = 0
+            
             for _, row in agg_df.iterrows():
                 # Compute hash for this aggregated record
                 hash_data = {
@@ -490,37 +520,50 @@ class Transformer:
                 }
                 row_hash = compute_row_hash(hash_data)
                 
-                fact = FactInventory(
-                    posting_date=safe_convert(row['col_0_posting_date']),
-                    mvt_type=safe_convert(row['col_1_mvt_type']),  # Representative mvt_type
-                    plant_code=safe_convert(row['col_2_plant']),
-                    sloc_code=safe_convert(row['col_3_sloc']),
+                # Check if record exists
+                existing = self.db.query(FactInventory).filter_by(
                     material_code=safe_convert(row['col_4_material']),
-                    material_description=safe_convert(row['col_5_material_desc']),
-                    batch=safe_convert(row['col_6_batch']),
-                    qty=safe_convert(row['net_qty']),  # NET quantity change
-                    uom=safe_convert(row['col_8_uom']),
-                    qty_kg=safe_convert(row['net_qty_kg']),  # NET kg change
-                    cost_center=safe_convert(row['col_9_cost_center']),
-                    gl_account=safe_convert(row['col_10_gl_account']),
-                    material_document=safe_convert(row['col_11_material_doc']),
-                    reference=safe_convert(row['col_12_reference']),
-                    outbound_delivery=safe_convert(row['col_13_outbound_delivery']),
-                    purchase_order=safe_convert(row['col_15_purchase_order']),
-                    stock_impact=1 if row['net_qty'] > 0 else (-1 if row['net_qty'] < 0 else 0),
-                    row_hash=row_hash,
-                    raw_id=None  # Aggregated record, no single raw_id
-                )
-                self.db.add(fact)
+                    plant_code=safe_convert(row['col_2_plant']),
+                    posting_date=safe_convert(row['col_0_posting_date'])
+                ).first()
+                
+                # Execute UPSERT
+                self.db.execute(upsert_sql, {
+                    'posting_date': safe_convert(row['col_0_posting_date']),
+                    'mvt_type': safe_convert(row['col_1_mvt_type']),
+                    'plant_code': safe_convert(row['col_2_plant']),
+                    'sloc_code': safe_convert(row['col_3_sloc']),
+                    'material_code': safe_convert(row['col_4_material']),
+                    'material_description': safe_convert(row['col_5_material_desc']),
+                    'batch': safe_convert(row['col_6_batch']),
+                    'qty': safe_convert(row['net_qty']),
+                    'uom': safe_convert(row['col_8_uom']),
+                    'qty_kg': safe_convert(row['net_qty_kg']),
+                    'cost_center': safe_convert(row['col_9_cost_center']),
+                    'gl_account': safe_convert(row['col_10_gl_account']),
+                    'material_document': safe_convert(row['col_11_material_doc']),
+                    'reference': safe_convert(row['col_12_reference']),
+                    'outbound_delivery': safe_convert(row['col_13_outbound_delivery']),
+                    'purchase_order': safe_convert(row['col_15_purchase_order']),
+                    'stock_impact': 1 if row['net_qty'] > 0 else (-1 if row['net_qty'] < 0 else 0),
+                    'row_hash': row_hash,
+                    'raw_id': None
+                })
+                
+                if existing:
+                    updated += 1
+                else:
+                    inserted += 1
                 count += 1
                 
                 # Commit in batches for large datasets
                 if count % 5000 == 0:
                     self.db.commit()
-                    print(f"    ... {count:,} records inserted")
+                    print(f"    ... {count:,} records processed (inserted: {inserted:,}, updated: {updated:,})")
             
             self.db.commit()
             print(f"  ✓ Transformed {count:,} aggregated inventory records")
+            print(f"    Inserted: {inserted:,}, Updated: {updated:,}")
             print(f"    UNIQUE constraint enforced: 1 row per (material, plant, date)")
             print(f"    Transaction committed successfully")
             
