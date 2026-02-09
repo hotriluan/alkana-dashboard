@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### [Performance] 2026-02-09
 
+**ALERT DETECTION OPTIMIZATION - 82.6% FASTER**
+- Optimized alert detection from 112.64s → 19.58s (local) / ~350s → 59.77s (production)
+- Pre-filter MB51 once for all P01 batches instead of 6920× in loop
+- Netting operations: 106.87s → 14.06s (86.8% faster)
+- Alert accuracy validated: 323 delays detected (100% match on both environments)
+- Code review: 8.5/10 with Priority 2 fixes applied
+
+**Backend Changes:**
+
+**File:** `src/core/alerts.py`
+- Lines 102-120: Pre-filter MB51 for all batches at once (6920 filters → 1 filter)
+- Removed unused `self.netting_engine` object
+- Added guard clause for empty batch list
+- Documented memory trade-off for `.copy()` operation
+
+**File:** `src/etl/transform.py`
+- Lines 1352-1418: Added performance timing logs for alert detection
+- Granular metrics: query time, pre-filter time, netting time, total time
+
 **ETL PIPELINE OPTIMIZATION - 69.4% FASTER**
 - Optimized `transform_cooispi` from 30s → 5.43s (81.9% faster)
 - Optimized `transform_lead_time` from 17s → 8.97s (47.2% faster)
