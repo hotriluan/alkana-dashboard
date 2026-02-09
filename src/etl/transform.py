@@ -1351,6 +1351,9 @@ class Transformer:
     
     def detect_alerts(self):
         """Detect and insert alerts (stuck transit only - yield alerts removed)"""
+        import time
+        start_time = time.time()
+        
         print("Detecting alerts...")
         
         mb51_df = self.normalize_mb51_df(self.load_raw_to_df(RawMb51))
@@ -1366,7 +1369,9 @@ class Transformer:
         )
         
         # Detect stuck in transit (Factory → DC, so check at DC plant 1401)
+        stuck_start = time.time()
         stuck_alerts = detector.detect_stuck_in_transit(plant=1401)
+        stuck_duration = time.time() - stuck_start
         
         # Yield alerts removed - decommissioned
         
@@ -1414,4 +1419,9 @@ class Transformer:
             self.db.bulk_insert_mappings(FactAlert, new_alerts)
         
         self.db.commit()
+        
+        total_duration = time.time() - start_time
         print(f"  ✓ Detected {count} new alerts")
+        print(f"  ⏱ Alert detection performance:")
+        print(f"     - Stuck-in-transit detection: {stuck_duration:.2f}s")
+        print(f"     - Total alert detection: {total_duration:.2f}s")

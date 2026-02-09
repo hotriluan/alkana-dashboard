@@ -47,7 +47,7 @@ class AlertDetector:
         yield_threshold_pct: float = LOW_YIELD_THRESHOLD,
         uom_converter = None
     ):
-        self.netting_engine = StackNettingEngine(mb51_df)
+        # Note: self.netting_engine removed - we create temp engines with pre-filtered data for better performance
         self.mb51_df = mb51_df
         self.production_chain_df = production_chain_df
         self.stuck_threshold = stuck_threshold_hours
@@ -72,7 +72,9 @@ class AlertDetector:
         IMPORTANT: Only applies to P01 (Finished Goods)
         - P02/P03 (Semi-finished) don't go to finished goods warehouse
         """
+        import time
         alerts = []
+        query_start = time.time()
         current_time = datetime.now()
         
         # Get P01 batches with production finish dates from database
@@ -92,6 +94,36 @@ class AlertDetector:
                 FactProduction.actual_finish_date.isnot(None)
             ).all()
             
+            query_duration = time.time() - query_start
+            print(f"     - Query P01 batches: {query_duration:.2f}s ({len(p01_batches)} batches)")
+            
+            # Guard clause: Early return if no P01 batches found
+            if not p01_batches:
+                print("     - No P01 batches found, skipping netting")
+                return []
+            
+            # OPTIMIZATION: Pre-filter MB51 data once for all P01 batches at plant 1401
+            # Instead of filtering once per batch in the loop, pre-filter all batches at once
+            prefilter_start = time.time()
+            batch_list = [row.batch for row in p01_batches]
+            
+            # Pre-filter MB51 for MVT 101/102 at plant 1401 for all P01 batches
+            # Note: .copy() creates memory overhead but ensures data isolation
+            # Current dataset: ~6K movements (acceptable). Monitor if MB51 grows to millions.
+            mb51_prefiltered = self.mb51_df[
+                (self.mb51_df['col_1_mvt_type'].isin([101, 102])) &
+                (self.mb51_df['col_2_plant'] == plant) &
+                (self.mb51_df['col_6_batch'].isin(batch_list))
+            ].copy()
+            
+            prefilter_duration = time.time() - prefilter_start
+            print(f"     - Pre-filter MB51 (all batches): {prefilter_duration:.2f}s ({len(mb51_prefiltered)} movements)")
+            
+            # Create a temporary netting engine with pre-filtered data
+            from src.core.netting import StackNettingEngine
+            temp_netting_engine = StackNettingEngine(mb51_prefiltered)
+            
+            netting_start = time.time()
             for batch_row in p01_batches:
                 batch = batch_row.batch
                 actual_finish_date = batch_row.actual_finish_date
@@ -104,7 +136,8 @@ class AlertDetector:
                     finish_dt = datetime.combine(actual_finish_date, datetime.min.time())
                 
                 # Get MVT 101 receipt date at Plant 1401 (after netting 101/102)
-                result_101 = self.netting_engine.apply_stack_netting(batch, plant, 101, 102)
+                # Use temp_netting_engine with pre-filtered data (much faster!)
+                result_101 = temp_netting_engine.apply_stack_netting(batch, plant, 101, 102)
                 
                 if result_101.is_fully_reversed:
                     continue  # No valid receipt
@@ -135,6 +168,8 @@ class AlertDetector:
         finally:
             db.close()
         
+        netting_duration = time.time() - netting_start
+        print(f"     - Netting operations ({len(alerts)} delays found): {netting_duration:.2f}s")
         
         return alerts
     
