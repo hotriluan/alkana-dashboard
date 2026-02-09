@@ -22,6 +22,24 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.inputs.skip_tests != 'true'
     
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: alkana_dashboard
+          POSTGRES_USER: alkana_user
+          POSTGRES_PASSWORD: testpass123
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    env:
+      DATABASE_URL: postgresql://alkana_user:testpass123@localhost:5432/alkana_dashboard
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
