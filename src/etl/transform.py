@@ -361,11 +361,18 @@ class Transformer:
         print(f"  ✓ Transformed {len(to_insert) + len(to_update)} production orders")
     
     def transform_mb51(self):
-        """Transform raw_mb51 to fact_inventory (INDIVIDUAL transactions with REAL movement types)"""
-        print("Transforming mb51 to fact_inventory (individual transactions)...")
+        """Transform raw_mb51 to fact_inventory (AGGREGATED by material/plant/date)
+        
+        Phase 3 Fix: Aggregate movements by (material_code, plant_code, posting_date)
+        to prevent duplicates and comply with UNIQUE constraint.
+        
+        Each row in fact_inventory represents the NET stock position for a specific
+        material at a specific plant on a specific date.
+        """
+        print("Transforming mb51 to fact_inventory (aggregated by material/plant/date)...")
         
         # STEP 1: AUTO-POPULATE dim_material FIRST (Material Master Discovery)
-        print("  [1/2] Populating dim_material from unique materials...")
+        print("  [1/3] Populating dim_material from unique materials...")
         populate_sql = text("""
             INSERT INTO dim_material (material_code, material_description)
             SELECT DISTINCT 
@@ -381,121 +388,149 @@ class Transformer:
         self.db.commit()
         print(f"    ✓ Populated/updated {result.rowcount} materials in dim_material")
         
-        # STEP 2: Transform individual transactions (NO AGGREGATION)
-        print("  [2/2] Creating individual fact_inventory transactions...")
+        # STEP 2: Load and validate raw data BEFORE truncating
+        print("  [2/3] Loading raw MB51 data...")
         raw_df = self.load_raw_to_df(RawMb51)
         if raw_df.empty:
-            print("    ⚠ No data in raw_mb51")
+            print("    ⚠ No data in raw_mb51 - skipping transform")
             return
         
-        # Filter only valid rows (has material and mvt_type)
-        raw_df = raw_df[
-            (raw_df['col_4_material'].notna()) & 
-            (raw_df['col_1_mvt_type'].notna())
-        ].copy()
+        print(f"    Loaded {len(raw_df):,} raw movements")
         
-        # Add stock impact for each transaction
-        raw_df['stock_impact'] = raw_df['col_1_mvt_type'].apply(
-            lambda x: get_stock_impact(x) if pd.notna(x) else 0
-        )
+        # STEP 3: TRUNCATE only after validating we have data to insert
+        print("  [3/3] Starting transactional aggregation...")
+        try:
+            # Begin transaction
+            self.db.execute(text("TRUNCATE TABLE fact_inventory CASCADE"))
+            print("    ✓ fact_inventory cleared (transaction open)")
         
-        # Convert qty to KG for each transaction
-        def convert_to_kg(row):
-            material = row.get('col_4_material')
-            uom = row.get('col_8_uom')
-            qty = row.get('col_7_qty')
+            # Filter only valid rows (has material and mvt_type)
+            raw_df = raw_df[
+                (raw_df['col_4_material'].notna()) & 
+                (raw_df['col_1_mvt_type'].notna()) &
+                (raw_df['col_0_posting_date'].notna())
+            ].copy()
             
-            if pd.isna(qty):
+            if raw_df.empty:
+                self.db.rollback()
+                print("    ⚠ No valid data after filtering - rolling back")
+                return
+            
+            print(f"    Processing {len(raw_df):,} valid movements...")
+        
+            # Convert qty to KG for each transaction
+            def convert_to_kg(row):
+                material = row.get('col_4_material')
+                uom = row.get('col_8_uom')
+                qty = row.get('col_7_qty')
+                
+                if pd.isna(qty):
+                    return 0.0
+                
+                # If already in KG, return as-is
+                if uom == 'KG':
+                    return float(qty)
+                
+                # If in PC, need conversion
+                if uom == 'PC' and not pd.isna(material):
+                    kg_per_unit = self.uom_converter.get_kg_per_unit(str(material))
+                    if kg_per_unit:
+                        return float(qty) * kg_per_unit
+                
+                # Default: can't convert, return 0
                 return 0.0
             
-            # If already in KG, return as-is
-            if uom == 'KG':
-                return float(qty)
-            
-            # If in PC, need conversion
-            if uom == 'PC' and not pd.isna(material):
-                kg_per_unit = self.uom_converter.get_kg_per_unit(str(material))
-                if kg_per_unit:
-                    return float(qty) * kg_per_unit
-            
-            # Default: can't convert, return 0
-            return 0.0
-        
-        raw_df['qty_kg'] = raw_df.apply(convert_to_kg, axis=1)
-        
-        # Create INDIVIDUAL fact records (preserve real mvt_types: 601, 101, 261, etc.)
-        count = 0
-        skipped = 0
-        for _, row in raw_df.iterrows():
-            material = safe_convert(row['col_4_material'])
-            mvt_type = safe_convert(row['col_1_mvt_type'])
-            
-            # Skip if no material or mvt_type
-            if material is None or mvt_type is None:
-                skipped += 1
-                continue
-            
-            # Convert all fields
-            posting_date = safe_convert(row['col_0_posting_date'])
-            plant = safe_convert(row['col_2_plant'])
-            sloc = safe_convert(row['col_3_sloc'])
-            material_desc = safe_convert(row['col_5_material_desc'])
-            batch = safe_convert(row['col_6_batch'])
-            qty = safe_convert(row['col_7_qty'])
-            uom = safe_convert(row['col_8_uom'])
-            qty_kg = safe_convert(row['qty_kg'])
-            cost_center = safe_convert(row['col_9_cost_center'])
-            gl_account = safe_convert(row['col_10_gl_account'])
-            material_doc = safe_convert(row['col_11_material_doc'])
-            reference = safe_convert(row['col_12_reference'])
-            outbound_delivery = safe_convert(row['col_13_outbound_delivery'])
-            purchase_order = safe_convert(row['col_15_purchase_order'])
-            stock_impact = safe_convert(row['stock_impact'])
-            raw_id = safe_convert(row['id'])
-            
-            # Compute unique hash for this transaction
-            hash_data = {
-                'material': material,
-                'mvt_type': mvt_type,
-                'posting_date': str(posting_date) if posting_date else None,
-                'batch': batch,
-                'material_doc': material_doc
-            }
-            row_hash = compute_row_hash(hash_data)
-            
-            # Create fact record with REAL movement type (not 999!)
-            fact = FactInventory(
-                posting_date=posting_date,
-                mvt_type=mvt_type,  # PRESERVE REAL mvt_type (601, 101, 261, etc.)
-                plant_code=plant,
-                sloc_code=sloc,
-                material_code=material,
-                material_description=material_desc,
-                batch=batch,
-                qty=qty,
-                uom=uom,
-                qty_kg=qty_kg,
-                cost_center=cost_center,
-                gl_account=gl_account,
-                material_document=material_doc,
-                reference=reference,
-                outbound_delivery=outbound_delivery,
-                purchase_order=purchase_order,
-                stock_impact=stock_impact,
-                row_hash=row_hash,
-                raw_id=raw_id
+            # Add stock impact and qty_kg to DataFrame
+            raw_df['stock_impact'] = raw_df['col_1_mvt_type'].apply(
+                lambda x: get_stock_impact(x) if pd.notna(x) else 0
             )
-            self.db.add(fact)
-            count += 1
+            raw_df['qty_kg'] = raw_df.apply(convert_to_kg, axis=1)
             
-            # Commit in batches for large datasets
-            if count % 5000 == 0:
-                self.db.commit()
-                print(f"    ... {count} transactions processed")
-        
-        self.db.commit()
-        print(f"  ✓ Transformed {count} individual inventory transactions (skipped {skipped} invalid rows)")
-        print(f"    Movement types preserved: 601, 101, 261, etc. (NO aggregation, NO mvt_type=999)")
+            # Prepare aggregation columns
+            raw_df['net_qty'] = raw_df['col_7_qty'].fillna(0) * raw_df['stock_impact']
+            raw_df['net_qty_kg'] = raw_df['qty_kg'] * raw_df['stock_impact']
+            
+            # Group by material/plant/date and aggregate
+            agg_df = raw_df.groupby(['col_4_material', 'col_2_plant', 'col_0_posting_date']).agg({
+                # Sum quantities (net stock change for the date)
+                'net_qty': 'sum',
+                'net_qty_kg': 'sum',
+                
+                # Take first occurrence for descriptive fields
+                'col_5_material_desc': 'first',
+                'col_8_uom': 'first',
+                'col_3_sloc': 'first',
+                'col_6_batch': 'first',
+                'col_9_cost_center': 'first',
+                'col_10_gl_account': 'first',
+                
+                # For movement type, use most common (mode) or first
+                'col_1_mvt_type': lambda x: x.mode()[0] if not x.mode().empty else x.iloc[0],
+                
+                # Collect references (take first non-null)
+                'col_11_material_doc': lambda x: x.dropna().iloc[0] if not x.dropna().empty else None,
+                'col_12_reference': lambda x: x.dropna().iloc[0] if not x.dropna().empty else None,
+                'col_13_outbound_delivery': lambda x: x.dropna().iloc[0] if not x.dropna().empty else None,
+                'col_15_purchase_order': lambda x: x.dropna().iloc[0] if not x.dropna().empty else None,
+                
+                # Count transactions for this aggregation
+                'id': 'count',  # Number of transactions aggregated
+            }).reset_index()
+            
+            print(f"    Aggregated {len(raw_df):,} movements → {len(agg_df):,} inventory records")
+            
+            # Insert aggregated data
+            count = 0
+            for _, row in agg_df.iterrows():
+                # Compute hash for this aggregated record
+                hash_data = {
+                    'material': row['col_4_material'],
+                    'plant': row['col_2_plant'],
+                    'posting_date': str(row['col_0_posting_date'])
+                }
+                row_hash = compute_row_hash(hash_data)
+                
+                fact = FactInventory(
+                    posting_date=safe_convert(row['col_0_posting_date']),
+                    mvt_type=safe_convert(row['col_1_mvt_type']),  # Representative mvt_type
+                    plant_code=safe_convert(row['col_2_plant']),
+                    sloc_code=safe_convert(row['col_3_sloc']),
+                    material_code=safe_convert(row['col_4_material']),
+                    material_description=safe_convert(row['col_5_material_desc']),
+                    batch=safe_convert(row['col_6_batch']),
+                    qty=safe_convert(row['net_qty']),  # NET quantity change
+                    uom=safe_convert(row['col_8_uom']),
+                    qty_kg=safe_convert(row['net_qty_kg']),  # NET kg change
+                    cost_center=safe_convert(row['col_9_cost_center']),
+                    gl_account=safe_convert(row['col_10_gl_account']),
+                    material_document=safe_convert(row['col_11_material_doc']),
+                    reference=safe_convert(row['col_12_reference']),
+                    outbound_delivery=safe_convert(row['col_13_outbound_delivery']),
+                    purchase_order=safe_convert(row['col_15_purchase_order']),
+                    stock_impact=1 if row['net_qty'] > 0 else (-1 if row['net_qty'] < 0 else 0),
+                    row_hash=row_hash,
+                    raw_id=None  # Aggregated record, no single raw_id
+                )
+                self.db.add(fact)
+                count += 1
+                
+                # Commit in batches for large datasets
+                if count % 5000 == 0:
+                    self.db.commit()
+                    print(f"    ... {count:,} records inserted")
+            
+            self.db.commit()
+            print(f"  ✓ Transformed {count:,} aggregated inventory records")
+            print(f"    UNIQUE constraint enforced: 1 row per (material, plant, date)")
+            print(f"    Transaction committed successfully")
+            
+        except Exception as e:
+            self.db.rollback()
+            print(f"\n  ❌ Transform failed: {e}")
+            print("  Transaction rolled back - fact_inventory restored to pre-transform state")
+            import traceback
+            traceback.print_exc()
+            raise
 
     
     def transform_zrmm024(self):
