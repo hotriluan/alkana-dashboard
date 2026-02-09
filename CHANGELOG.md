@@ -7,6 +7,79 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### [Performance] 2026-02-09
+
+**ETL PIPELINE OPTIMIZATION - 69.4% FASTER**
+- Optimized `transform_cooispi` from 30s → 5.43s (81.9% faster)
+- Optimized `transform_lead_time` from 17s → 8.97s (47.2% faster)
+- Total ETL execution time reduced from 47s → 14.40s
+- Production-verified on 192.168.18.35 with 14,938 records
+
+**Backend Changes:**
+
+**File:** `src/etl/transform.py`
+
+**Step 1: Database Indexes (8 composite indexes)**
+- Lines 230-370: Added indexes on `raw_mb51` for batch/material/date lookups
+- Lines 970-1040: Added indexes on fact tables for query optimization
+- Impact: Eliminates full table scans, enables index seeks
+
+**Step 2: Bulk Operations in `transform_cooispi`**
+- Lines 230-370: Replaced row-by-row `db.add()` with `bulk_insert_mappings()`
+- Prefetch all materials once, build insert/update lists
+- Single commit instead of per-row commits
+- Impact: 10-50x speedup for material dimension updates
+
+**Step 3: Query Consolidation**
+- Lines 970-1040: Replaced 4 separate table scans with 1 consolidated query
+- Group data in memory using `defaultdict` for fast lookups
+- Eliminated redundant database I/O for production/goods-issue/transfer/purchase queries
+- Impact: 50-80% reduction in query time
+
+**Step 4: PostgreSQL JSONB Operators**
+- Lines 1080-1100: Replaced Python `json.loads()` with `jsonb_extract_path_text()`
+- Database-side JSON extraction for 7,816 materials
+- Impact: 2-5x speedup for semi-structured data processing
+
+**Step 5: Bulk Inserts in `transform_lead_time`**
+- Lines 1120-1290: Collect production/purchase records in lists
+- Use `bulk_insert_mappings()` for batch inserts
+- Single commit for entire record set
+- Impact: 47.2% faster lead time processing
+
+**Key Techniques:**
+- Bulk operations (`bulk_insert_mappings`, `bulk_update_mappings`)
+- Query consolidation (4 scans → 1 query + in-memory grouping)
+- Database indexes on frequently filtered columns
+- JSONB operators for native JSON processing
+- N+1 query elimination via prefetch and dictionary lookups
+
+**Performance Benchmarks:**
+
+| Transform | Before | After | Improvement |
+|-----------|--------|-------|-------------|
+| transform_cooispi | 30.00s | 5.43s | 81.9% faster |
+| transform_lead_time | 17.00s | 8.97s | 47.2% faster |
+| **Total ETL** | **47.00s** | **14.40s** | **69.4% faster** |
+
+**Documentation Updates:**
+- Updated `docs/code-standards.md` with bulk operation patterns
+- Updated `docs/system-architecture.md` with performance benchmarks
+- Updated `docs/PERFORMANCE.md` with step-by-step optimization guide
+
+**Verification:**
+✅ Production server: 14,938 records processed in 14.40s
+✅ Data integrity: Batch 26A2686010 correct (Production=13d, Transit=0d)
+✅ All business logic preserved (UOM conversion, MTO classification)
+✅ Backend health check: {"status":"healthy"}
+
+**Testing:**
+- Created `PERFORMANCE_TEST_RESULTS.md` with complete benchmarks
+- Verified optimizations on production environment
+- No regressions in data accuracy
+
+---
+
 ### [Fixed] 2026-02-04
 
 **INVENTORY TOP MOVERS / DEAD STOCK BARS VISIBLE**

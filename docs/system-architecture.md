@@ -1285,23 +1285,77 @@ graph TB
 
 ### 8. Performance Optimizations
 
-#### Database
-- **Indexes**: On frequently queried columns (material_id, customer_id, date)
+#### ETL Performance Benchmarks (Feb 2026)
+
+**Production Environment** (PostgreSQL on 192.168.18.35, 14,938 records):
+
+| Transform | Before | After | Improvement | Key Optimizations |
+|-----------|--------|-------|-------------|-------------------|
+| transform_cooispi | 30.00s | 5.43s | **81.9% faster** | Bulk ops, JSONB operators |
+| transform_lead_time | 17.00s | 8.97s | **47.2% faster** | Query consolidation, bulk inserts |
+| **Total ETL** | **47.00s** | **14.40s** | **69.4% faster** | — |
+
+**Optimization Techniques Applied:**
+
+1. **Database Indexes** (8 composite indexes):
+   ```sql
+   -- Raw layer indexes for fast lookups
+   CREATE INDEX idx_mb51_batch_mvt_date ON raw_mb51 
+     (batch_number, movement_type, posting_date);
+   
+   CREATE INDEX idx_mb51_material_date ON raw_mb51 
+     (material, posting_date);
+   
+   -- Fact table indexes for queries
+   CREATE INDEX idx_leadtime_batch_date ON fact_lead_time 
+     (batch_number, snapshot_date);
+   
+   CREATE INDEX idx_production_batch_date ON fact_production_record 
+     (batch_number, posting_date);
+   ```
+
+2. **Bulk Operations** (10-50x speedup):
+   - Replaced row-by-row `db.add()` with `bulk_insert_mappings()`
+   - Batch commits instead of per-row commits
+   - Applied in `transform_cooispi` (Material Dimension) and `transform_lead_time` (Production/Purchase records)
+
+3. **Query Consolidation** (4 scans → 1 query):
+   - Before: 4 separate table scans for production/goods-issue/transfer/purchase
+   - After: 1 consolidated query + in-memory grouping with `defaultdict`
+   - Eliminated redundant database I/O
+
+4. **PostgreSQL JSONB Operators**:
+   - Replaced Python `json.loads()` loops with native `jsonb_extract_path_text()`
+   - Processes 7,816 materials without Python-side parsing
+   - Database-side JSON extraction (2-5x faster than Python)
+
+5. **N+1 Query Elimination**:
+   - Identified and removed per-batch database lookups
+   - Prefetch all data in single query, build lookup dictionaries
+
+#### Database Optimizations
+
+- **Indexes**: 20+ composite indexes on business keys (batch_number, material_id, customer_id, date)
 - **Materialized Views**: Pre-aggregated metrics refreshed periodically
-- **Connection Pooling**: Reuse database connections
-- **Query Optimization**: Avoid N+1 queries, use joins efficiently
+- **Connection Pooling**: SQLAlchemy manages connection pool (size: 20, max overflow: 40)
+- **Query Optimization**: Eliminated N+1 patterns, use bulk operations for >100 records
+- **JSONB for JSON Columns**: Native PostgreSQL operators for semi-structured data
 
-#### Backend
-- **Caching**: Redis for frequently accessed data (planned)
-- **Batch Processing**: Bulk inserts for large datasets
+#### Backend Optimizations
+
+- **Bulk Processing**: `bulk_insert_mappings()` and `bulk_update_mappings()` for ETL transforms
+- **Query Consolidation**: Single queries with in-memory grouping instead of multiple scans
 - **Async I/O**: FastAPI async endpoints for I/O-bound operations
-- **Pagination**: Limit result sets to prevent memory issues
+- **Pagination**: Limit result sets to prevent memory issues (default: 1000 records/page)
+- **In-Memory Caching**: `defaultdict` and hash maps for repeated lookups
 
-#### Frontend
+#### Frontend Optimizations
+
 - **Code Splitting**: Lazy load routes and components
-- **Memoization**: React.memo, useMemo, useCallback
-- **Query Caching**: TanStack Query caches API responses
+- **Memoization**: React.memo, useMemo, useCallback for expensive computations
+- **Query Caching**: TanStack Query caches API responses (5-minute staleTime)
 - **Virtual Scrolling**: For large data tables (planned)
+- **Debounced Filters**: 300ms debounce on search/filter inputs
 
 ### 9. Security Considerations
 

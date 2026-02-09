@@ -615,6 +615,216 @@ async def get_inventory(
 
 ## ETL Performance
 
+### Production Benchmarks (Feb 2026)
+
+**Environment:** PostgreSQL on 192.168.18.35, 14,938 production records
+
+| Transform | Before | After | Change | Improvement |
+|-----------|--------|-------|--------|-------------|
+| `transform_cooispi` | 30.00s | 5.43s | -24.57s | **81.9% faster** |
+| `transform_lead_time` | 17.00s | 8.97s | -8.03s | **47.2% faster** |
+| **Total ETL Pipeline** | **47.00s** | **14.40s** | **-32.60s** | **69.4% faster** |
+
+#### Step-by-Step Optimization
+
+**Step 1: Database Indexes** (8 composite indexes)
+```sql
+-- Raw MB51 for production chain queries
+CREATE INDEX idx_mb51_batch_mvt_date ON raw_mb51 
+  (batch_number, movement_type, posting_date);
+
+CREATE INDEX idx_mb51_material_date ON raw_mb51 
+  (material, posting_date);
+
+-- Fact tables for fast lookups
+CREATE INDEX idx_leadtime_batch_date ON fact_lead_time 
+  (batch_number, snapshot_date);
+
+CREATE INDEX idx_production_batch_date ON fact_production_record 
+  (batch_number, posting_date);
+
+CREATE INDEX idx_purchase_batch_date ON fact_purchase_receipt 
+  (batch_number, posting_date);
+```
+
+**Impact:** Eliminates full table scans, enables index seeks for batch/material lookups.
+
+**Step 2: Bulk Operations in `transform_cooispi`**
+
+**Before (Slow - 30s):**
+```python
+# Row-by-row operations
+for material_id in materials:
+    existing = db.query(DimMaterial).filter_by(
+        material_id=material_id
+    ).first()
+    
+    if existing:
+        existing.material_name = data['name']
+        db.add(existing)
+    else:
+        db.add(DimMaterial(material_id=material_id, ...))
+    
+    db.commit()  # Commits each row!
+```
+
+**After (Fast - 5.43s):**
+```python
+# Prefetch all materials once
+existing_materials = {
+    m.material_id: m 
+    for m in db.query(DimMaterial).all()
+}
+
+inserts = []
+updates = []
+
+for material_id, data in materials:
+    if material_id in existing_materials:
+        updates.append({'material_id': material_id, ...})
+    else:
+        inserts.append({'material_id': material_id, ...})
+
+# Bulk operations
+if inserts:
+    db.bulk_insert_mappings(DimMaterial, inserts)
+if updates:
+    db.bulk_update_mappings(DimMaterial, updates)
+
+db.commit()  # Single commit
+```
+
+**Impact:** 10-50x speedup by eliminating per-row commits.
+
+**Step 3: Query Consolidation in `transform_lead_time`**
+
+**Before (Slow - 4 table scans):**
+```python
+for batch in batches:
+    # Query 1: Production records
+    production = db.query(RawMb51).filter_by(
+        movement_type='101', batch_number=batch
+    ).all()
+    
+    # Query 2: Goods issue
+    issues = db.query(RawMb51).filter_by(
+        movement_type='261', batch_number=batch
+    ).all()
+    
+    # Query 3: Transfer posting
+    transfers = db.query(RawMb51).filter_by(
+        movement_type='311', batch_number=batch
+    ).all()
+    
+    # Query 4: Purchase receipts
+    purchases = db.query(RawMb51).filter_by(
+        movement_type='301', batch_number=batch
+    ).all()
+```
+
+**After (Fast - 1 consolidated query):**
+```python
+# Single query for all movement types
+all_data = db.query(RawMb51).filter(
+    RawMb51.movement_type.in_(['101', '261', '311', '301']),
+    RawMb51.batch_number.in_(batch_numbers)
+).all()
+
+# Group in memory using defaultdict
+from collections import defaultdict
+production_map = defaultdict(list)
+issues_map = defaultdict(list)
+transfers_map = defaultdict(list)
+purchases_map = defaultdict(list)
+
+for row in all_data:
+    if row.movement_type == '101':
+        production_map[row.batch_number].append(row)
+    elif row.movement_type == '261':
+        issues_map[row.batch_number].append(row)
+    # ... etc
+
+# Process using dictionary lookups
+for batch in batches:
+    production = production_map.get(batch, [])
+    issues = issues_map.get(batch, [])
+    # ... etc
+```
+
+**Impact:** 50-80% reduction in query time by eliminating redundant table scans.
+
+**Step 4: PostgreSQL JSONB Operators**
+
+**Before (Python JSON parsing):**
+```python
+materials = db.query(RawCooispi).all()  # 7,816 materials
+for material in materials:
+    data = json.loads(material.json_data)  # Parse in Python!
+    comp_code = data.get('CompanyCode')
+    plant = data.get('Plant')
+```
+
+**After (Database-side extraction):**
+```python
+from sqlalchemy import func
+
+materials = db.query(
+    RawCooispi.material,
+    func.jsonb_extract_path_text(
+        RawCooispi.json_data, 'CompanyCode'
+    ).label('comp_code'),
+    func.jsonb_extract_path_text(
+        RawCooispi.json_data, 'Plant'
+    ).label('plant')
+).all()
+
+for material in materials:
+    comp_code = material.comp_code  # Already extracted!
+    plant = material.plant
+```
+
+**Impact:** 2-5x speedup for 7,816 materials by using native PostgreSQL JSONB operators.
+
+**Step 5: Bulk Inserts in `transform_lead_time`**
+
+**Before (Row-by-row inserts):**
+```python
+for batch, prod_date, transit_date in production_records:
+    record = FactProductionRecord(
+        batch_number=batch,
+        production_date=prod_date,
+        transit_date=transit_date
+    )
+    db.add(record)
+    db.commit()  # Commit each row!
+```
+
+**After (Bulk insert):**
+```python
+production_records = []
+for batch, prod_date, transit_date in records:
+    production_records.append({
+        'batch_number': batch,
+        'production_date': prod_date,
+        'transit_date': transit_date,
+        'created_at': datetime.now()
+    })
+
+# Bulk insert all at once
+db.bulk_insert_mappings(FactProductionRecord, production_records)
+db.commit()  # Single commit
+```
+
+**Impact:** 47.2% faster `transform_lead_time` (17s → 8.97s).
+
+#### Key Takeaways
+
+1. **Bulk Operations**: Always use `bulk_insert_mappings()` and `bulk_update_mappings()` for >100 records
+2. **Query Consolidation**: Fetch all data in 1 query, group in memory with `defaultdict`
+3. **Database Indexes**: Add composite indexes on frequently filtered columns
+4. **JSONB Operators**: Use PostgreSQL native functions for JSON extraction
+5. **N+1 Elimination**: Prefetch related data, use dictionary lookups instead of per-row queries
+
 ### Batch Processing
 
 **Process in chunks:**

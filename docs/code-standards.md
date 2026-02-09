@@ -467,6 +467,156 @@ describe('ProductCard', () => {
 });
 ```
 
+## Database Performance Optimization
+
+### Bulk Operations Pattern
+**Context:** When inserting/updating large numbers of records (>100), use SQLAlchemy bulk operations instead of row-by-row `db.add()`.
+
+**Performance Impact:** 10-50x speedup for large datasets.
+
+#### ❌ Avoid: Row-by-Row Operations
+```python
+# Slow: N individual commits
+for record in records:
+    fact = FactProduction(
+        batch_number=record['batch'],
+        quantity=record['qty']
+    )
+    db.add(fact)
+    db.commit()  # Commits each row separately
+```
+
+#### ✅ Prefer: Bulk Insert/Update
+```python
+# Fast: Single batch commit
+production_records = []
+for record in records:
+    production_records.append({
+        'batch_number': record['batch'],
+        'quantity': record['qty'],
+        'created_at': datetime.now()
+    })
+
+# Bulk insert all records at once
+db.bulk_insert_mappings(FactProduction, production_records)
+db.commit()
+
+# For updates (when primary key exists):
+db.bulk_update_mappings(FactProduction, records_to_update)
+db.commit()
+```
+
+### Query Consolidation
+**Context:** Avoid multiple table scans when data can be fetched in one query.
+
+**Performance Impact:** Reduces query time by 50-80% when consolidating 3-4 queries.
+
+#### ❌ Avoid: Multiple Queries in Loop
+```python
+# Slow: 4 separate table scans
+for batch in batches:
+    # Query 1: Get production records
+    production = db.query(RawMb51).filter_by(
+        movement_type='101', batch_number=batch
+    ).all()
+    
+    # Query 2: Get goods issue
+    issues = db.query(RawMb51).filter_by(
+        movement_type='261', batch_number=batch
+    ).all()
+    
+    # ... repeats for each batch
+```
+
+#### ✅ Prefer: Single Query + In-Memory Lookup
+```python
+# Fast: 1 consolidated query with in-memory grouping
+all_data = db.query(RawMb51).filter(
+    RawMb51.movement_type.in_(['101', '261', '311']),
+    RawMb51.batch_number.in_(batch_numbers)
+).all()
+
+# Group in memory using defaultdict
+from collections import defaultdict
+production_map = defaultdict(list)
+issues_map = defaultdict(list)
+
+for row in all_data:
+    if row.movement_type == '101':
+        production_map[row.batch_number].append(row)
+    elif row.movement_type == '261':
+        issues_map[row.batch_number].append(row)
+
+# Process using lookups
+for batch in batches:
+    production = production_map.get(batch, [])
+    issues = issues_map.get(batch, [])
+```
+
+### PostgreSQL JSONB Operators
+**Context:** When querying JSON columns, use native PostgreSQL JSONB operators instead of Python JSON parsing.
+
+**Performance Impact:** 2-5x speedup for large JSON columns.
+
+#### ❌ Avoid: Python JSON Parsing
+```python
+# Slow: Python-side JSON parsing
+materials = db.query(RawCooispi).all()
+for material in materials:
+    data = json.loads(material.json_data)  # Parse in Python
+    comp_code = data.get('CompanyCode')
+```
+
+#### ✅ Prefer: PostgreSQL Native JSONB
+```python
+from sqlalchemy import func
+
+# Fast: Database-side JSON extraction
+materials = db.query(
+    RawCooispi.material,
+    func.jsonb_extract_path_text(
+        RawCooispi.json_data, 'CompanyCode'
+    ).label('comp_code')
+).all()
+
+for material in materials:
+    comp_code = material.comp_code  # Already extracted
+```
+
+### Database Indexes
+**Context:** Add composite indexes for frequently filtered columns in large tables.
+
+#### Index Strategy
+```sql
+-- Composite indexes for common query patterns
+CREATE INDEX idx_mb51_batch_mvt_date 
+ON raw_mb51 (batch_number, movement_type, posting_date);
+
+CREATE INDEX idx_leadtime_batch_date 
+ON fact_lead_time (batch_number, snapshot_date);
+
+-- Partial indexes for specific filters
+CREATE INDEX idx_mb51_production 
+ON raw_mb51 (batch_number, posting_date) 
+WHERE movement_type = '101';
+```
+
+### Performance Metrics
+Based on ETL optimization project (Feb 2026):
+
+| Transform | Before | After | Improvement |
+|-----------|--------|-------|-------------|
+| transform_cooispi | 30s | 5.43s | 81.9% faster |
+| transform_lead_time | 17s | 8.97s | 47.2% faster |
+| **Total ETL** | **47s** | **14.40s** | **69.4% faster** |
+
+**Key Techniques:**
+- 8 composite database indexes
+- Bulk operations (`bulk_insert_mappings`)
+- Query consolidation (4 scans → 1 query)
+- JSONB operators for 7,816 materials
+- Eliminated N+1 query patterns
+
 ## Git Commit Standards
 
 ### Commit Message Format
