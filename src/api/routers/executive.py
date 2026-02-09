@@ -101,18 +101,17 @@ async def get_executive_summary(
         {date_filter}
     """)).fetchone()
     
-    # Sales Order metrics (fixed: was counting production orders)
-    sales_date_filter = ""
+    # Production Order metrics (CORRECTED: Using fact_production, not sales)
+    production_date_filter = ""
     if start_date and end_date:
-        sales_date_filter = f"WHERE order_date BETWEEN '{start_date}' AND '{end_date}'"
+        production_date_filter = f"WHERE release_date BETWEEN '{start_date}' AND '{end_date}'"
     
-    sales_order_result = db.execute(text(f"""
+    production_result = db.execute(text(f"""
         SELECT 
             COUNT(*) as total_orders,
-            COUNT(CASE WHEN invoice_count > 0 THEN 1 END) as completed_orders,
-            COALESCE(AVG(invoice_count), 0) as avg_invoices_per_order
-        FROM view_sales_orders
-        {sales_date_filter}
+            COUNT(CASE WHEN order_status = 'COMPLETED' THEN 1 END) as completed_orders
+        FROM fact_production
+        {production_date_filter}
     """)).fetchone()
     
     # Inventory metrics
@@ -138,8 +137,8 @@ async def get_executive_summary(
         )
     """)).fetchone()
     
-    total_orders = int(sales_order_result[0] or 0)
-    completed_orders = int(sales_order_result[1] or 0)
+    total_orders = int(production_result[0] or 0)
+    completed_orders = int(production_result[1] or 0)
     completion_rate = (completed_orders / total_orders * 100) if total_orders > 0 else 0
     
     total_ar = float(ar_result[0] or 0)
